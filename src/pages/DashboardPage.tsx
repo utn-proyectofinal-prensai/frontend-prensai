@@ -83,12 +83,12 @@ export default function DashboardPage() {
                   <div className="bg-black/20 backdrop-blur-md shadow-lg border-b border-white/10 w-full">
             <div className="w-full px-6 py-4">
             <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="flex items-center space-x-6">
+                <div className="w-32 h-32 flex items-center justify-center">
                   <img 
-                    src="/images/logo.png" 
+                    src="/images/fondoblanco.png" 
                     alt="PrensAI Logo" 
-                    className="w-8 h-8 object-contain"
+                    className="w-28 h-28 object-contain"
                     onError={(e) => {
                       console.log('Error loading logo:', e);
                       e.currentTarget.style.display = 'none';
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className="flex items-center space-x-6">
+              <div className="flex flex-col items-end space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
                     <span className="text-white text-sm font-bold">
@@ -112,7 +112,6 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-white drop-shadow-md">Bienvenido, {user?.username}</p>
-                    <p className="text-xs text-white/70 font-medium">Usuario Activo</p>
                   </div>
                 </div>
                 <button 
@@ -127,20 +126,20 @@ export default function DashboardPage() {
         </div>
 
         {/* Contenido principal */}
-        <div className="w-full px-6 py-8 h-full">
+        <div className="w-full px-6 py-12 h-full">
           {/* Título de bienvenida */}
-          <div className="mb-10 text-center">
-            <h2 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">Bienvenido a tu Dashboard</h2>
+          <div className="mb-48 text-center">
+            <h2 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">Bienvenido a tu dashboard</h2>
             <p className="text-white/90 text-lg font-medium drop-shadow-md">Monitorea y analiza tus noticias con inteligencia artificial</p>
           </div>
 
           {/* Estadísticas rápidas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-64">
+            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white/80 mb-2">Noticias Hoy</p>
-                  <p className="text-3xl font-bold text-white">{stats.noticiasHoy}</p>
+                  <p className="text-sm font-semibold text-white/80 mb-3">Noticias Hoy</p>
+                  <p className="text-3xl font-bold text-white mb-2">{stats.noticiasHoy}</p>
                   <p className="text-xs text-green-300 font-bold">+12% vs ayer</p>
                 </div>
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
@@ -151,11 +150,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white/80 mb-2">Esta Semana</p>
-                  <p className="text-3xl font-bold text-white">{stats.noticiasEstaSemana}</p>
+                  <p className="text-sm font-semibold text-white/80 mb-3">Esta Semana</p>
+                  <p className="text-3xl font-bold text-white mb-2">{stats.noticiasEstaSemana}</p>
                   <p className="text-xs text-blue-300 font-bold">+8% vs semana pasada</p>
                 </div>
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
@@ -166,11 +165,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white/80 mb-2">Clippings</p>
-                  <p className="text-3xl font-bold text-white">{stats.clippingGenerados}</p>
+                  <p className="text-sm font-semibold text-white/80 mb-3">Clippings</p>
+                  <p className="text-3xl font-bold text-white mb-2">{stats.clippingGenerados}</p>
                   <p className="text-xs text-purple-300 font-bold">+15% este mes</p>
                 </div>
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
@@ -181,11 +180,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
+            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white/80 mb-2">Temas Analizados</p>
-                  <p className="text-3xl font-bold text-white">{stats.temasAnalizados}</p>
+                  <p className="text-sm font-semibold text-white/80 mb-3">Temas Analizados</p>
+                  <p className="text-3xl font-bold text-white mb-2">{stats.temasAnalizados}</p>
                   <p className="text-xs text-orange-300 font-bold">+3 nuevos</p>
                 </div>
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
@@ -198,56 +197,56 @@ export default function DashboardPage() {
           </div>
 
           {/* Acciones principales - MISMO ESTILO QUE LAS CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-                        <button className="group bg-black/40 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 p-8 hover:bg-black/50 hover:border-white/50 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-3xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-64">
+                        <button className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}>
               <div className="flex items-center">
-                <div className="w-16 h-16 bg-white/30 backdrop-blur-md rounded-xl flex items-center justify-center mr-6 group-hover:bg-white/40 transition-all duration-300 border border-white/30 shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
                 <div className="text-left">
-                  <h3 className="text-xl font-bold mb-2 text-white drop-shadow-sm">Subir Links</h3>
-                  <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Carga nuevas noticias para procesar con IA</p>
+                  <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Subir set de noticias</h3>
+                  <p className="text-blue-300 text-base leading-relaxed font-medium drop-shadow-sm">Carga nuevas noticias (links) para procesar</p>
                 </div>
               </div>
             </button>
 
-                        <button className="group bg-black/40 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 p-8 hover:bg-black/50 hover:border-white/50 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-3xl">
+                        <button className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}>
               <div className="flex items-center">
-                <div className="w-16 h-16 bg-white/30 backdrop-blur-md rounded-xl flex items-center justify-center mr-6 group-hover:bg-white/40 transition-all duration-300 border border-white/30 shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div className="text-left">
-                  <h3 className="text-xl font-bold mb-2 text-white drop-shadow-sm">Ver Histórico</h3>
-                  <p className="text-green-300 text-sm leading-relaxed font-medium drop-shadow-sm">Explora todas las noticias procesadas</p>
+                  <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Ver histórico</h3>
+                  <p className="text-green-300 text-base leading-relaxed font-medium drop-shadow-sm">Explora todas las noticias procesadas</p>
                 </div>
               </div>
             </button>
 
-                        <button className="group bg-black/40 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 p-8 hover:bg-black/50 hover:border-white/50 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-3xl">
+                        <button className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}>
               <div className="flex items-center">
-                <div className="w-16 h-16 bg-white/30 backdrop-blur-md rounded-xl flex items-center justify-center mr-6 group-hover:bg-white/40 transition-all duration-300 border border-white/30 shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div className="text-left">
-                  <h3 className="text-xl font-bold mb-2 text-white drop-shadow-sm">Crear Clipping</h3>
-                  <p className="text-purple-300 text-sm leading-relaxed font-medium drop-shadow-sm">Genera análisis por tema específico</p>
+                  <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Crear clipping</h3>
+                  <p className="text-purple-300 text-base leading-relaxed font-medium drop-shadow-sm">Genera análisis por tema específico</p>
                 </div>
               </div>
             </button>
           </div>
 
           {/* Últimas noticias */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-            <div className="px-8 py-6 border-b border-white/20">
+          <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden mt-48">
+            <div className="px-8 py-8 border-b border-white/20">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white">Últimas Noticias Procesadas</h2>
-                <button className="text-white/80 hover:text-white font-semibold text-sm transition-colors hover:scale-105 transform">
+                <button className="text-white !important hover:text-white/90 font-bold text-base transition-colors hover:scale-105 transform" style={{ color: 'white' }}>
                   Ver todas →
                 </button>
               </div>
@@ -266,17 +265,17 @@ export default function DashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-white/10">
                   {ultimasNoticias.map((noticia) => (
-                    <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
-                      <td className="px-8 py-6">
+                                      <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
+                    <td className="px-8 py-8">
                         <div className="text-sm font-semibold text-white max-w-xs truncate">{noticia.titulo}</div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-8 py-8">
                         <div className="text-sm font-medium text-white/90">{noticia.medio}</div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-8 py-8">
                         <div className="text-sm font-medium text-white/90">{noticia.fecha}</div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-8 py-8">
                         <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-full ${
                           noticia.sentimiento === 'Positivo' 
                             ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
@@ -287,10 +286,10 @@ export default function DashboardPage() {
                           {noticia.sentimiento}
                         </span>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-8 py-8">
                         <div className="text-sm font-medium text-white/90">{noticia.tema}</div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-8 py-8">
                         <div className="flex items-center">
                           <div className="w-20 bg-white/20 rounded-full h-2.5 mr-3">
                             <div 

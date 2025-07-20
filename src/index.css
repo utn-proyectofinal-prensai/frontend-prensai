@@ -95,6 +95,30 @@ html, body {
   border-color: transparent !important;
 }
 
+/* Estilo específico para el botón "Ver todas" */
+.dashboard-container button[style*="color: white"] {
+  color: white !important;
+}
+
+.dashboard-container button.text-white {
+  color: white !important;
+}
+
+/* Forzar bordes blancos discretos en los botones del dashboard */
+.dashboard-container button[style*="border: 1px solid rgba(255, 255, 255, 0.3)"] {
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+.dashboard-container .group {
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
 /* Animaciones personalizadas */
 @keyframes fade-in {
   from {
