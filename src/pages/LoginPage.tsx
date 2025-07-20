@@ -56,8 +56,8 @@ export default function LoginPage() {
       ></div>
 
       {/* Formulario flotante a la derecha */}
-      <div className="relative z-20 flex items-center justify-end h-full pr-24">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-12 w-full max-w-lg border border-white/20 animate-slide-in-right hover-lift min-h-[600px]">
+      <div className="relative z-20 flex items-center justify-end h-full pr-16">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-10 w-full max-w-md border border-white/20 animate-slide-in-right hover-lift min-h-[600px]">
           {/* Logo real del proyecto */}
           <div className="text-center mb-12 animate-fade-in">
             <div className="inline-flex items-center justify-center w-40 h-40 mb-6 animate-bounce-slow">
@@ -75,16 +75,16 @@ export default function LoginPage() {
           </div>
 
           {/* Título y descripción mejorados */}
-          <div className="text-center mb-20 animate-fade-in" style={{animationDelay: '0.2s'}}>
-            <h2 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-blue-600 bg-clip-text text-transparent mb-4 animate-gradient-x">Iniciar Sesión</h2>
-            <p className="text-gray-600 text-xl leading-relaxed font-medium text-center">Automatiza, filtrá y analizá las noticias con inteligencia artificial</p>
+          <div className="text-center mb-16 animate-fade-in" style={{animationDelay: '0.2s'}}>
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-blue-600 bg-clip-text text-transparent mb-3 animate-gradient-x">Iniciar Sesión</h2>
+            <p className="text-gray-600 text-lg leading-relaxed font-medium text-center">Automatiza, filtrá y analizá las noticias con inteligencia artificial</p>
           </div>
 
           {/* Espaciado adicional antes del formulario */}
           <div className="h-8"></div>
 
           {/* Formulario mejorado */}
-          <form onSubmit={handleSubmit} className="space-y-16">
+          <form onSubmit={handleSubmit} className="space-y-12">
             <div className="space-y-3 animate-fade-in" style={{animationDelay: '0.4s'}}>
               <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-3">
                 Usuario
