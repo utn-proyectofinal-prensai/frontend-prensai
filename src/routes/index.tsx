@@ -3,6 +3,7 @@ import Layout from '../components/layout/Layout';
 import HomePage from '../pages/HomePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
+import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -11,7 +12,11 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: (
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'login',

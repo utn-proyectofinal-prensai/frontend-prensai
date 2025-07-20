@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Fondo -->
+  <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+  
+  <!-- Puntos de red neuronal -->
+  <g opacity="0.3">
+    <circle cx="100" cy="100" r="2" fill="#67e8f9"/>
+    <circle cx="300" cy="150" r="1" fill="#67e8f9"/>
+    <circle cx="500" cy="200" r="1.5" fill="#67e8f9"/>
+    <circle cx="700" cy="100" r="1" fill="#67e8f9"/>
+    <circle cx="900" cy="300" r="2" fill="#67e8f9"/>
+    <circle cx="1100" cy="150" r="1" fill="#67e8f9"/>
+    <circle cx="1300" cy="250" r="1.5" fill="#67e8f9"/>
+    <circle cx="1500" cy="100" r="1" fill="#67e8f9"/>
+    <circle cx="1700" cy="300" r="2" fill="#67e8f9"/>
+    <circle cx="200" cy="500" r="1" fill="#67e8f9"/>
+    <circle cx="400" cy="600" r="1.5" fill="#67e8f9"/>
+    <circle cx="600" cy="500" r="1" fill="#67e8f9"/>
+    <circle cx="800" cy="700" r="2" fill="#67e8f9"/>
+    <circle cx="1000" cy="600" r="1" fill="#67e8f9"/>
+    <circle cx="1200" cy="800" r="1.5" fill="#67e8f9"/>
+    <circle cx="1400" cy="700" r="1" fill="#67e8f9"/>
+    <circle cx="1600" cy="900" r="2" fill="#67e8f9"/>
+    <circle cx="1800" cy="800" r="1" fill="#67e8f9"/>
+  </g>
+  
+  <!-- Cabeza humana estilizada (izquierda) -->
+  <g opacity="0.6" filter="url(#glow)">
+    <circle cx="300" cy="300" r="120" fill="none" stroke="#67e8f9" stroke-width="2" stroke-dasharray="4"/>
+    <path d="M200 400 Q300 600 400 400" fill="none" stroke="#67e8f9" stroke-width="2" stroke-dasharray="4"/>
+    <!-- Puntos de red neuronal en la cabeza -->
+    <circle cx="280" cy="280" r="1" fill="#67e8f9"/>
+    <circle cx="320" cy="290" r="1" fill="#67e8f9"/>
+    <circle cx="300" cy="320" r="1" fill="#67e8f9"/>
+    <circle cx="260" cy="300" r="1" fill="#67e8f9"/>
+    <circle cx="340" cy="310" r="1" fill="#67e8f9"/>
+    <circle cx="290" cy="340" r="1" fill="#67e8f9"/>
+    <circle cx="310" cy="260" r="1" fill="#67e8f9"/>
+  </g>
+  
+  <!-- Líneas de flujo detrás de la cabeza -->
+  <g opacity="0.4">
+    <line x1="150" y1="250" x2="150" y2="350" stroke="#67e8f9" stroke-width="1"/>
+    <line x1="160" y1="240" x2="160" y2="360" stroke="#67e8f9" stroke-width="1"/>
+    <line x1="170" y1="230" x2="170" y2="370" stroke="#67e8f9" stroke-width="1"/>
+  </g>
+  
+  <!-- Documento superior -->
+  <g opacity="0.6" filter="url(#glow)">
+    <rect x="800" y="200" width="120" height="160" fill="#67e8f9" opacity="0.2" stroke="#67e8f9" stroke-width="1"/>
+    <!-- Líneas de texto -->
+    <rect x="820" y="220" width="20" height="2" fill="#67e8f9" opacity="0.6"/>
+    <rect x="820" y="230" width="60" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="820" y="235" width="40" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="820" y="240" width="50" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="820" y="245" width="30" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="820" y="250" width="45" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="820" y="255" width="35" height="1" fill="#67e8f9" opacity="0.4"/>
+    <!-- Icono de menú -->
+    <rect x="825" y="215" width="10" height="1" fill="#67e8f9" opacity="0.8"/>
+    <rect x="825" y="217" width="10" height="1" fill="#67e8f9" opacity="0.8"/>
+    <rect x="825" y="219" width="10" height="1" fill="#67e8f9" opacity="0.8"/>
+  </g>
+  
+  <!-- Documento inferior -->
+  <g opacity="0.6" filter="url(#glow)">
+    <rect x="700" y="400" width="120" height="160" fill="#67e8f9" opacity="0.2" stroke="#67e8f9" stroke-width="1"/>
+    <!-- Líneas de texto -->
+    <rect x="720" y="420" width="20" height="2" fill="#67e8f9" opacity="0.6"/>
+    <rect x="720" y="430" width="60" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="720" y="435" width="40" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="720" y="440" width="50" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="720" y="445" width="30" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="720" y="450" width="45" height="1" fill="#67e8f9" opacity="0.4"/>
+    <rect x="720" y="455" width="35" height="1" fill="#67e8f9" opacity="0.4"/>
+    <!-- Icono de paisaje -->
+    <rect x="725" y="515" width="20" height="15" fill="#67e8f9" opacity="0.6"/>
+    <circle cx="735" cy="520" r="3" fill="#67e8f9" opacity="0.8"/>
+    <path d="M725 530 L735 525 L745 530 L755 528 L765 530" fill="none" stroke="#67e8f9" stroke-width="1" opacity="0.8"/>
+  </g>
+  
+  <!-- Círculo AI central -->
+  <g filter="url(#glow)">
+    <circle cx="1200" cy="540" r="160" fill="#67e8f9" opacity="0.2" stroke="#67e8f9" stroke-width="2"/>
+    <text x="1200" y="550" text-anchor="middle" fill="#67e8f9" font-size="48" font-weight="bold">AI</text>
+    <!-- Puntos conectores -->
+    <circle cx="1100" cy="500" r="2" fill="#67e8f9"/>
+    <circle cx="1300" cy="480" r="2" fill="#67e8f9"/>
+    <circle cx="1150" cy="600" r="2" fill="#67e8f9"/>
+    <circle cx="1250" cy="620" r="2" fill="#67e8f9"/>
+    <line x1="1100" y1="500" x2="1200" y2="540" stroke="#67e8f9" stroke-width="1" opacity="0.6"/>
+    <line x1="1300" y1="480" x2="1200" y2="540" stroke="#67e8f9" stroke-width="1" opacity="0.6"/>
+    <line x1="1150" y1="600" x2="1200" y2="540" stroke="#67e8f9" stroke-width="1" opacity="0.6"/>
+    <line x1="1250" y1="620" x2="1200" y2="540" stroke="#67e8f9" stroke-width="1" opacity="0.6"/>
+  </g>
+</svg> 
