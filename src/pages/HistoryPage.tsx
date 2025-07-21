@@ -189,7 +189,7 @@ export default function HistoryPage() {
                   <h1 className="text-2xl font-bold text-white drop-shadow-lg">
                     PrensAI
                   </h1>
-                  <p className="text-white/80 text-sm font-medium">Historial de Noticias</p>
+                  <p className="text-white/80 text-sm font-medium">Historial de noticias</p>
                 </div>
               </div>
             </div>

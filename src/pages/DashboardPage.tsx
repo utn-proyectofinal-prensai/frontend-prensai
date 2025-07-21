@@ -83,7 +83,7 @@ export default function DashboardPage() {
       <div className="relative z-10 w-full h-full">
         {/* Header transparente */}
                   <div className="bg-black/20 backdrop-blur-md shadow-lg border-b border-white/10 w-full">
-            <div className="w-full px-6 py-4">
+            <div className="w-full py-4 px-6">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-6">
                 <div className="w-32 h-32 flex items-center justify-center">
@@ -101,7 +101,7 @@ export default function DashboardPage() {
                   <h1 className="text-2xl font-bold text-white drop-shadow-lg">
                     PrensAI
                   </h1>
-                  <p className="text-white/80 text-sm font-medium">Dashboard de Análisis Inteligente</p>
+                  <p className="text-white/80 text-sm font-medium">Dashboard de análisis inteligente</p>
                 </div>
               </div>
               
@@ -128,15 +128,16 @@ export default function DashboardPage() {
         </div>
 
         {/* Contenido principal */}
-        <div className="w-full px-6 py-12 h-full">
+        <div className="w-full py-16 px-6 h-full">
           {/* Título de bienvenida */}
-          <div className="mb-48 text-center">
+          <div className="welcome-section mb-32 text-center">
             <h2 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">Bienvenido a tu dashboard</h2>
             <p className="text-white/90 text-lg font-medium drop-shadow-md">Monitorea y analiza tus noticias con inteligencia artificial</p>
           </div>
 
           {/* Estadísticas rápidas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-64">
+          <div className="stats-section mb-32">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
               <div className="flex items-center justify-between">
                 <div>
@@ -197,9 +198,11 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+          </div>
 
           {/* Acciones principales - MISMO ESTILO QUE LAS CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-64">
+          <div className="actions-section mb-32">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
                         <button 
                           onClick={() => navigate('/upload-news')}
                           className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl"
@@ -249,13 +252,15 @@ export default function DashboardPage() {
                 </div>
               </div>
             </button>
+            </div>
           </div>
 
           {/* Últimas noticias */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden mt-48">
+          <div className="news-section">
+            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
             <div className="px-8 py-8 border-b border-white/20">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Últimas Noticias Procesadas</h2>
+                <h2 className="text-xl font-bold text-white">Últimas noticias procesadas</h2>
                 <button 
                   onClick={() => navigate('/history')}
                   className="text-white !important hover:text-white/90 font-bold text-base transition-colors hover:scale-105 transform" 
@@ -269,27 +274,27 @@ export default function DashboardPage() {
               <table className="min-w-full">
                 <thead className="bg-black/20">
                   <tr>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Noticia</th>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Medio</th>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Fecha</th>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Sentimiento</th>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Tema</th>
-                    <th className="px-8 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Confianza</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Noticia</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Medio</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Fecha</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Sentimiento</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Tema</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Confianza</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
                   {ultimasNoticias.map((noticia) => (
                                       <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
-                    <td className="px-8 py-8">
-                        <div className="text-sm font-semibold text-white max-w-xs truncate">{noticia.titulo}</div>
+                    <td className="px-8 py-8 text-center">
+                        <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.titulo}</div>
                       </td>
-                      <td className="px-8 py-8">
+                      <td className="px-8 py-8 text-center">
                         <div className="text-sm font-medium text-white/90">{noticia.medio}</div>
                       </td>
-                      <td className="px-8 py-8">
+                      <td className="px-8 py-8 text-center">
                         <div className="text-sm font-medium text-white/90">{noticia.fecha}</div>
                       </td>
-                      <td className="px-8 py-8">
+                      <td className="px-8 py-8 text-center">
                         <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-full ${
                           noticia.sentimiento === 'Positivo' 
                             ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
@@ -300,11 +305,11 @@ export default function DashboardPage() {
                           {noticia.sentimiento}
                         </span>
                       </td>
-                      <td className="px-8 py-8">
+                      <td className="px-8 py-8 text-center">
                         <div className="text-sm font-medium text-white/90">{noticia.tema}</div>
                       </td>
-                      <td className="px-8 py-8">
-                        <div className="flex items-center">
+                      <td className="px-8 py-8 text-center">
+                        <div className="flex items-center justify-center">
                           <div className="w-20 bg-white/20 rounded-full h-2.5 mr-3">
                             <div 
                               className="bg-white/60 h-2.5 rounded-full" 
@@ -319,6 +324,7 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </div>
+          </div>
           </div>
         </div>
       </div>

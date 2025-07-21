@@ -59,6 +59,33 @@ html, body {
   overflow-x: hidden !important;
 }
 
+/* Eliminar espacios laterales */
+.dashboard-container {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+
+.dashboard-container .w-full {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+.dashboard-container .px-6 {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+/* Forzar ancho completo sin espacios */
+.dashboard-container > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
 .dashboard-container html,
 .dashboard-container body {
   background-color: #1e293b !important;
@@ -98,6 +125,60 @@ html, body {
 /* Estilo específico para el botón "Ver todas" */
 .dashboard-container button[style*="color: white"] {
   color: white !important;
+}
+
+/* Estilos para separación de secciones del dashboard */
+.dashboard-container .welcome-section {
+  margin-bottom: 2rem !important;
+}
+
+.dashboard-container .stats-section {
+  margin-bottom: 2.5rem !important;
+}
+
+.dashboard-container .actions-section {
+  margin-bottom: 2.5rem !important;
+}
+
+.dashboard-container .news-section {
+  margin-top: 2rem !important;
+}
+
+/* Responsive spacing */
+@media (min-width: 768px) {
+  .dashboard-container .welcome-section {
+    margin-bottom: 2.5rem !important;
+  }
+  
+  .dashboard-container .stats-section {
+    margin-bottom: 3rem !important;
+  }
+  
+  .dashboard-container .actions-section {
+    margin-bottom: 3rem !important;
+  }
+  
+  .dashboard-container .news-section {
+    margin-top: 2.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-container .welcome-section {
+    margin-bottom: 3rem !important;
+  }
+  
+  .dashboard-container .stats-section {
+    margin-bottom: 3.5rem !important;
+  }
+  
+  .dashboard-container .actions-section {
+    margin-bottom: 3.5rem !important;
+  }
+  
+  .dashboard-container .news-section {
+    margin-top: 3rem !important;
+  }
 }
 
 .dashboard-container button.text-white {
