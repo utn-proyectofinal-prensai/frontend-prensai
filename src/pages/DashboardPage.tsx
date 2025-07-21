@@ -1,7 +1,9 @@
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   // Datos mock para el dashboard
   const stats = {
@@ -198,33 +200,41 @@ export default function DashboardPage() {
 
           {/* Acciones principales - MISMO ESTILO QUE LAS CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-64">
-                        <button className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}>
-              <div className="flex items-center">
-                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
-                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Subir set de noticias</h3>
-                  <p className="text-blue-300 text-base leading-relaxed font-medium drop-shadow-sm">Carga nuevas noticias (links) para procesar</p>
-                </div>
-              </div>
-            </button>
+                        <button 
+                          onClick={() => navigate('/upload-news')}
+                          className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl"
+                          style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}
+                        >
+                          <div className="flex items-center">
+                            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
+                              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                              </svg>
+                            </div>
+                            <div className="text-left">
+                              <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Subir set de noticias</h3>
+                              <p className="text-blue-300 text-base leading-relaxed font-medium drop-shadow-sm">Carga nuevas noticias (links) para procesar</p>
+                            </div>
+                          </div>
+                        </button>
 
-                        <button className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}>
-              <div className="flex items-center">
-                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
-                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Ver histórico</h3>
-                  <p className="text-green-300 text-base leading-relaxed font-medium drop-shadow-sm">Explora todas las noticias procesadas</p>
-                </div>
-              </div>
-            </button>
+                        <button 
+                          onClick={() => navigate('/history')}
+                          className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" 
+                          style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}
+                        >
+                          <div className="flex items-center">
+                            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
+                              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                            <div className="text-left">
+                              <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Ver histórico</h3>
+                              <p className="text-green-300 text-base leading-relaxed font-medium drop-shadow-sm">Explora todas las noticias procesadas</p>
+                            </div>
+                          </div>
+                        </button>
 
                         <button className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}>
               <div className="flex items-center">
@@ -246,7 +256,11 @@ export default function DashboardPage() {
             <div className="px-8 py-8 border-b border-white/20">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white">Últimas Noticias Procesadas</h2>
-                <button className="text-white !important hover:text-white/90 font-bold text-base transition-colors hover:scale-105 transform" style={{ color: 'white' }}>
+                <button 
+                  onClick={() => navigate('/history')}
+                  className="text-white !important hover:text-white/90 font-bold text-base transition-colors hover:scale-105 transform" 
+                  style={{ color: 'white' }}
+                >
                   Ver todas →
                 </button>
               </div>
