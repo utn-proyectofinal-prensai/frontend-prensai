@@ -211,7 +211,7 @@ export default function UploadNewsPage() {
                   <h3 className="text-xl font-bold text-white">URLs a procesar ({urls.length})</h3>
                   <button
                     onClick={() => setUrls([])}
-                    className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+                    className="text-white hover:text-white/80 text-sm font-medium transition-colors"
                   >
                     Limpiar todo
                   </button>

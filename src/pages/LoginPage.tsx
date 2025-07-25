@@ -10,6 +10,7 @@ export default function LoginPage() {
     password: ''
   });
 
+
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
@@ -39,6 +40,8 @@ export default function LoginPage() {
       navigate('/');
     }
   };
+
+
 
   return (
     <div className="fixed inset-0 w-full h-full">
@@ -195,9 +198,22 @@ export default function LoginPage() {
                 </a>
               </p>
             </div>
+
+            {/* Botón de Administración */}
+            <div className="text-center animate-fade-in pt-6" style={{animationDelay: '0.7s'}}>
+              <button
+                type="button"
+                onClick={() => navigate('/admin-users')}
+                className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors hover:scale-105 transform"
+              >
+                Administración
+              </button>
+            </div>
           </form>
         </div>
       </div>
+
+
     </div>
   );
 }

@@ -4,6 +4,8 @@ import HomePage from '../pages/HomePage';
 import DashboardPage from '../pages/DashboardPage';
 import UploadNewsPage from '../pages/UploadNewsPage';
 import HistoryPage from '../pages/HistoryPage';
+import AdminPage from '../pages/AdminPage';
+import AdminUsersPage from '../pages/AdminUsersPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
@@ -48,6 +50,18 @@ export const router = createBrowserRouter([
             <HistoryPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'admin',
+        element: (
+          <ProtectedRoute>
+            <AdminPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin-users',
+        element: <AdminUsersPage />,
       }
     ],
   },
