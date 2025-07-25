@@ -6,6 +6,7 @@ import UploadNewsPage from '../pages/UploadNewsPage';
 import HistoryPage from '../pages/HistoryPage';
 import AdminPage from '../pages/AdminPage';
 import AdminUsersPage from '../pages/AdminUsersPage';
+import CreateClippingPage from '../pages/CreateClippingPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
@@ -62,6 +63,14 @@ export const router = createBrowserRouter([
       {
         path: 'admin-users',
         element: <AdminUsersPage />,
+      },
+      {
+        path: 'create-clipping',
+        element: (
+          <ProtectedRoute>
+            <CreateClippingPage />
+          </ProtectedRoute>
+        ),
       }
     ],
   },
