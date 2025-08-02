@@ -3,13 +3,34 @@ import { useNavigate } from 'react-router-dom';
 
 interface NewsItem {
   id: string;
-  title: string;
-  url: string;
-  source: string;
-  dateProcessed: string;
+  titulo: string;
+  tipoPublicacion: string;
+  fecha: string;
+  soporte: string;
+  medio: string;
+  seccion: string;
+  autor: string;
+  conductor: string;
+  entrevistado: string;
+  tema: string;
+  etiqueta1: string;
+  etiqueta2: string;
+  link: string;
+  alcance: string;
+  cotizacion: string;
+  tapa: string;
+  valoracion: string;
+  ejeComunicacional: string;
+  factorPolitico: string;
+  crisis: string;
+  gestion: string;
+  area: string;
+  mencion1: string;
+  mencion2: string;
+  mencion3: string;
+  mencion4: string;
+  mencion5: string;
   status: 'processed' | 'pending' | 'error';
-  category?: string;
-  sentiment?: 'positive' | 'negative' | 'neutral';
 }
 
 export default function HistoryPage() {
@@ -24,63 +45,189 @@ export default function HistoryPage() {
     const mockData: NewsItem[] = [
       {
         id: '1',
-        title: 'Nueva tecnología revoluciona el mercado financiero',
-        url: 'https://ejemplo.com/noticia1',
-        source: 'El País',
-        dateProcessed: '2024-01-15',
-        status: 'processed',
-        category: 'Tecnología',
-        sentiment: 'positive'
+        titulo: 'Nueva tecnología revoluciona el mercado financiero',
+        tipoPublicacion: 'Nota',
+        fecha: '2024-01-15',
+        soporte: 'Digital',
+        medio: 'El País',
+        seccion: 'Tecnología',
+        autor: 'Carlos Ruiz',
+        conductor: '',
+        entrevistado: '',
+        tema: 'Tecnología',
+        etiqueta1: 'Fintech',
+        etiqueta2: 'Innovación',
+        link: 'https://ejemplo.com/noticia1',
+        alcance: 'Internacional',
+        cotizacion: 'Alta',
+        tapa: 'No',
+        valoracion: 'Positiva',
+        ejeComunicacional: 'Innovación',
+        factorPolitico: 'Bajo',
+        crisis: 'No',
+        gestion: 'Privada',
+        area: 'Tecnología',
+        mencion1: 'CEO',
+        mencion2: 'Analista',
+        mencion3: '',
+        mencion4: '',
+        mencion5: '',
+        status: 'processed'
       },
       {
         id: '2',
-        title: 'Análisis del impacto económico en América Latina',
-        url: 'https://ejemplo.com/noticia2',
-        source: 'BBC Mundo',
-        dateProcessed: '2024-01-14',
-        status: 'processed',
-        category: 'Economía',
-        sentiment: 'neutral'
+        titulo: 'Análisis del impacto económico en América Latina',
+        tipoPublicacion: 'Reportaje',
+        fecha: '2024-01-14',
+        soporte: 'Digital',
+        medio: 'BBC Mundo',
+        seccion: 'Economía',
+        autor: 'María González',
+        conductor: '',
+        entrevistado: '',
+        tema: 'Economía',
+        etiqueta1: 'América Latina',
+        etiqueta2: 'Análisis',
+        link: 'https://ejemplo.com/noticia2',
+        alcance: 'Internacional',
+        cotizacion: 'Media',
+        tapa: 'No',
+        valoracion: 'Neutral',
+        ejeComunicacional: 'Transparencia',
+        factorPolitico: 'Alto',
+        crisis: 'No',
+        gestion: 'Mixta',
+        area: 'Economía',
+        mencion1: 'Economista',
+        mencion2: 'Analista',
+        mencion3: '',
+        mencion4: '',
+        mencion5: '',
+        status: 'processed'
       },
       {
         id: '3',
-        title: 'Avances en investigación médica contra el cáncer',
-        url: 'https://ejemplo.com/noticia3',
-        source: 'Nature',
-        dateProcessed: '2024-01-13',
-        status: 'processed',
-        category: 'Ciencia',
-        sentiment: 'positive'
+        titulo: 'Avances en investigación médica contra el cáncer',
+        tipoPublicacion: 'Entrevista',
+        fecha: '2024-01-13',
+        soporte: 'Digital',
+        medio: 'Nature',
+        seccion: 'Ciencia',
+        autor: 'Dr. Ana Silva',
+        conductor: 'Roberto López',
+        entrevistado: 'Dr. Juan Pérez',
+        tema: 'Ciencia',
+        etiqueta1: 'Medicina',
+        etiqueta2: 'Investigación',
+        link: 'https://ejemplo.com/noticia3',
+        alcance: 'Internacional',
+        cotizacion: 'Alta',
+        tapa: 'Sí',
+        valoracion: 'Muy Positiva',
+        ejeComunicacional: 'Innovación',
+        factorPolitico: 'Bajo',
+        crisis: 'No',
+        gestion: 'Privada',
+        area: 'Ciencia',
+        mencion1: 'Investigador',
+        mencion2: 'Médico',
+        mencion3: 'Universidad',
+        mencion4: '',
+        mencion5: '',
+        status: 'processed'
       },
       {
         id: '4',
-        title: 'Cambios climáticos afectan producción agrícola',
-        url: 'https://ejemplo.com/noticia4',
-        source: 'Reuters',
-        dateProcessed: '2024-01-12',
-        status: 'processed',
-        category: 'Medio Ambiente',
-        sentiment: 'negative'
+        titulo: 'Cambios climáticos afectan producción agrícola',
+        tipoPublicacion: 'Nota',
+        fecha: '2024-01-12',
+        soporte: 'Impreso',
+        medio: 'Reuters',
+        seccion: 'Medio Ambiente',
+        autor: 'Laura Martínez',
+        conductor: '',
+        entrevistado: '',
+        tema: 'Medio Ambiente',
+        etiqueta1: 'Clima',
+        etiqueta2: 'Agricultura',
+        link: 'https://ejemplo.com/noticia4',
+        alcance: 'Nacional',
+        cotizacion: 'Media',
+        tapa: 'No',
+        valoracion: 'Negativa',
+        ejeComunicacional: 'Sostenibilidad',
+        factorPolitico: 'Medio',
+        crisis: 'Sí',
+        gestion: 'Mixta',
+        area: 'Agricultura',
+        mencion1: 'Productor',
+        mencion2: 'Especialista',
+        mencion3: '',
+        mencion4: '',
+        mencion5: '',
+        status: 'processed'
       },
       {
         id: '5',
-        title: 'Nuevas políticas educativas en Europa',
-        url: 'https://ejemplo.com/noticia5',
-        source: 'Le Monde',
-        dateProcessed: '2024-01-11',
-        status: 'pending',
-        category: 'Educación',
-        sentiment: 'neutral'
+        titulo: 'Nuevas políticas educativas en Europa',
+        tipoPublicacion: 'Nota',
+        fecha: '2024-01-11',
+        soporte: 'Digital',
+        medio: 'Le Monde',
+        seccion: 'Educación',
+        autor: 'Pierre Dubois',
+        conductor: '',
+        entrevistado: '',
+        tema: 'Educación',
+        etiqueta1: 'Europa',
+        etiqueta2: 'Políticas',
+        link: 'https://ejemplo.com/noticia5',
+        alcance: 'Internacional',
+        cotizacion: 'Media',
+        tapa: 'No',
+        valoracion: 'Neutral',
+        ejeComunicacional: 'Transparencia',
+        factorPolitico: 'Alto',
+        crisis: 'No',
+        gestion: 'Legislativa',
+        area: 'Educación',
+        mencion1: 'Ministro',
+        mencion2: 'Especialista',
+        mencion3: '',
+        mencion4: '',
+        mencion5: '',
+        status: 'pending'
       },
       {
         id: '6',
-        title: 'Innovaciones en transporte público urbano',
-        url: 'https://ejemplo.com/noticia6',
-        source: 'The Guardian',
-        dateProcessed: '2024-01-10',
-        status: 'error',
-        category: 'Transporte',
-        sentiment: 'positive'
+        titulo: 'Innovaciones en transporte público urbano',
+        tipoPublicacion: 'Reportaje',
+        fecha: '2024-01-10',
+        soporte: 'Digital',
+        medio: 'The Guardian',
+        seccion: 'Transporte',
+        autor: 'Sarah Johnson',
+        conductor: '',
+        entrevistado: '',
+        tema: 'Transporte',
+        etiqueta1: 'Urbano',
+        etiqueta2: 'Innovación',
+        link: 'https://ejemplo.com/noticia6',
+        alcance: 'Nacional',
+        cotizacion: 'Baja',
+        tapa: 'No',
+        valoracion: 'Positiva',
+        ejeComunicacional: 'Desarrollo',
+        factorPolitico: 'Medio',
+        crisis: 'No',
+        gestion: 'Municipal',
+        area: 'Transporte',
+        mencion1: 'Alcalde',
+        mencion2: 'Especialista',
+        mencion3: '',
+        mencion4: '',
+        mencion5: '',
+        status: 'error'
       }
     ];
 
@@ -132,9 +279,9 @@ export default function HistoryPage() {
 
   const filteredNews = newsHistory.filter(item => {
     const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
-    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.medio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.tema?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -269,74 +416,141 @@ export default function HistoryPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="min-w-full">
                     <thead className="bg-black/20">
                       <tr>
-                        <th className="px-6 py-4 text-center text-white/90 font-medium">Título</th>
-                        <th className="px-6 py-4 text-center text-white/90 font-medium">Fuente</th>
-                        <th className="px-6 py-4 text-center text-white/90 font-medium">Categoría</th>
-                        <th className="px-6 py-4 text-center text-white/90 font-medium">Sentimiento</th>
-                        <th className="px-6 py-4 text-center text-white/90 font-medium">Estado</th>
-                        <th className="px-6 py-4 text-center text-white/90 font-medium">Fecha</th>
-                        <th className="px-6 py-4 text-center text-white/90 font-medium">Acciones</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TÍTULO</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TIPO PUBLICACIÓN</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FECHA</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SOPORTE</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MEDIO</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SECCIÓN</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">AUTOR</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CONDUCTOR</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ENTREVISTADO</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TEMA</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_1</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_2</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">LINK</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ALCANCE</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">COTIZACIÓN</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TAPA</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">VALORACIÓN</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">EJE COMUNICACIONAL</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FACTOR POLÍTICO</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CRISIS</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">GESTIÓN</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ÁREA</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_1</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_2</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_3</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_4</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_5</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ESTADO</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
                       {filteredNews.map((item) => (
-                        <tr key={item.id} className="hover:bg-white/5 transition-colors">
-                          <td className="px-6 py-4">
-                            <div>
-                              <div className="text-white font-medium mb-1 line-clamp-2">
-                                {item.title}
-                              </div>
-                              <a 
-                                href={item.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:text-blue-300 text-sm underline"
-                              >
-                                Ver original
+                        <tr key={item.id} className="hover:bg-black/20 transition-colors duration-200">
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{item.titulo}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.tipoPublicacion}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.fecha}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.soporte}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.medio}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.seccion}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.autor}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.conductor || '-'}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.entrevistado || '-'}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.tema}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.etiqueta1}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.etiqueta2}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90">
+                              <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">
+                                Ver
                               </a>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="text-white/80">{item.source}</span>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.alcance}</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="text-white/80">{item.category || 'Sin categoría'}</span>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.cotizacion}</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className={`font-medium ${getSentimentColor(item.sentiment)}`}>
-                              {item.sentiment === 'positive' && 'Positivo'}
-                              {item.sentiment === 'negative' && 'Negativo'}
-                              {item.sentiment === 'neutral' && 'Neutral'}
-                              {!item.sentiment && 'N/A'}
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.tapa}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
+                              item.valoracion === 'Muy Positiva' 
+                                ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
+                                : item.valoracion === 'Positiva'
+                                ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
+                                : item.valoracion === 'Negativa'
+                                ? 'bg-red-500/20 text-red-300 border border-red-300/30'
+                                : 'bg-white/20 text-white/90 border border-white/30'
+                            }`}>
+                              {item.valoracion}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.ejeComunicacional}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.factorPolitico}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.crisis}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.gestion}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.area}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion1 || '-'}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion2 || '-'}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion3 || '-'}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion4 || '-'}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion5 || '-'}</div>
+                          </td>
+                          <td className="px-6 py-3 text-center">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(item.status)}`}>
                               {getStatusText(item.status)}
                             </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-white/80 text-sm">
-                              {new Date(item.dateProcessed).toLocaleDateString('es-ES')}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex space-x-2">
-                              <button className="text-blue-400 hover:text-blue-300 transition-colors">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                              </button>
-                              <button className="text-green-400 hover:text-green-300 transition-colors">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                              </button>
-                            </div>
                           </td>
                         </tr>
                       ))}

@@ -19,38 +19,122 @@ export default function DashboardPage() {
     {
       id: 1,
       titulo: "Nuevas medidas económicas anunciadas por el gobierno",
-      medio: "Clarín",
+      tipoPublicacion: "Nota",
       fecha: "2024-01-15",
-      sentimiento: "Neutral",
+      soporte: "Digital",
+      medio: "Clarín",
+      seccion: "Política",
+      autor: "Juan Pérez",
+      conductor: "",
+      entrevistado: "",
       tema: "Economía",
-      porcentaje: 85
+      etiqueta1: "Gobierno",
+      etiqueta2: "Medidas",
+      link: "https://clarin.com/nota1",
+      alcance: "Nacional",
+      cotizacion: "Alta",
+      tapa: "No",
+      valoracion: "Positiva",
+      ejeComunicacional: "Transparencia",
+      factorPolitico: "Alto",
+      crisis: "No",
+      gestion: "Ejecutiva",
+      area: "Economía",
+      mencion1: "Presidente",
+      mencion2: "Ministro",
+      mencion3: "",
+      mencion4: "",
+      mencion5: ""
     },
     {
       id: 2,
       titulo: "Avances en tecnología de inteligencia artificial",
-      medio: "La Nación",
+      tipoPublicacion: "Entrevista",
       fecha: "2024-01-15",
-      sentimiento: "Positivo",
+      soporte: "Digital",
+      medio: "La Nación",
+      seccion: "Tecnología",
+      autor: "María García",
+      conductor: "Carlos López",
+      entrevistado: "Dr. Ana Silva",
       tema: "Tecnología",
-      porcentaje: 92
+      etiqueta1: "IA",
+      etiqueta2: "Innovación",
+      link: "https://lanacion.com/entrevista1",
+      alcance: "Internacional",
+      cotizacion: "Media",
+      tapa: "Sí",
+      valoracion: "Muy Positiva",
+      ejeComunicacional: "Innovación",
+      factorPolitico: "Bajo",
+      crisis: "No",
+      gestion: "Privada",
+      area: "Tecnología",
+      mencion1: "CEO",
+      mencion2: "Investigador",
+      mencion3: "Universidad",
+      mencion4: "",
+      mencion5: ""
     },
     {
       id: 3,
       titulo: "Incremento en las exportaciones del sector agrícola",
-      medio: "Infobae",
+      tipoPublicacion: "Reportaje",
       fecha: "2024-01-14",
-      sentimiento: "Positivo",
+      soporte: "Impreso",
+      medio: "Infobae",
+      seccion: "Economía",
+      autor: "Roberto Díaz",
+      conductor: "",
+      entrevistado: "",
       tema: "Agricultura",
-      porcentaje: 78
+      etiqueta1: "Exportaciones",
+      etiqueta2: "Campo",
+      link: "https://infobae.com/reportaje1",
+      alcance: "Nacional",
+      cotizacion: "Alta",
+      tapa: "No",
+      valoracion: "Positiva",
+      ejeComunicacional: "Desarrollo",
+      factorPolitico: "Medio",
+      crisis: "No",
+      gestion: "Mixta",
+      area: "Agricultura",
+      mencion1: "Productor",
+      mencion2: "Exportador",
+      mencion3: "Ministerio",
+      mencion4: "",
+      mencion5: ""
     },
     {
       id: 4,
       titulo: "Debate sobre reforma educativa en el Congreso",
-      medio: "Página 12",
+      tipoPublicacion: "Nota",
       fecha: "2024-01-14",
-      sentimiento: "Neutral",
+      soporte: "Digital",
+      medio: "Página 12",
+      seccion: "Educación",
+      autor: "Laura Martínez",
+      conductor: "",
+      entrevistado: "",
       tema: "Educación",
-      porcentaje: 88
+      etiqueta1: "Reforma",
+      etiqueta2: "Congreso",
+      link: "https://pagina12.com/nota1",
+      alcance: "Nacional",
+      cotizacion: "Media",
+      tapa: "No",
+      valoracion: "Neutral",
+      ejeComunicacional: "Transparencia",
+      factorPolitico: "Alto",
+      crisis: "No",
+      gestion: "Legislativa",
+      area: "Educación",
+      mencion1: "Diputado",
+      mencion2: "Senador",
+      mencion3: "Ministro",
+      mencion4: "",
+      mencion5: ""
     }
   ];
 
@@ -297,50 +381,132 @@ export default function DashboardPage() {
               <table className="min-w-full">
                 <thead className="bg-black/20">
                   <tr>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Noticia</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Medio</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Fecha</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Sentimiento</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Tema</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Confianza</th>
+                    <th className="px-4 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TÍTULO</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TIPO PUBLICACIÓN</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FECHA</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SOPORTE</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MEDIO</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SECCIÓN</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">AUTOR</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CONDUCTOR</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ENTREVISTADO</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TEMA</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_1</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_2</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">LINK</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ALCANCE</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">COTIZACIÓN</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TAPA</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">VALORACIÓN</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">EJE COMUNICACIONAL</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FACTOR POLÍTICO</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CRISIS</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">GESTIÓN</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ÁREA</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_1</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_2</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_3</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_4</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_5</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
                   {ultimasNoticias.map((noticia) => (
-                                      <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
-                    <td className="px-8 py-8 text-center">
+                    <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
+                      <td className="px-4 py-3 text-center">
                         <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.titulo}</div>
                       </td>
-                      <td className="px-8 py-8 text-center">
-                        <div className="text-sm font-medium text-white/90">{noticia.medio}</div>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.tipoPublicacion}</div>
                       </td>
-                      <td className="px-8 py-8 text-center">
-                        <div className="text-sm font-medium text-white/90">{noticia.fecha}</div>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.fecha}</div>
                       </td>
-                      <td className="px-8 py-8 text-center">
-                        <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-full ${
-                          noticia.sentimiento === 'Positivo' 
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.soporte}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.medio}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.seccion}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.autor}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.conductor || '-'}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.entrevistado || '-'}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.tema}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.etiqueta1}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.etiqueta2}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90">
+                          <a href={noticia.link} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">
+                            Ver
+                          </a>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.alcance}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.cotizacion}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.tapa}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
+                          noticia.valoracion === 'Muy Positiva' 
                             ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
-                            : noticia.sentimiento === 'Negativo'
+                            : noticia.valoracion === 'Positiva'
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
+                            : noticia.valoracion === 'Negativa'
                             ? 'bg-red-500/20 text-red-300 border border-red-300/30'
                             : 'bg-white/20 text-white/90 border border-white/30'
                         }`}>
-                          {noticia.sentimiento}
+                          {noticia.valoracion}
                         </span>
                       </td>
-                      <td className="px-8 py-8 text-center">
-                        <div className="text-sm font-medium text-white/90">{noticia.tema}</div>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.ejeComunicacional}</div>
                       </td>
-                      <td className="px-8 py-8 text-center">
-                        <div className="flex items-center justify-center">
-                          <div className="w-20 bg-white/20 rounded-full h-2.5 mr-3">
-                            <div 
-                              className="bg-white/60 h-2.5 rounded-full" 
-                              style={{ width: `${noticia.porcentaje}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-semibold text-white/90">{noticia.porcentaje}%</span>
-                        </div>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.factorPolitico}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.crisis}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.gestion}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.area}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion1 || '-'}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion2 || '-'}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion3 || '-'}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion4 || '-'}</div>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion5 || '-'}</div>
                       </td>
                     </tr>
                   ))}
