@@ -1,37 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-interface NewsItem {
-  id: string;
-  titulo: string;
-  tipoPublicacion: string;
-  fecha: string;
-  soporte: string;
-  medio: string;
-  seccion: string;
-  autor: string;
-  conductor: string;
-  entrevistado: string;
-  tema: string;
-  etiqueta1: string;
-  etiqueta2: string;
-  link: string;
-  alcance: string;
-  cotizacion: string;
-  tapa: string;
-  valoracion: string;
-  ejeComunicacional: string;
-  factorPolitico: string;
-  crisis: string;
-  gestion: string;
-  area: string;
-  mencion1: string;
-  mencion2: string;
-  mencion3: string;
-  mencion4: string;
-  mencion5: string;
-  status: 'processed' | 'pending' | 'error';
-}
+import { apiService } from '../services/api';
+import type { NewsItem } from '../services/api';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -40,203 +10,33 @@ export default function HistoryPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Simulación de datos históricos
+  // Cargar datos históricos reales
   useEffect(() => {
-    const mockData: NewsItem[] = [
-      {
-        id: '1',
-        titulo: 'Nueva tecnología revoluciona el mercado financiero',
-        tipoPublicacion: 'Nota',
-        fecha: '2024-01-15',
-        soporte: 'Digital',
-        medio: 'El País',
-        seccion: 'Tecnología',
-        autor: 'Carlos Ruiz',
-        conductor: '',
-        entrevistado: '',
-        tema: 'Tecnología',
-        etiqueta1: 'Fintech',
-        etiqueta2: 'Innovación',
-        link: 'https://ejemplo.com/noticia1',
-        alcance: 'Internacional',
-        cotizacion: 'Alta',
-        tapa: 'No',
-        valoracion: 'Positiva',
-        ejeComunicacional: 'Innovación',
-        factorPolitico: 'Bajo',
-        crisis: 'No',
-        gestion: 'Privada',
-        area: 'Tecnología',
-        mencion1: 'CEO',
-        mencion2: 'Analista',
-        mencion3: '',
-        mencion4: '',
-        mencion5: '',
-        status: 'processed'
-      },
-      {
-        id: '2',
-        titulo: 'Análisis del impacto económico en América Latina',
-        tipoPublicacion: 'Reportaje',
-        fecha: '2024-01-14',
-        soporte: 'Digital',
-        medio: 'BBC Mundo',
-        seccion: 'Economía',
-        autor: 'María González',
-        conductor: '',
-        entrevistado: '',
-        tema: 'Economía',
-        etiqueta1: 'América Latina',
-        etiqueta2: 'Análisis',
-        link: 'https://ejemplo.com/noticia2',
-        alcance: 'Internacional',
-        cotizacion: 'Media',
-        tapa: 'No',
-        valoracion: 'Neutral',
-        ejeComunicacional: 'Transparencia',
-        factorPolitico: 'Alto',
-        crisis: 'No',
-        gestion: 'Mixta',
-        area: 'Economía',
-        mencion1: 'Economista',
-        mencion2: 'Analista',
-        mencion3: '',
-        mencion4: '',
-        mencion5: '',
-        status: 'processed'
-      },
-      {
-        id: '3',
-        titulo: 'Avances en investigación médica contra el cáncer',
-        tipoPublicacion: 'Entrevista',
-        fecha: '2024-01-13',
-        soporte: 'Digital',
-        medio: 'Nature',
-        seccion: 'Ciencia',
-        autor: 'Dr. Ana Silva',
-        conductor: 'Roberto López',
-        entrevistado: 'Dr. Juan Pérez',
-        tema: 'Ciencia',
-        etiqueta1: 'Medicina',
-        etiqueta2: 'Investigación',
-        link: 'https://ejemplo.com/noticia3',
-        alcance: 'Internacional',
-        cotizacion: 'Alta',
-        tapa: 'Sí',
-        valoracion: 'Muy Positiva',
-        ejeComunicacional: 'Innovación',
-        factorPolitico: 'Bajo',
-        crisis: 'No',
-        gestion: 'Privada',
-        area: 'Ciencia',
-        mencion1: 'Investigador',
-        mencion2: 'Médico',
-        mencion3: 'Universidad',
-        mencion4: '',
-        mencion5: '',
-        status: 'processed'
-      },
-      {
-        id: '4',
-        titulo: 'Cambios climáticos afectan producción agrícola',
-        tipoPublicacion: 'Nota',
-        fecha: '2024-01-12',
-        soporte: 'Impreso',
-        medio: 'Reuters',
-        seccion: 'Medio Ambiente',
-        autor: 'Laura Martínez',
-        conductor: '',
-        entrevistado: '',
-        tema: 'Medio Ambiente',
-        etiqueta1: 'Clima',
-        etiqueta2: 'Agricultura',
-        link: 'https://ejemplo.com/noticia4',
-        alcance: 'Nacional',
-        cotizacion: 'Media',
-        tapa: 'No',
-        valoracion: 'Negativa',
-        ejeComunicacional: 'Sostenibilidad',
-        factorPolitico: 'Medio',
-        crisis: 'Sí',
-        gestion: 'Mixta',
-        area: 'Agricultura',
-        mencion1: 'Productor',
-        mencion2: 'Especialista',
-        mencion3: '',
-        mencion4: '',
-        mencion5: '',
-        status: 'processed'
-      },
-      {
-        id: '5',
-        titulo: 'Nuevas políticas educativas en Europa',
-        tipoPublicacion: 'Nota',
-        fecha: '2024-01-11',
-        soporte: 'Digital',
-        medio: 'Le Monde',
-        seccion: 'Educación',
-        autor: 'Pierre Dubois',
-        conductor: '',
-        entrevistado: '',
-        tema: 'Educación',
-        etiqueta1: 'Europa',
-        etiqueta2: 'Políticas',
-        link: 'https://ejemplo.com/noticia5',
-        alcance: 'Internacional',
-        cotizacion: 'Media',
-        tapa: 'No',
-        valoracion: 'Neutral',
-        ejeComunicacional: 'Transparencia',
-        factorPolitico: 'Alto',
-        crisis: 'No',
-        gestion: 'Legislativa',
-        area: 'Educación',
-        mencion1: 'Ministro',
-        mencion2: 'Especialista',
-        mencion3: '',
-        mencion4: '',
-        mencion5: '',
-        status: 'pending'
-      },
-      {
-        id: '6',
-        titulo: 'Innovaciones en transporte público urbano',
-        tipoPublicacion: 'Reportaje',
-        fecha: '2024-01-10',
-        soporte: 'Digital',
-        medio: 'The Guardian',
-        seccion: 'Transporte',
-        autor: 'Sarah Johnson',
-        conductor: '',
-        entrevistado: '',
-        tema: 'Transporte',
-        etiqueta1: 'Urbano',
-        etiqueta2: 'Innovación',
-        link: 'https://ejemplo.com/noticia6',
-        alcance: 'Nacional',
-        cotizacion: 'Baja',
-        tapa: 'No',
-        valoracion: 'Positiva',
-        ejeComunicacional: 'Desarrollo',
-        factorPolitico: 'Medio',
-        crisis: 'No',
-        gestion: 'Municipal',
-        area: 'Transporte',
-        mencion1: 'Alcalde',
-        mencion2: 'Especialista',
-        mencion3: '',
-        mencion4: '',
-        mencion5: '',
-        status: 'error'
+    const loadNewsHistory = async () => {
+      try {
+        setIsLoading(true);
+        const data = await apiService.getNews({ limit: 100 }); // Cargar hasta 100 noticias
+        setNewsHistory(data);
+      } catch (error) {
+        console.error('Error cargando historial de noticias:', error);
+      } finally {
+        setIsLoading(false);
       }
-    ];
+    };
 
-    // Simular carga
-    setTimeout(() => {
-      setNewsHistory(mockData);
-      setIsLoading(false);
-    }, 1000);
+    loadNewsHistory();
   }, []);
+
+  // Filtrar noticias basado en estado y término de búsqueda
+  const filteredNews = newsHistory.filter(news => {
+    const matchesStatus = filterStatus === 'all' || news.status === filterStatus;
+    const matchesSearch = searchTerm === '' || 
+      news.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      news.medio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      news.tema.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesStatus && matchesSearch;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -265,10 +65,13 @@ export default function HistoryPage() {
   };
 
   const getSentimentColor = (sentiment?: string) => {
-    switch (sentiment) {
-      case 'positive':
+    if (!sentiment) return 'text-gray-400';
+    
+    switch (sentiment.toLowerCase()) {
+      case 'muy positiva':
+      case 'positiva':
         return 'text-green-400';
-      case 'negative':
+      case 'negativa':
         return 'text-red-400';
       case 'neutral':
         return 'text-blue-400';
@@ -276,14 +79,6 @@ export default function HistoryPage() {
         return 'text-gray-400';
     }
   };
-
-  const filteredNews = newsHistory.filter(item => {
-    const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
-    const matchesSearch = item.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.medio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.tema?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
 
   return (
     <div className="dashboard-container w-full h-screen relative overflow-x-hidden" style={{ backgroundColor: '#1e293b' }}>
@@ -355,6 +150,9 @@ export default function HistoryPage() {
               <p className="text-white/80 text-lg">
                 Revisa todas las noticias que han sido procesadas por el sistema
               </p>
+              <p className="text-white/60 text-sm mt-2">
+                Total: {newsHistory.length} noticias | Mostrando: {filteredNews.length}
+              </p>
             </div>
 
             {/* Filtros y búsqueda */}
@@ -398,10 +196,12 @@ export default function HistoryPage() {
                 {/* Estadísticas */}
                 <div>
                   <label className="block text-white/90 text-sm font-medium mb-2">
-                    Total de noticias
+                    Estadísticas
                   </label>
-                  <div className="text-2xl font-bold text-white">
-                    {filteredNews.length}
+                  <div className="text-white/80 text-sm">
+                    <div>Procesadas: {newsHistory.filter(n => n.status === 'processed').length}</div>
+                    <div>Pendientes: {newsHistory.filter(n => n.status === 'pending').length}</div>
+                    <div>Errores: {newsHistory.filter(n => n.status === 'error').length}</div>
                   </div>
                 </div>
               </div>
@@ -459,7 +259,7 @@ export default function HistoryPage() {
                             <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.tipoPublicacion}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.fecha}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{new Date(item.fecha).toLocaleDateString()}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
                             <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.soporte}</div>
@@ -556,6 +356,15 @@ export default function HistoryPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {filteredNews.length === 0 && !isLoading && (
+                <div className="text-center py-12">
+                  <div className="text-white/60 text-lg">No se encontraron noticias</div>
+                  <div className="text-white/40 text-sm mt-2">
+                    {searchTerm ? 'Intenta con otros términos de búsqueda' : 'No hay noticias en el historial'}
+                  </div>
                 </div>
               )}
             </div>
