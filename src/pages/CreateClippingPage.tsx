@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/api';
+import type { NewsItem } from '../services/api';
 
 interface EventoTema {
   id: string;
@@ -46,213 +48,110 @@ export default function CreateClippingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const [eventosTemas, setEventosTemas] = useState<EventoTema[]>([
-    { id: '1', nombre: 'Elecciones 2024', descripcion: 'Proceso electoral nacional', color: '#3B82F6', activo: true, etiquetas: ['política', 'nacional', 'elecciones'] },
-    { id: '2', nombre: 'Economía', descripcion: 'Noticias económicas y financieras', color: '#10B981', activo: true, etiquetas: ['finanzas', 'mercado'] },
-    { id: '3', nombre: 'Tecnología', descripcion: 'Innovaciones tecnológicas', color: '#F59E0B', activo: true, etiquetas: ['innovación', 'digital', 'IA'] },
-  ]);
+  const [eventosTemas, setEventosTemas] = useState<EventoTema[]>([]);
+  const [isLoadingTemas, setIsLoadingTemas] = useState(true);
 
-  const [noticias, setNoticias] = useState<Noticia[]>([
-    {
-      id: '1',
-      titulo: 'Nuevas medidas económicas anunciadas por el gobierno',
-      tipoPublicacion: 'Nota',
-      fecha: '2024-01-15',
-      soporte: 'Digital',
-      medio: 'Clarín',
-      seccion: 'Política',
-      autor: 'Juan Pérez',
-      conductor: '',
-      entrevistado: '',
-      tema: 'Economía',
-      etiqueta1: 'Gobierno',
-      etiqueta2: 'Medidas',
-      link: 'https://www.clarin.com/noticia1',
-      alcance: 'Nacional',
-      cotizacion: 'Alta',
-      tapa: 'No',
-      valoracion: 'Positiva',
-      ejeComunicacional: 'Transparencia',
-      factorPolitico: 'Alto',
-      crisis: 'No',
-      gestion: 'Ejecutiva',
-      area: 'Economía',
-      mencion1: 'Presidente',
-      mencion2: 'Ministro',
-      mencion3: '',
-      mencion4: '',
-      mencion5: ''
-    },
-    {
-      id: '2',
-      titulo: 'Avances en tecnología de inteligencia artificial',
-      tipoPublicacion: 'Entrevista',
-      fecha: '2024-01-15',
-      soporte: 'Digital',
-      medio: 'La Nación',
-      seccion: 'Tecnología',
-      autor: 'María García',
-      conductor: 'Carlos López',
-      entrevistado: 'Dr. Ana Silva',
-      tema: 'Tecnología',
-      etiqueta1: 'IA',
-      etiqueta2: 'Innovación',
-      link: 'https://www.lanacion.com/noticia2',
-      alcance: 'Internacional',
-      cotizacion: 'Media',
-      tapa: 'Sí',
-      valoracion: 'Muy Positiva',
-      ejeComunicacional: 'Innovación',
-      factorPolitico: 'Bajo',
-      crisis: 'No',
-      gestion: 'Privada',
-      area: 'Tecnología',
-      mencion1: 'CEO',
-      mencion2: 'Investigador',
-      mencion3: 'Universidad',
-      mencion4: '',
-      mencion5: ''
-    },
-    {
-      id: '3',
-      titulo: 'Incremento en las exportaciones del sector agrícola',
-      tipoPublicacion: 'Reportaje',
-      fecha: '2024-01-14',
-      soporte: 'Impreso',
-      medio: 'Infobae',
-      seccion: 'Economía',
-      autor: 'Roberto Díaz',
-      conductor: '',
-      entrevistado: '',
-      tema: 'Economía',
-      etiqueta1: 'Exportaciones',
-      etiqueta2: 'Campo',
-      link: 'https://www.infobae.com/noticia3',
-      alcance: 'Nacional',
-      cotizacion: 'Alta',
-      tapa: 'No',
-      valoracion: 'Positiva',
-      ejeComunicacional: 'Desarrollo',
-      factorPolitico: 'Medio',
-      crisis: 'No',
-      gestion: 'Mixta',
-      area: 'Agricultura',
-      mencion1: 'Productor',
-      mencion2: 'Exportador',
-      mencion3: 'Ministerio',
-      mencion4: '',
-      mencion5: ''
-    },
-    {
-      id: '4',
-      titulo: 'Debate sobre reforma educativa en el Congreso',
-      tipoPublicacion: 'Nota',
-      fecha: '2024-01-14',
-      soporte: 'Digital',
-      medio: 'Página 12',
-      seccion: 'Educación',
-      autor: 'Laura Martínez',
-      conductor: '',
-      entrevistado: '',
-      tema: 'Educación',
-      etiqueta1: 'Reforma',
-      etiqueta2: 'Congreso',
-      link: 'https://www.pagina12.com/noticia4',
-      alcance: 'Nacional',
-      cotizacion: 'Media',
-      tapa: 'No',
-      valoracion: 'Neutral',
-      ejeComunicacional: 'Transparencia',
-      factorPolitico: 'Alto',
-      crisis: 'No',
-      gestion: 'Legislativa',
-      area: 'Educación',
-      mencion1: 'Diputado',
-      mencion2: 'Senador',
-      mencion3: 'Ministro',
-      mencion4: '',
-      mencion5: ''
-    },
-    {
-      id: '5',
-      titulo: 'Nuevas tecnologías en el sector financiero',
-      tipoPublicacion: 'Reportaje',
-      fecha: '2024-01-13',
-      soporte: 'Digital',
-      medio: 'Ámbito',
-      seccion: 'Finanzas',
-      autor: 'Carlos Ruiz',
-      conductor: '',
-      entrevistado: '',
-      tema: 'Tecnología',
-      etiqueta1: 'Fintech',
-      etiqueta2: 'Bancos',
-      link: 'https://www.ambito.com/noticia5',
-      alcance: 'Nacional',
-      cotizacion: 'Alta',
-      tapa: 'No',
-      valoracion: 'Positiva',
-      ejeComunicacional: 'Innovación',
-      factorPolitico: 'Medio',
-      crisis: 'No',
-      gestion: 'Privada',
-      area: 'Finanzas',
-      mencion1: 'Banco',
-      mencion2: 'Especialista',
-      mencion3: '',
-      mencion4: '',
-      mencion5: ''
-    },
-    {
-      id: '6',
-      titulo: 'Análisis del mercado de valores',
-      tipoPublicacion: 'Nota',
-      fecha: '2024-01-13',
-      soporte: 'Digital',
-      medio: 'Clarín',
-      seccion: 'Economía',
-      autor: 'María González',
-      conductor: '',
-      entrevistado: '',
-      tema: 'Economía',
-      etiqueta1: 'Mercado',
-      etiqueta2: 'Análisis',
-      link: 'https://www.clarin.com/noticia6',
-      alcance: 'Nacional',
-      cotizacion: 'Media',
-      tapa: 'No',
-      valoracion: 'Neutral',
-      ejeComunicacional: 'Transparencia',
-      factorPolitico: 'Bajo',
-      crisis: 'No',
-      gestion: 'Privada',
-      area: 'Economía',
-      mencion1: 'Analista',
-      mencion2: 'Especialista',
-      mencion3: '',
-      mencion4: '',
-      mencion5: ''
-    }
-  ]);
+  // Cargar temas reales de la base de datos
+  useEffect(() => {
+    const loadTemas = async () => {
+      try {
+        setIsLoadingTemas(true);
+        const allNews = await apiService.getNews({ limit: 1000 }); // Cargar todas las noticias
+        
+        // Extraer temas únicos de las noticias
+        const temasUnicos = [...new Set(allNews.map(news => news.tema))].filter(tema => tema && tema.trim() !== '');
+        
+        // Generar colores para cada tema
+        const colores = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
+        
+        const temasFormateados: EventoTema[] = temasUnicos.map((tema, index) => ({
+          id: (index + 1).toString(),
+          nombre: tema,
+          descripcion: `Noticias relacionadas con ${tema}`,
+          color: colores[index % colores.length],
+          activo: true,
+          etiquetas: [tema.toLowerCase()]
+        }));
+        
+        setEventosTemas(temasFormateados);
+      } catch (error) {
+        console.error('Error cargando temas:', error);
+      } finally {
+        setIsLoadingTemas(false);
+      }
+    };
+
+    loadTemas();
+  }, []);
+
+  const [noticias, setNoticias] = useState<Noticia[]>([]);
+  const [isLoadingNoticias, setIsLoadingNoticias] = useState(false);
 
   const [eventoTemaSeleccionado, setEventoTemaSeleccionado] = useState<string>('');
   const [noticiasSeleccionadas, setNoticiasSeleccionadas] = useState<Set<string>>(new Set());
   const [noticiasFiltradas, setNoticiasFiltradas] = useState<Noticia[]>([]);
 
-  // Filtrar noticias cuando cambia el evento/tema seleccionado
+  // Cargar noticias cuando cambia el evento/tema seleccionado
   useEffect(() => {
-    if (eventoTemaSeleccionado) {
-      // Buscar por el nombre del evento/tema, no por el ID
-      const eventoTema = eventosTemas.find(e => e.id === eventoTemaSeleccionado);
-      const filtradas = noticias.filter(noticia => noticia.tema === eventoTema?.nombre);
-      setNoticiasFiltradas(filtradas);
-      // Limpiar selecciones al cambiar de tema
-      setNoticiasSeleccionadas(new Set());
-    } else {
-      setNoticiasFiltradas([]);
-      setNoticiasSeleccionadas(new Set());
-    }
-  }, [eventoTemaSeleccionado, noticias, eventosTemas]);
+    const loadNoticiasPorTema = async () => {
+      if (eventoTemaSeleccionado) {
+        try {
+          setIsLoadingNoticias(true);
+          const eventoTema = eventosTemas.find(e => e.id === eventoTemaSeleccionado);
+          
+          if (eventoTema) {
+            // Cargar todas las noticias y filtrar por tema
+            const allNews = await apiService.getNews({ limit: 1000 });
+            const noticiasDelTema = allNews.filter(noticia => noticia.tema === eventoTema.nombre);
+            
+            // Convertir NewsItem a Noticia
+            const noticiasConvertidas: Noticia[] = noticiasDelTema.map(news => ({
+              id: news.id,
+              titulo: news.titulo,
+              tipoPublicacion: news.tipoPublicacion,
+              fecha: news.fecha,
+              soporte: news.soporte,
+              medio: news.medio,
+              seccion: news.seccion,
+              autor: news.autor,
+              conductor: news.conductor,
+              entrevistado: news.entrevistado,
+              tema: news.tema,
+              etiqueta1: news.etiqueta1,
+              etiqueta2: news.etiqueta2,
+              link: news.link,
+              alcance: news.alcance,
+              cotizacion: news.cotizacion,
+              tapa: news.tapa,
+              valoracion: news.valoracion,
+              ejeComunicacional: news.ejeComunicacional,
+              factorPolitico: news.factorPolitico,
+              crisis: news.crisis,
+              gestion: news.gestion,
+              area: news.area,
+              mencion1: news.mencion1,
+              mencion2: news.mencion2,
+              mencion3: news.mencion3,
+              mencion4: news.mencion4,
+              mencion5: news.mencion5
+            }));
+            
+            setNoticiasFiltradas(noticiasConvertidas);
+            setNoticiasSeleccionadas(new Set());
+          }
+        } catch (error) {
+          console.error('Error cargando noticias por tema:', error);
+        } finally {
+          setIsLoadingNoticias(false);
+        }
+      } else {
+        setNoticiasFiltradas([]);
+        setNoticiasSeleccionadas(new Set());
+      }
+    };
+
+    loadNoticiasPorTema();
+  }, [eventoTemaSeleccionado, eventosTemas]);
 
   const handleEventoTemaChange = (eventoId: string) => {
     setEventoTemaSeleccionado(eventoId);
@@ -410,8 +309,15 @@ export default function CreateClippingPage() {
           {/* Paso 1: Seleccionar Evento/Tema */}
           <div className="mt-16 mb-40">
             <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Paso 1: Selecciona un Evento/Tema</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {eventosTemas.filter(evento => evento.activo).map((evento) => (
+            
+            {isLoadingTemas ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span className="ml-3 text-white/80">Cargando temas...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {eventosTemas.filter(evento => evento.activo).map((evento) => (
                 <button
                   key={evento.id}
                   onClick={() => handleEventoTemaChange(evento.id)}
@@ -457,7 +363,8 @@ export default function CreateClippingPage() {
                   </div>
                 </button>
               ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Paso 2: Seleccionar Noticias */}
@@ -521,7 +428,12 @@ export default function CreateClippingPage() {
                 </div>
               </div>
 
-              {noticiasFiltradas.length > 0 ? (
+                             {isLoadingNoticias ? (
+                 <div className="flex justify-center items-center py-12">
+                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                   <span className="ml-3 text-white/80">Cargando noticias...</span>
+                 </div>
+               ) : noticiasFiltradas.length > 0 ? (
                 <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="min-w-full">
@@ -682,11 +594,11 @@ export default function CreateClippingPage() {
                     </table>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-white/60 text-lg">No hay noticias disponibles para este evento/tema</p>
-                </div>
-              )}
+                             ) : (
+                 <div className="text-center py-12">
+                   <p className="text-white/60 text-lg">No hay noticias disponibles para este evento/tema</p>
+                 </div>
+               )}
             </div>
           )}
 
