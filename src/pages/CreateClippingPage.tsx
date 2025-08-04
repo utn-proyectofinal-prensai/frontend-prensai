@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 import type { NewsItem } from '../services/api';
+import * as XLSX from 'xlsx';
 
 interface EventoTema {
   id: string;
@@ -186,9 +187,60 @@ export default function CreateClippingPage() {
       noticiasSeleccionadas.has(noticia.id)
     );
 
-    // Aquí iría la lógica para generar el clipping
-    console.log('Generando clipping con:', noticiasDelClipping);
-    alert(`Clipping generado con ${noticiasDelClipping.length} noticias seleccionadas.`);
+    // Generar Excel con las noticias seleccionadas
+    try {
+      // Preparar los datos para el Excel (mismo formato que noticias.xlsx)
+      const excelData = noticiasDelClipping.map(noticia => ({
+        'TITULO': noticia.titulo,
+        'TIPO PUBLICACION': noticia.tipoPublicacion,
+        'FECHA': noticia.fecha,
+        'SOPORTE': noticia.soporte,
+        'MEDIO': noticia.medio,
+        'SECCION': noticia.seccion,
+        'AUTOR': noticia.autor,
+        'CONDUCTOR': noticia.conductor,
+        'ENTREVISTADO': noticia.entrevistado,
+        'TEMA': noticia.tema,
+        'ETIQUETA_1': noticia.etiqueta1,
+        'ETIQUETA_2': noticia.etiqueta2,
+        'LINK': noticia.link,
+        'ALCANCE': noticia.alcance,
+        'COTIZACION': noticia.cotizacion,
+        'TAPA': noticia.tapa,
+        'VALORACION': noticia.valoracion,
+        'EJE COMUNICACIONAL': noticia.ejeComunicacional,
+        'FACTOR POLITICO': noticia.factorPolitico,
+        'CRISIS': noticia.crisis,
+        'GESTION': noticia.gestion,
+        'AREA': noticia.area,
+        'MENCION_1': noticia.mencion1,
+        'MENCION_2': noticia.mencion2,
+        'MENCION_3': noticia.mencion3,
+        'MENCION_4': noticia.mencion4,
+        'MENCION_5': noticia.mencion5
+      }));
+
+      // Crear el workbook y worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Agregar el worksheet al workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Noticias');
+
+      // Generar el nombre del archivo con fecha y tema
+      const eventoTema = getEventoTemaById(eventoTemaSeleccionado);
+      const fecha = new Date().toISOString().split('T')[0];
+      const nombreArchivo = `clipping_${eventoTema?.nombre?.replace(/\s+/g, '_')}_${fecha}.xlsx`;
+
+      // Descargar el archivo
+      XLSX.writeFile(workbook, nombreArchivo);
+
+      console.log('Excel generado con éxito:', nombreArchivo);
+      alert(`Excel generado con ${noticiasDelClipping.length} noticias seleccionadas.\nArchivo: ${nombreArchivo}`);
+    } catch (error) {
+      console.error('Error generando Excel:', error);
+      alert('Error al generar el archivo Excel. Por favor, intenta nuevamente.');
+    }
   };
 
   const handleGenerarMetricas = () => {
