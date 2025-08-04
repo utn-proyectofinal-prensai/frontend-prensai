@@ -43,6 +43,19 @@ export interface DashboardStats {
   noticiasPorMedio: { medio: string; count: number }[];
 }
 
+export interface ActiveMention {
+  position: number;
+  name: string;
+}
+
+export interface Mention {
+  id: number;
+  position: number;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 // Función helper para hacer requests
 async function apiRequest<T>(
   endpoint: string,
@@ -152,6 +165,65 @@ export const apiService = {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+    });
+  },
+
+  // Gestión de menciones activas
+  async getActiveMentions(): Promise<{ activeMentions: ActiveMention[] }> {
+    return apiRequest<{ activeMentions: ActiveMention[] }>('/mentions/active');
+  },
+
+  async updateActiveMentions(mentions: ActiveMention[]): Promise<{
+    message: string;
+    activeMentions: ActiveMention[];
+  }> {
+    return apiRequest<{
+      message: string;
+      activeMentions: ActiveMention[];
+    }>('/mentions/active', {
+      method: 'PUT',
+      body: JSON.stringify({ mentions }),
+    });
+  },
+
+  async getAllMentions(): Promise<{ mentions: Mention[] }> {
+    return apiRequest<{ mentions: Mention[] }>('/mentions/all');
+  },
+
+  // CRUD de menciones individuales
+  async createMention(name: string): Promise<{
+    message: string;
+    mention: Mention;
+  }> {
+    return apiRequest<{
+      message: string;
+      mention: Mention;
+    }>('/mentions', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+  },
+
+  async updateMention(id: string, name: string): Promise<{
+    message: string;
+    mention: Mention;
+  }> {
+    return apiRequest<{
+      message: string;
+      mention: Mention;
+    }>(`/mentions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name }),
+    });
+  },
+
+  async deleteMention(id: string): Promise<{
+    message: string;
+  }> {
+    return apiRequest<{
+      message: string;
+    }>(`/mentions/${id}`, {
+      method: 'DELETE',
     });
   },
 };

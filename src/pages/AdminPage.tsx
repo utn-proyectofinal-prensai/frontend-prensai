@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/api';
+import type { ActiveMention, Mention } from '../services/api';
 
 interface EventoTema {
   id: string;
@@ -31,19 +33,42 @@ export default function AdminPage() {
   ]);
   
   // Estados para Menciones
-  const [menciones, setMenciones] = useState<Mencion[]>([
-    { id: '1', nombre: 'Juan Pérez', activo: true, numeroMencion: 1 },
-    { id: '2', nombre: 'María García', activo: true, numeroMencion: 2 },
-    { id: '3', nombre: 'Carlos López', activo: true, numeroMencion: 3 },
-    { id: '4', nombre: 'Ana Silva', activo: false },
-    { id: '5', nombre: 'Roberto Díaz', activo: false },
-    { id: '6', nombre: 'Laura Martínez', activo: false },
-    { id: '7', nombre: 'Carlos Ruiz', activo: false },
-    { id: '8', nombre: 'María González', activo: false },
-  ]);
+  const [menciones, setMenciones] = useState<Mencion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Estados para drag and drop
   const [draggedMencion, setDraggedMencion] = useState<string | null>(null);
+
+  // Cargar menciones desde la API
+  useEffect(() => {
+    const loadMentions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Cargar todas las menciones
+        const { mentions } = await apiService.getAllMentions();
+        
+        // Convertir el formato de la API al formato del componente
+        const mencionesFormateadas: Mencion[] = mentions.map(mention => ({
+          id: mention.id.toString(),
+          nombre: mention.name,
+          activo: mention.isActive,
+          numeroMencion: mention.isActive ? mention.position : undefined
+        }));
+        
+        setMenciones(mencionesFormateadas);
+      } catch (err) {
+        console.error('Error cargando menciones:', err);
+        setError('Error al cargar las menciones');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMentions();
+  }, []);
 
   // Estados para formularios
   const [showEventoForm, setShowEventoForm] = useState(false);
@@ -96,35 +121,55 @@ export default function AdminPage() {
   };
 
   // Funciones para Menciones
-  const handleMencionSubmit = (e: React.FormEvent) => {
+  const handleMencionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+    const nombre = formData.get('nombre') as string;
     
-    if (editingMencion) {
-      // Editando - mantener el número de mención si existe
-      const nuevaMencion: Mencion = {
-        id: editingMencion.id,
-        nombre: formData.get('nombre') as string,
-        activo: editingMencion.activo,
-        numeroMencion: editingMencion.numeroMencion
-      };
-      setMenciones(menciones.map(m => m.id === editingMencion.id ? nuevaMencion : m));
-    } else {
-      // Nueva mención - agregar como inactiva (sin número)
-      const nuevaMencion: Mencion = {
-        id: Date.now().toString(),
-        nombre: formData.get('nombre') as string,
-        activo: false
-      };
-      setMenciones([...menciones, nuevaMencion]);
+    try {
+      if (editingMencion) {
+        // Editando mención existente
+        await apiService.updateMention(editingMencion.id, nombre);
+      } else {
+        // Creando nueva mención
+        await apiService.createMention(nombre);
+      }
+      
+      // Recargar menciones desde la API para asegurar sincronización
+      const { mentions } = await apiService.getAllMentions();
+      const mencionesFormateadas: Mencion[] = mentions.map(mention => ({
+        id: mention.id.toString(),
+        nombre: mention.name,
+        activo: mention.isActive,
+        numeroMencion: mention.isActive ? mention.position : undefined
+      }));
+      setMenciones(mencionesFormateadas);
+      
+      setShowMencionForm(false);
+      setEditingMencion(null);
+    } catch (error) {
+      console.error('❌ Error guardando mención:', error);
+      alert('Error al guardar la mención. Intenta nuevamente.');
     }
-    
-    setShowMencionForm(false);
-    setEditingMencion(null);
   };
 
-  const handleMencionDelete = (id: string) => {
-    setMenciones(menciones.filter(m => m.id !== id));
+  const handleMencionDelete = async (id: string) => {
+    try {
+      await apiService.deleteMention(id);
+      
+      // Recargar menciones desde la API
+      const { mentions } = await apiService.getAllMentions();
+      const mencionesFormateadas: Mencion[] = mentions.map(mention => ({
+        id: mention.id.toString(),
+        nombre: mention.name,
+        activo: mention.isActive,
+        numeroMencion: mention.isActive ? mention.position : undefined
+      }));
+      setMenciones(mencionesFormateadas);
+    } catch (error) {
+      console.error('❌ Error eliminando mención:', error);
+      alert('Error al eliminar la mención. Intenta nuevamente.');
+    }
   };
 
   const handleMencionEdit = (mencion: Mencion) => {
@@ -143,7 +188,7 @@ export default function AdminPage() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e: React.DragEvent, targetActivo: boolean) => {
+  const handleDrop = async (e: React.DragEvent, targetActivo: boolean) => {
     e.preventDefault();
     if (!draggedMencion) return;
 
@@ -155,24 +200,64 @@ export default function AdminPage() {
       return;
     }
 
-    if (targetActivo) {
-      // Moviendo a activo - asignar el primer número disponible
-      const numerosUsados = menciones.filter(m => m.activo && m.numeroMencion).map(m => m.numeroMencion!);
-      const numerosDisponibles = [1, 2, 3, 4, 5].filter(num => !numerosUsados.includes(num));
-      const numeroAsignar = numerosDisponibles[0];
+    try {
+      let nuevasMenciones: Mencion[];
 
-      setMenciones(menciones.map(m => 
-        m.id === draggedMencion 
-          ? { ...m, activo: true, numeroMencion: numeroAsignar }
-          : m
-      ));
-    } else {
-      // Moviendo a inactivo - remover número de mención
-      setMenciones(menciones.map(m => 
-        m.id === draggedMencion 
-          ? { ...m, activo: false, numeroMencion: undefined }
-          : m
-      ));
+      if (targetActivo) {
+        // Moviendo a activo - asignar el primer número disponible
+        const numerosUsados = menciones.filter(m => m.activo && m.numeroMencion).map(m => m.numeroMencion!);
+        const numerosDisponibles = [1, 2, 3, 4, 5].filter(num => !numerosUsados.includes(num));
+        const numeroAsignar = numerosDisponibles[0];
+
+        nuevasMenciones = menciones.map(m => 
+          m.id === draggedMencion 
+            ? { ...m, activo: true, numeroMencion: numeroAsignar }
+            : m
+        );
+      } else {
+        // Moviendo a inactivo - remover número de mención
+        nuevasMenciones = menciones.map(m => 
+          m.id === draggedMencion 
+            ? { ...m, activo: false, numeroMencion: undefined }
+            : m
+        );
+      }
+
+      // Actualizar estado local primero
+      setMenciones(nuevasMenciones);
+
+      // Preparar datos para la API - enviar TODAS las menciones activas
+      const mencionesActivasParaAPI = nuevasMenciones
+        .filter(m => m.activo)
+        .map(m => ({
+          position: m.numeroMencion!,
+          name: m.nombre
+        }));
+
+      // Guardar en la API
+      await apiService.updateActiveMentions(mencionesActivasParaAPI);
+      
+      console.log('✅ Menciones activas actualizadas en la base de datos');
+    } catch (error) {
+      console.error('❌ Error actualizando menciones:', error);
+      alert('Error al guardar los cambios. Intenta nuevamente.');
+      
+      // Revertir cambios locales en caso de error
+      const loadMentions = async () => {
+        try {
+          const { mentions } = await apiService.getAllMentions();
+          const mencionesFormateadas: Mencion[] = mentions.map(mention => ({
+            id: mention.id.toString(),
+            nombre: mention.name,
+            activo: mention.isActive,
+            numeroMencion: mention.isActive ? mention.position : undefined
+          }));
+          setMenciones(mencionesFormateadas);
+        } catch (err) {
+          console.error('Error recargando menciones:', err);
+        }
+      };
+      loadMentions();
     }
     
     setDraggedMencion(null);
@@ -364,6 +449,23 @@ export default function AdminPage() {
             </div>
 
             {/* Sistema de Drag and Drop */}
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-white/80">Cargando menciones...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="text-red-400 mb-4">⚠️</div>
+                <p className="text-white/80 mb-4">{error}</p>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Menciones en Uso (máximo 5) */}
               <div 
@@ -478,6 +580,7 @@ export default function AdminPage() {
                 )}
               </div>
             </div>
+            )}
 
             {/* Instrucciones */}
             <div className="mt-8 p-6 bg-blue-500/10 backdrop-blur-sm rounded-2xl border border-blue-500/20">
