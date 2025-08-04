@@ -50,9 +50,19 @@ export interface ActiveMention {
 
 export interface Mention {
   id: number;
-  position: number;
+  position: number | null; // Changed to allow null
   name: string;
   isActive: boolean;
+  createdAt: string;
+}
+
+export interface Event {
+  id: number;
+  name: string;
+  description: string;
+  color: string;
+  isActive: boolean;
+  tags: string[];
   createdAt: string;
 }
 
@@ -223,6 +233,46 @@ export const apiService = {
     return apiRequest<{
       message: string;
     }>(`/mentions/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Eventos/Temas
+  async getAllEvents(): Promise<{ events: Event[] }> {
+    return apiRequest<{ events: Event[] }>('/events');
+  },
+
+  async getActiveEvents(): Promise<{ activeEvents: Event[] }> {
+    return apiRequest<{ activeEvents: Event[] }>('/events/active');
+  },
+
+  async createEvent(data: {
+    name: string;
+    description?: string;
+    color?: string;
+    tags?: string[];
+  }): Promise<{ message: string; event: Event }> {
+    return apiRequest<{ message: string; event: Event }>('/events', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateEvent(id: string, data: {
+    name: string;
+    description?: string;
+    color?: string;
+    isActive?: boolean;
+    tags?: string[];
+  }): Promise<{ message: string; event: Event }> {
+    return apiRequest<{ message: string; event: Event }>(`/events/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteEvent(id: string): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>(`/events/${id}`, {
       method: 'DELETE',
     });
   },

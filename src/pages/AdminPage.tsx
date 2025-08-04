@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
-import type { ActiveMention, Mention } from '../services/api';
+import type { ActiveMention, Mention, Event } from '../services/api';
 
 interface EventoTema {
   id: string;
@@ -17,7 +17,7 @@ interface Mencion {
   id: string;
   nombre: string;
   activo: boolean;
-  numeroMencion?: number; // Número fijo de mención (1-5)
+  numeroMencion?: number | null; // Número fijo de mención (1-5)
 }
 
 export default function AdminPage() {
@@ -26,11 +26,9 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'eventos' | 'menciones'>('eventos');
   
   // Estados para Eventos/Temas
-  const [eventos, setEventos] = useState<EventoTema[]>([
-    { id: '1', nombre: 'Elecciones 2024', descripcion: 'Proceso electoral nacional', color: '#3B82F6', activo: true, etiquetas: ['política', 'nacional', 'elecciones'] },
-    { id: '2', nombre: 'Economía', descripcion: 'Noticias económicas y financieras', color: '#10B981', activo: true, etiquetas: ['finanzas', 'mercado'] },
-    { id: '3', nombre: 'Tecnología', descripcion: 'Innovaciones tecnológicas', color: '#F59E0B', activo: true, etiquetas: ['innovación', 'digital', 'IA'] },
-  ]);
+  const [eventos, setEventos] = useState<EventoTema[]>([]);
+  const [eventosLoading, setEventosLoading] = useState(true);
+  const [eventosError, setEventosError] = useState<string | null>(null);
   
   // Estados para Menciones
   const [menciones, setMenciones] = useState<Mencion[]>([]);
@@ -70,6 +68,38 @@ export default function AdminPage() {
     loadMentions();
   }, []);
 
+  // Cargar eventos desde la API
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        setEventosLoading(true);
+        setEventosError(null);
+        
+        // Cargar todos los eventos
+        const { events } = await apiService.getAllEvents();
+        
+        // Convertir el formato de la API al formato del componente
+        const eventosFormateados: EventoTema[] = events.map(event => ({
+          id: event.id.toString(),
+          nombre: event.name,
+          descripcion: event.description,
+          color: event.color,
+          activo: event.isActive,
+          etiquetas: event.tags || []
+        }));
+        
+        setEventos(eventosFormateados);
+      } catch (err) {
+        console.error('Error cargando eventos:', err);
+        setEventosError('Error al cargar los eventos');
+      } finally {
+        setEventosLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, []);
+
   // Estados para formularios
   const [showEventoForm, setShowEventoForm] = useState(false);
   const [showMencionForm, setShowMencionForm] = useState(false);
@@ -83,7 +113,7 @@ export default function AdminPage() {
   ];
 
   // Funciones para Eventos/Temas
-  const handleEventoSubmit = (e: React.FormEvent) => {
+  const handleEventoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const etiqueta1 = (formData.get('etiqueta1') as string)?.trim() || '';
@@ -92,27 +122,64 @@ export default function AdminPage() {
     
     const etiquetas = [etiqueta1, etiqueta2, etiqueta3].filter(tag => tag.length > 0);
     
-    const nuevoEvento: EventoTema = {
-      id: editingEvento?.id || Date.now().toString(),
-      nombre: formData.get('nombre') as string,
-      descripcion: (formData.get('descripcion') as string) || '',
-      color: formData.get('color') as string,
-      activo: true,
-      etiquetas: editingEvento?.etiquetas || etiquetas
-    };
-
-    if (editingEvento) {
-      setEventos(eventos.map(e => e.id === editingEvento.id ? nuevoEvento : e));
-    } else {
-      setEventos([...eventos, nuevoEvento]);
+    try {
+      if (editingEvento) {
+        // Editando evento existente
+        await apiService.updateEvent(editingEvento.id, {
+          name: formData.get('nombre') as string,
+          description: (formData.get('descripcion') as string) || '',
+          color: formData.get('color') as string,
+          tags: etiquetas
+        });
+      } else {
+        // Creando nuevo evento
+        await apiService.createEvent({
+          name: formData.get('nombre') as string,
+          description: (formData.get('descripcion') as string) || '',
+          color: formData.get('color') as string,
+          tags: etiquetas
+        });
+      }
+      
+      // Recargar eventos desde la API para asegurar sincronización
+      const { events } = await apiService.getAllEvents();
+      const eventosFormateados: EventoTema[] = events.map(event => ({
+        id: event.id.toString(),
+        nombre: event.name,
+        descripcion: event.description,
+        color: event.color,
+        activo: event.isActive,
+        etiquetas: event.tags || []
+      }));
+      setEventos(eventosFormateados);
+      
+      setShowEventoForm(false);
+      setEditingEvento(null);
+    } catch (error) {
+      console.error('❌ Error guardando evento:', error);
+      alert('Error al guardar el evento. Intenta nuevamente.');
     }
-    
-    setShowEventoForm(false);
-    setEditingEvento(null);
   };
 
-  const handleEventoDelete = (id: string) => {
-    setEventos(eventos.filter(e => e.id !== id));
+  const handleEventoDelete = async (id: string) => {
+    try {
+      await apiService.deleteEvent(id);
+      
+      // Recargar eventos desde la API
+      const { events } = await apiService.getAllEvents();
+      const eventosFormateados: EventoTema[] = events.map(event => ({
+        id: event.id.toString(),
+        nombre: event.name,
+        descripcion: event.description,
+        color: event.color,
+        activo: event.isActive,
+        etiquetas: event.tags || []
+      }));
+      setEventos(eventosFormateados);
+    } catch (error) {
+      console.error('❌ Error eliminando evento:', error);
+      alert('Error al eliminar el evento. Intenta nuevamente.');
+    }
   };
 
   const handleEventoEdit = (evento: EventoTema) => {
@@ -375,9 +442,27 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Lista de eventos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {eventos.map((evento) => (
+            {/* Loading y Error states */}
+            {eventosLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-white/80">Cargando eventos...</p>
+              </div>
+            ) : eventosError ? (
+              <div className="text-center py-12">
+                <div className="text-red-400 mb-4">⚠️</div>
+                <p className="text-white/80 mb-4">{eventosError}</p>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : (
+              /* Lista de eventos */
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {eventos.map((evento) => (
                 <div key={evento.id} className="bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
@@ -431,6 +516,7 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
