@@ -66,6 +66,22 @@ export interface Event {
   createdAt: string;
 }
 
+export interface SoporteMetric {
+  soporte: string;
+  cantidad: number;
+  porcentaje: number;
+}
+
+export interface ClippingMetrics {
+  totalNoticias: number;
+  soporte: SoporteMetric[];
+  resumen: {
+    soportesUnicos: number;
+    soporteMasFrecuente: string;
+    porcentajeSoporteMasFrecuente: number;
+  };
+}
+
 // Función helper para hacer requests
 async function apiRequest<T>(
   endpoint: string,
@@ -274,6 +290,17 @@ export const apiService = {
   async deleteEvent(id: string): Promise<{ message: string }> {
     return apiRequest<{ message: string }>(`/events/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  // Métricas de clipping
+  async calculateClippingMetrics(newsIds: string[]): Promise<{
+    message: string;
+    metricas: ClippingMetrics;
+  }> {
+    return apiRequest<{ message: string; metricas: ClippingMetrics }>('/news/metrics', {
+      method: 'POST',
+      body: JSON.stringify({ newsIds }),
     });
   },
 };

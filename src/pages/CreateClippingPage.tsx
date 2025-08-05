@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
-import type { NewsItem } from '../services/api';
+import type { NewsItem, ClippingMetrics } from '../services/api';
 import * as XLSX from 'xlsx';
+import MetricsCharts from '../components/MetricsCharts';
 
 interface EventoTema {
   id: string;
@@ -91,6 +92,8 @@ export default function CreateClippingPage() {
   const [eventoTemaSeleccionado, setEventoTemaSeleccionado] = useState<string>('');
   const [noticiasSeleccionadas, setNoticiasSeleccionadas] = useState<Set<string>>(new Set());
   const [noticiasFiltradas, setNoticiasFiltradas] = useState<Noticia[]>([]);
+  const [metricas, setMetricas] = useState<ClippingMetrics | null>(null);
+  const [isLoadingMetricas, setIsLoadingMetricas] = useState(false);
 
   // Cargar noticias cuando cambia el evento/tema seleccionado
   useEffect(() => {
@@ -243,19 +246,24 @@ export default function CreateClippingPage() {
     }
   };
 
-  const handleGenerarMetricas = () => {
+  const handleGenerarMetricas = async () => {
     if (noticiasSeleccionadas.size === 0) {
       alert('Por favor selecciona al menos una noticia para generar las métricas.');
       return;
     }
 
-    const noticiasDelClipping = noticiasFiltradas.filter(noticia => 
-      noticiasSeleccionadas.has(noticia.id)
-    );
-
-    // Aquí iría la lógica para generar métricas
-    console.log('Generando métricas con:', noticiasDelClipping);
-    alert(`Métricas generadas con ${noticiasDelClipping.length} noticias seleccionadas.`);
+    try {
+      setIsLoadingMetricas(true);
+      const newsIds = Array.from(noticiasSeleccionadas);
+      const response = await apiService.calculateClippingMetrics(newsIds);
+      setMetricas(response.metricas);
+      console.log('Métricas calculadas:', response.metricas);
+    } catch (error) {
+      console.error('Error generando métricas:', error);
+      alert('Error al generar las métricas. Por favor, intenta nuevamente.');
+    } finally {
+      setIsLoadingMetricas(false);
+    }
   };
 
   const handleGenerarInforme = () => {
@@ -733,6 +741,39 @@ export default function CreateClippingPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Visualización de Métricas */}
+              {metricas && (
+                <div className="mt-8">
+                  <h4 className="text-lg font-bold text-white mb-4 drop-shadow-md">
+                    📊 Métricas Calculadas
+                  </h4>
+                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
+                    <MetricsCharts metricas={metricas} />
+                    
+                    {/* Botón para descargar PDF */}
+                    <div className="flex justify-center mt-6">
+                      <button
+                        onClick={() => {
+                          // TODO: Implementar descarga de PDF
+                          alert('Funcionalidad de descarga de PDF próximamente disponible');
+                        }}
+                        className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      >
+                        📄 Descargar PDF con Métricas
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Loading state para métricas */}
+              {isLoadingMetricas && (
+                <div className="mt-8 flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                  <span className="ml-3 text-white/80">Calculando métricas...</span>
+                </div>
+              )}
             </div>
           )}
 
