@@ -61,7 +61,7 @@ export interface Event {
   name: string;
   description: string;
   color: string;
-  isActive: boolean;
+  is_active: boolean;
   tags: string[];
   createdAt: string;
 }
@@ -247,7 +247,7 @@ export const apiService = {
       mention: Mention;
     }>('/mentions', {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ mention: { name } }),
     });
   },
 
@@ -260,7 +260,7 @@ export const apiService = {
       mention: Mention;
     }>(`/mentions/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ mention: { name } }),
     });
   },
 
@@ -288,10 +288,11 @@ export const apiService = {
     description?: string;
     color?: string;
     tags?: string[];
+    is_active?: boolean;
   }): Promise<{ message: string; event: Event }> {
     return apiRequest<{ message: string; event: Event }>('/events', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ event: data }),
     });
   },
 
@@ -299,12 +300,12 @@ export const apiService = {
     name: string;
     description?: string;
     color?: string;
-    isActive?: boolean;
+    is_active?: boolean;
     tags?: string[];
   }): Promise<{ message: string; event: Event }> {
     return apiRequest<{ message: string; event: Event }>(`/events/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ event: data }),
     });
   },
 

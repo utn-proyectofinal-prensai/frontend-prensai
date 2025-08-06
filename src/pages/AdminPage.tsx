@@ -84,7 +84,7 @@ export default function AdminPage() {
           nombre: event.name,
           descripcion: event.description,
           color: event.color,
-          activo: event.isActive,
+          activo: event.is_active,
           etiquetas: event.tags || []
         }));
         
@@ -137,7 +137,8 @@ export default function AdminPage() {
           name: formData.get('nombre') as string,
           description: (formData.get('descripcion') as string) || '',
           color: formData.get('color') as string,
-          tags: etiquetas
+          tags: etiquetas,
+          is_active: true
         });
       }
       
@@ -148,7 +149,7 @@ export default function AdminPage() {
         nombre: event.name,
         descripcion: event.description,
         color: event.color,
-        activo: event.isActive,
+        activo: event.is_active,
         etiquetas: event.tags || []
       }));
       setEventos(eventosFormateados);
@@ -172,7 +173,7 @@ export default function AdminPage() {
         nombre: event.name,
         descripcion: event.description,
         color: event.color,
-        activo: event.isActive,
+        activo: event.is_active,
         etiquetas: event.tags || []
       }));
       setEventos(eventosFormateados);
@@ -723,18 +724,18 @@ export default function AdminPage() {
                   Color
                 </label>
                 <div className="grid grid-cols-5 gap-2">
-                  {colores.map((color) => (
+                  {colores.map((color, index) => (
                     <label key={color} className="cursor-pointer">
                       <input
                         type="radio"
                         name="color"
                         value={color}
-                        defaultChecked={editingEvento?.color === color}
+                        defaultChecked={editingEvento?.color === color || (index === 0 && !editingEvento)}
                         className="hidden"
                       />
                       <div 
                         className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          editingEvento?.color === color ? 'border-white scale-110' : 'border-white/30'
+                          editingEvento?.color === color || (index === 0 && !editingEvento) ? 'border-white scale-110' : 'border-white/30'
                         }`}
                         style={{ backgroundColor: color }}
                       ></div>
