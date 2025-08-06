@@ -6,7 +6,7 @@ export default function LoginPage() {
   const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: ''
   });
 
@@ -23,7 +23,7 @@ export default function LoginPage() {
     if (error) {
       clearError();
     }
-  }, [formData.username, formData.password, error, clearError]);
+  }, [formData.email, formData.password, error, clearError]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,7 +35,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await login(formData.username, formData.password);
+    const success = await login(formData.email, formData.password);
     if (success) {
       navigate('/');
     }
@@ -89,22 +89,22 @@ export default function LoginPage() {
           {/* Formulario mejorado */}
           <form onSubmit={handleSubmit} className="space-y-12">
             <div className="space-y-3 animate-fade-in" style={{animationDelay: '0.4s'}}>
-              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-3">
-                Usuario
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-3">
+                Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                   </svg>
                 </div>
                 <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="Ej: agustin"
+                  placeholder="admin@prensai.com"
                   className="w-4/5 pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm input-focus text-lg"
                   required
                 />

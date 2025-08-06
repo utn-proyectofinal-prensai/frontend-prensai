@@ -89,11 +89,21 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  // Obtener el token del localStorage
+  const token = localStorage.getItem('token');
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...options.headers as Record<string, string>,
+  };
+
+  // Agregar el token de autorización si existe
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
   const config: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
     ...options,
   };
 
@@ -101,6 +111,13 @@ async function apiRequest<T>(
     const response = await fetch(url, config);
     
     if (!response.ok) {
+      if (response.status === 401) {
+        // Token inválido, limpiar localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        throw new Error('Sesión expirada');
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
@@ -159,10 +176,14 @@ export const apiService = {
     formData.append('excel', file);
 
     const url = `${API_BASE_URL}/news/import`;
+    const token = localStorage.getItem('token');
     
     try {
       const response = await fetch(url, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
 
@@ -178,10 +199,10 @@ export const apiService = {
   },
 
   // Autenticación
-  async login(username: string, password: string): Promise<{ token: string }> {
+  async login(email: string, password: string): Promise<{ token: string }> {
     return apiRequest<{ token: string }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     });
   },
 
