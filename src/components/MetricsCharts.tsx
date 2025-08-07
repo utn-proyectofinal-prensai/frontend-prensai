@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,6 +11,8 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import type { ClippingMetrics, MetricItem } from '../services/api';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 ChartJS.register(
   CategoryScale,
@@ -30,11 +32,261 @@ type MetricType = 'soporte' | 'medio' | 'tema' | 'valoracion' | 'ejeComunicacion
 
 export default function MetricsCharts({ metricas }: MetricsChartsProps) {
   const [activeMetric, setActiveMetric] = useState<MetricType>('soporte');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const metricsRef = useRef<HTMLDivElement>(null);
+  const valoracionChartRef = useRef<HTMLDivElement>(null);
+  const mencionesChartRef = useRef<HTMLDivElement>(null);
+  const metricsChartRef = useRef<HTMLDivElement>(null);
   
   const metricTypes: MetricType[] = ['soporte', 'medio', 'tema', 'valoracion', 'ejeComunicacional', 'factorPolitico', 'gestion', 'area'];
   
   const getCurrentMetrics = () => {
     return metricas[activeMetric] || [];
+  };
+
+  const generatePDF = async () => {
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      let yPosition = margin;
+
+      // Título
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Reporte de Métricas del Clipping', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 20;
+
+      // Fecha
+      pdf.setFontSize(12);
+      pdf.setTextColor(100, 100, 100);
+      const fecha = new Date().toLocaleDateString('es-ES');
+      pdf.text(`Generado el: ${fecha}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 30;
+
+              // Resumen
+        if (metricas?.resumen) {
+          pdf.setFontSize(16);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text('Resumen General', margin, yPosition);
+          yPosition += 15;
+
+          pdf.setFontSize(12);
+          pdf.setTextColor(60, 60, 60);
+          pdf.text(`Total de noticias: ${metricas.totalNoticias}`, margin, yPosition);
+          yPosition += 10;
+          pdf.text(`Soportes únicos: ${metricas.resumen.soportesUnicos}`, margin, yPosition);
+          yPosition += 10;
+          pdf.text(`Medios únicos: ${metricas.resumen.mediosUnicos}`, margin, yPosition);
+          yPosition += 10;
+          pdf.text(`Temas únicos: ${metricas.resumen.temasUnicos}`, margin, yPosition);
+          yPosition += 20;
+        }
+
+      // Análisis de Valoración
+      if (metricas?.valoracionAnalysis) {
+        const valoracion = metricas.valoracionAnalysis;
+        
+        // Verificar si necesitamos nueva página
+        if (yPosition > pageHeight - 100) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(16);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Análisis de Valoración', margin, yPosition);
+        yPosition += 15;
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(60, 60, 60);
+        
+        // Tabla de valoraciones
+        const valoracionData = [
+          ['Tipo', 'Cantidad', 'Porcentaje'],
+          ['Negativas', valoracion.negativas.cantidad.toString(), `${valoracion.negativas.porcentaje.toFixed(1)}%`],
+          ['Positivas', valoracion.positivas.cantidad.toString(), `${valoracion.positivas.porcentaje.toFixed(1)}%`],
+          ['Neutras', valoracion.neutras.cantidad.toString(), `${valoracion.neutras.porcentaje.toFixed(1)}%`],
+          ['No Especificadas', valoracion.noEspecificadas.cantidad.toString(), `${valoracion.noEspecificadas.porcentaje.toFixed(1)}%`]
+        ];
+
+        // Dibujar tabla
+        const tableWidth = pageWidth - 2 * margin;
+        const colWidth = tableWidth / 3;
+        const rowHeight = 12;
+
+        // Encabezados
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(margin, yPosition - 5, tableWidth, rowHeight, 'F');
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(11);
+        pdf.text('Tipo', margin + 5, yPosition + 3);
+        pdf.text('Cantidad', margin + colWidth + 5, yPosition + 3);
+        pdf.text('Porcentaje', margin + 2 * colWidth + 5, yPosition + 3);
+        yPosition += rowHeight;
+
+        // Datos
+        pdf.setFontSize(10);
+        for (let i = 1; i < valoracionData.length; i++) {
+          if (yPosition > pageHeight - 50) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          
+          pdf.setTextColor(60, 60, 60);
+          pdf.text(valoracionData[i][0], margin + 5, yPosition + 3);
+          pdf.text(valoracionData[i][1], margin + colWidth + 5, yPosition + 3);
+          pdf.text(valoracionData[i][2], margin + 2 * colWidth + 5, yPosition + 3);
+          yPosition += rowHeight;
+        }
+
+        // Estado crítico
+        yPosition += 10;
+        pdf.setFontSize(12);
+        if (valoracion.esTemaCritico) {
+          pdf.setTextColor(200, 0, 0);
+        } else {
+          pdf.setTextColor(0, 150, 0);
+        }
+        pdf.text(`Estado del tema: ${valoracion.esTemaCritico ? 'CRÍTICO' : 'No crítico'}`, margin, yPosition);
+        yPosition += 25;
+      }
+
+      // Análisis de Menciones
+      if (metricas?.mencionesAnalysis) {
+        const menciones = metricas.mencionesAnalysis;
+        
+        // Verificar si necesitamos nueva página
+        if (yPosition > pageHeight - 100) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        pdf.setFontSize(16);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Análisis de Menciones', margin, yPosition);
+        yPosition += 15;
+
+        pdf.setFontSize(12);
+        pdf.setTextColor(60, 60, 60);
+        
+        // Tabla de menciones
+        const mencionesData = [
+          ['Mención', 'Cantidad', 'Porcentaje'],
+          ['Mención 1', menciones.mencion1.cantidad.toString(), `${menciones.mencion1.porcentaje.toFixed(1)}%`],
+          ['Mención 2', menciones.mencion2.cantidad.toString(), `${menciones.mencion2.porcentaje.toFixed(1)}%`],
+          ['Mención 3', menciones.mencion3.cantidad.toString(), `${menciones.mencion3.porcentaje.toFixed(1)}%`],
+          ['Mención 4', menciones.mencion4.cantidad.toString(), `${menciones.mencion4.porcentaje.toFixed(1)}%`],
+          ['Mención 5', menciones.mencion5.cantidad.toString(), `${menciones.mencion5.porcentaje.toFixed(1)}%`]
+        ];
+
+        // Dibujar tabla
+        const tableWidth = pageWidth - 2 * margin;
+        const colWidth = tableWidth / 3;
+        const rowHeight = 12;
+
+        // Encabezados
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(margin, yPosition - 5, tableWidth, rowHeight, 'F');
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(11);
+        pdf.text('Mención', margin + 5, yPosition + 3);
+        pdf.text('Cantidad', margin + colWidth + 5, yPosition + 3);
+        pdf.text('Porcentaje', margin + 2 * colWidth + 5, yPosition + 3);
+        yPosition += rowHeight;
+
+        // Datos
+        pdf.setFontSize(10);
+        for (let i = 1; i < mencionesData.length; i++) {
+          if (yPosition > pageHeight - 50) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          
+          pdf.setTextColor(60, 60, 60);
+          pdf.text(mencionesData[i][0], margin + 5, yPosition + 3);
+          pdf.text(mencionesData[i][1], margin + colWidth + 5, yPosition + 3);
+          pdf.text(mencionesData[i][2], margin + 2 * colWidth + 5, yPosition + 3);
+          yPosition += rowHeight;
+        }
+        yPosition += 25;
+      }
+
+      // Métricas por categorías
+      if (metricas) {
+        const metricCategories = ['soporte', 'medio', 'tema', 'valoracion', 'ejeComunicacional', 'factorPolitico', 'gestion', 'area'];
+        
+        for (const category of metricCategories) {
+          const categoryData = metricas[category as keyof ClippingMetrics];
+          if (categoryData && Array.isArray(categoryData)) {
+            // Verificar si necesitamos nueva página
+            if (yPosition > pageHeight - 120) {
+              pdf.addPage();
+              yPosition = margin;
+            }
+
+            pdf.setFontSize(16);
+            pdf.setTextColor(0, 0, 0);
+            pdf.text(`Análisis por ${getCategoryDisplayName(category)}`, margin, yPosition);
+            yPosition += 15;
+
+            pdf.setFontSize(12);
+            pdf.setTextColor(60, 60, 60);
+            
+            // Tabla de datos
+            const tableWidth = pageWidth - 2 * margin;
+            const colWidth = tableWidth / 2;
+            const rowHeight = 12;
+
+            // Encabezados
+            pdf.setFillColor(240, 240, 240);
+            pdf.rect(margin, yPosition - 5, tableWidth, rowHeight, 'F');
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(11);
+            pdf.text('Categoría', margin + 5, yPosition + 3);
+            pdf.text('Cantidad', margin + colWidth + 5, yPosition + 3);
+            yPosition += rowHeight;
+
+            // Datos
+            pdf.setFontSize(10);
+            for (const item of categoryData) {
+              if (yPosition > pageHeight - 50) {
+                pdf.addPage();
+                yPosition = margin;
+              }
+              
+                           pdf.setTextColor(60, 60, 60);
+             pdf.text(item.nombre, margin + 5, yPosition + 3);
+             pdf.text(item.cantidad.toString(), margin + colWidth + 5, yPosition + 3);
+              yPosition += rowHeight;
+            }
+            yPosition += 20;
+          }
+        }
+      }
+
+      // Guardar PDF
+      pdf.save('metricas-clipping.pdf');
+      alert('PDF generado exitosamente');
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      alert('Error al generar el PDF. Inténtalo de nuevo');
+    }
+  };
+
+  const getCategoryDisplayName = (category: string): string => {
+    const names: { [key: string]: string } = {
+      soporte: 'Soporte',
+      medio: 'Medio',
+      tema: 'Tema',
+      valoracion: 'Valoración',
+      ejeComunicacional: 'Eje Comunicacional',
+      factorPolitico: 'Factor Político',
+      gestion: 'Gestión',
+      area: 'Área'
+    };
+    return names[category] || category;
   };
 
   const getMetricColor = (index: number) => {
@@ -131,10 +383,21 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={metricsRef} data-metrics-charts>
+      {/* Botón oculto para generar PDF */}
+      <button
+        ref={(el) => {
+          if (el) {
+            el.setAttribute('data-generate-pdf', 'true');
+          }
+        }}
+        onClick={generatePDF}
+        style={{ display: 'none' }}
+      />
+      
       {/* Análisis de Valoración - Sección destacada */}
       {metricas.valoracionAnalysis && (
-        <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 backdrop-blur-sm rounded-lg p-6 border border-red-300/30">
+        <div ref={valoracionChartRef} className="bg-gradient-to-r from-red-500/20 to-orange-500/20 backdrop-blur-sm rounded-lg p-6 border border-red-300/30">
           <h3 className="text-xl font-bold text-white mb-4 flex items-center">
             <span className="mr-2">📊</span>
             Análisis de Valoración
@@ -276,7 +539,7 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
 
       {/* Análisis de Menciones - Sección destacada */}
       {metricas.mencionesAnalysis && (
-        <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-lg p-6 border border-blue-300/30">
+        <div ref={mencionesChartRef} className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-lg p-6 border border-blue-300/30">
           <h3 className="text-xl font-bold text-white mb-4 flex items-center">
             <span className="mr-2">👥</span>
             Análisis de Menciones
@@ -448,7 +711,7 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
       </div>
 
       {/* Pestañas de Métricas */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+      <div ref={metricsChartRef} className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
         <div className="flex flex-wrap gap-2 mb-4">
           {metricTypes.map((type) => (
             <button

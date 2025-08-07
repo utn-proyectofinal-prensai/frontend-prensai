@@ -1049,8 +1049,14 @@ export default function CreateClippingPage() {
                     <div className="flex justify-center mt-6">
                       <button
                         onClick={() => {
-                          // TODO: Implementar descarga de PDF
-                          alert('Funcionalidad de descarga de PDF próximamente disponible');
+                          // Llamar a la función generatePDF del componente MetricsCharts
+                          const metricsChartsElement = document.querySelector('[data-metrics-charts]') as HTMLElement;
+                          if (metricsChartsElement) {
+                            const generatePDFButton = metricsChartsElement.querySelector('[data-generate-pdf]') as HTMLButtonElement;
+                            if (generatePDFButton) {
+                              generatePDFButton.click();
+                            }
+                          }
                         }}
                         className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                       >
