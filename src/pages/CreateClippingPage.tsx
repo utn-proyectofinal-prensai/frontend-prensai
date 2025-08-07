@@ -95,6 +95,12 @@ export default function CreateClippingPage() {
   const [metricas, setMetricas] = useState<ClippingMetrics | null>(null);
   const [isLoadingMetricas, setIsLoadingMetricas] = useState(false);
 
+  // Nuevos estados para filtros de fecha
+  const [fechaDesde, setFechaDesde] = useState<string>('');
+  const [fechaHasta, setFechaHasta] = useState<string>('');
+  const [noticiasOriginales, setNoticiasOriginales] = useState<Noticia[]>([]);
+  const [rangoFechas, setRangoFechas] = useState<{min: string, max: string} | null>(null);
+
   // Cargar noticias cuando cambia el evento/tema seleccionado
   useEffect(() => {
     const loadNoticiasPorTema = async () => {
@@ -140,8 +146,74 @@ export default function CreateClippingPage() {
               mencion5: news.mencion5
             }));
             
+            setNoticiasOriginales(noticiasConvertidas);
             setNoticiasFiltradas(noticiasConvertidas);
             setNoticiasSeleccionadas(new Set());
+            // Resetear filtros de fecha
+            setFechaDesde('');
+            setFechaHasta('');
+            
+            // Calcular rango de fechas disponible
+            if (noticiasConvertidas.length > 0) {
+              // Debug: mostrar todas las fechas disponibles
+              console.log('Fechas disponibles en las noticias:');
+              noticiasConvertidas.forEach((noticia, index) => {
+                console.log(`Noticia ${index + 1}: ${noticia.fecha} (Tema: ${noticia.tema})`);
+              });
+              
+              const fechas = noticiasConvertidas
+                .map(n => n.fecha)
+                .filter(fecha => fecha && fecha.trim() !== '')
+                .map(fecha => {
+                  // Normalizar fecha si está en formato DD/MM/YYYY
+                  let fechaNormalizada = fecha;
+                  if (fecha.includes('/')) {
+                    const partes = fecha.split('/');
+                    if (partes.length === 3) {
+                      fechaNormalizada = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                    }
+                  }
+                  
+                  // Crear fecha en zona horaria local para evitar problemas de UTC
+                  const [year, month, day] = fechaNormalizada.split('-').map(Number);
+                  const fechaDate = new Date(year, month - 1, day); // month - 1 porque Date usa 0-indexed months
+                  console.log(`Fecha original: ${fecha} -> Normalizada: ${fechaNormalizada} -> Date: ${fechaDate.toISOString()} (Local: ${fechaDate.toString()})`);
+                  return fechaDate;
+                })
+                .filter(fecha => !isNaN(fecha.getTime()));
+              
+              console.log('Fechas válidas después de filtrado:', fechas.map(f => f.toISOString().split('T')[0]));
+              
+              if (fechas.length > 0) {
+                const minDate = new Date(Math.min(...fechas.map(d => d.getTime())));
+                const maxDate = new Date(Math.max(...fechas.map(d => d.getTime())));
+                
+                console.log('MinDate original:', minDate.toISOString(), 'Local:', minDate.toString());
+                console.log('MaxDate original:', maxDate.toISOString(), 'Local:', maxDate.toString());
+                
+                // Función para formatear fecha en zona horaria local
+                const formatLocalDate = (date: Date) => {
+                  const year = date.getFullYear();
+                  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                  const day = date.getDate().toString().padStart(2, '0');
+                  const formatted = `${year}-${month}-${day}`;
+                  console.log(`Formateando fecha: ${date.toString()} -> ${formatted}`);
+                  return formatted;
+                };
+                
+                const rango = {
+                  min: formatLocalDate(minDate),
+                  max: formatLocalDate(maxDate)
+                };
+                console.log('Rango de fechas calculado:', rango);
+                setRangoFechas(rango);
+              } else {
+                console.log('No se encontraron fechas válidas');
+                setRangoFechas(null);
+              }
+            } else {
+              setRangoFechas(null);
+            }
           }
         } catch (error) {
           console.error('Error cargando noticias por tema:', error);
@@ -150,12 +222,138 @@ export default function CreateClippingPage() {
         }
       } else {
         setNoticiasFiltradas([]);
+        setNoticiasOriginales([]);
         setNoticiasSeleccionadas(new Set());
+        setFechaDesde('');
+        setFechaHasta('');
+        setRangoFechas(null);
       }
     };
 
     loadNoticiasPorTema();
   }, [eventoTemaSeleccionado, eventosTemas]);
+
+  // Función para aplicar filtros de fecha
+  const aplicarFiltrosFecha = () => {
+    console.log('=== APLICANDO FILTROS DE FECHA ===');
+    console.log('Fecha desde:', fechaDesde);
+    console.log('Fecha hasta:', fechaHasta);
+    console.log('Noticias originales:', noticiasOriginales.length);
+    
+    let noticiasFiltradas = [...noticiasOriginales];
+
+    if (fechaDesde) {
+      noticiasFiltradas = noticiasFiltradas.filter(noticia => {
+        try {
+          // Normalizar la fecha de la noticia
+          let fechaNoticia = noticia.fecha;
+          
+          // Si la fecha está en formato DD/MM/YYYY, convertirla
+          if (fechaNoticia && fechaNoticia.includes('/')) {
+            const partes = fechaNoticia.split('/');
+            if (partes.length === 3) {
+              fechaNoticia = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+            }
+          }
+          
+          const fechaNoticiaDate = new Date(fechaNoticia);
+          const fechaDesdeDate = new Date(fechaDesde);
+          
+          // Comparar solo la fecha (sin hora)
+          const fechaNoticiaOnly = new Date(fechaNoticiaDate.getFullYear(), fechaNoticiaDate.getMonth(), fechaNoticiaDate.getDate());
+          const fechaDesdeOnly = new Date(fechaDesdeDate.getFullYear(), fechaDesdeDate.getMonth(), fechaDesdeDate.getDate());
+          
+          console.log(`Comparando: ${fechaNoticia} (${fechaNoticiaOnly.toISOString()}) >= ${fechaDesde} (${fechaDesdeOnly.toISOString()})`);
+          
+          return fechaNoticiaOnly >= fechaDesdeOnly;
+        } catch (error) {
+          console.warn('Error al procesar fecha de noticia:', noticia.fecha, error);
+          return true; // Incluir si no se puede procesar la fecha
+        }
+      });
+    }
+
+    if (fechaHasta) {
+      noticiasFiltradas = noticiasFiltradas.filter(noticia => {
+        try {
+          // Normalizar la fecha de la noticia
+          let fechaNoticia = noticia.fecha;
+          
+          // Si la fecha está en formato DD/MM/YYYY, convertirla
+          if (fechaNoticia && fechaNoticia.includes('/')) {
+            const partes = fechaNoticia.split('/');
+            if (partes.length === 3) {
+              fechaNoticia = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+            }
+          }
+          
+          const fechaNoticiaDate = new Date(fechaNoticia);
+          const fechaHastaDate = new Date(fechaHasta);
+          
+          // Comparar solo la fecha (sin hora)
+          const fechaNoticiaOnly = new Date(fechaNoticiaDate.getFullYear(), fechaNoticiaDate.getMonth(), fechaNoticiaDate.getDate());
+          const fechaHastaOnly = new Date(fechaHastaDate.getFullYear(), fechaHastaDate.getMonth(), fechaHastaDate.getDate());
+          
+          console.log(`Comparando: ${fechaNoticia} (${fechaNoticiaOnly.toISOString()}) <= ${fechaHasta} (${fechaHastaOnly.toISOString()})`);
+          
+          return fechaNoticiaOnly <= fechaHastaOnly;
+        } catch (error) {
+          console.warn('Error al procesar fecha de noticia:', noticia.fecha, error);
+          return true; // Incluir si no se puede procesar la fecha
+        }
+      });
+    }
+
+    // Ordenar por fecha (más reciente primero)
+    noticiasFiltradas.sort((a, b) => {
+      try {
+        let fechaA = a.fecha;
+        let fechaB = b.fecha;
+        
+        // Normalizar fechas si están en formato DD/MM/YYYY
+        if (fechaA && fechaA.includes('/')) {
+          const partes = fechaA.split('/');
+          if (partes.length === 3) {
+            fechaA = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+          }
+        }
+        
+        if (fechaB && fechaB.includes('/')) {
+          const partes = fechaB.split('/');
+          if (partes.length === 3) {
+            fechaB = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+          }
+        }
+        
+        const fechaADate = new Date(fechaA);
+        const fechaBDate = new Date(fechaB);
+        return fechaBDate.getTime() - fechaADate.getTime();
+      } catch (error) {
+        return 0;
+      }
+    });
+
+    console.log('Noticias después del filtrado:', noticiasFiltradas.length);
+    console.log('=== FIN FILTRADO ===');
+    
+    setNoticiasFiltradas(noticiasFiltradas);
+    setNoticiasSeleccionadas(new Set()); // Resetear selecciones al filtrar
+  };
+
+  // Aplicar filtros cuando cambian las fechas
+  useEffect(() => {
+    if (noticiasOriginales.length > 0) {
+      aplicarFiltrosFecha();
+    }
+  }, [fechaDesde, fechaHasta, noticiasOriginales]);
+
+  // Función para limpiar filtros
+  const limpiarFiltros = () => {
+    setFechaDesde('');
+    setFechaHasta('');
+    setNoticiasFiltradas(noticiasOriginales);
+    setNoticiasSeleccionadas(new Set());
+  };
 
   const handleEventoTemaChange = (eventoId: string) => {
     setEventoTemaSeleccionado(eventoId);
@@ -427,13 +625,109 @@ export default function CreateClippingPage() {
             )}
           </div>
 
-          {/* Paso 2: Seleccionar Noticias */}
+          {/* Paso 2: Filtros de Fecha */}
           {eventoTemaSeleccionado && (
-            <div className="mt-16 mb-40">
-              <div className="flex items-center justify-between mb-4">
+            <div className="mt-16 mb-8">
+              <h3 className="text-xl font-bold text-white drop-shadow-md mb-4">
+                Paso 2: Filtros de Fecha (Opcional)
+              </h3>
+              <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm font-semibold text-white/90 mb-2">
+                      Fecha Desde
+                    </label>
+                    <input
+                      type="date"
+                      value={fechaDesde}
+                      onChange={(e) => setFechaDesde(e.target.value)}
+                      min={rangoFechas?.min}
+                      max={rangoFechas?.max}
+                      className="w-full px-4 py-2 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Seleccionar fecha desde"
+                    />
+                    {rangoFechas && (
+                      <p className="text-xs text-white/60 mt-1">
+                        Disponible: {rangoFechas.min} - {rangoFechas.max}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-white/90 mb-2">
+                      Fecha Hasta
+                    </label>
+                    <input
+                      type="date"
+                      value={fechaHasta}
+                      onChange={(e) => setFechaHasta(e.target.value)}
+                      min={rangoFechas?.min}
+                      max={rangoFechas?.max}
+                      className="w-full px-4 py-2 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Seleccionar fecha hasta"
+                    />
+                    {rangoFechas && (
+                      <p className="text-xs text-white/60 mt-1">
+                        Disponible: {rangoFechas.min} - {rangoFechas.max}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={limpiarFiltros}
+                      className="px-6 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      🔄 Limpiar Filtros
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-4 text-sm text-white/70">
+                  <div className="flex items-center justify-between">
+                    <p>
+                      <span className="font-semibold">Noticias mostradas:</span> {noticiasFiltradas.length} de {noticiasOriginales.length} totales
+                    </p>
+                    {(fechaDesde || fechaHasta) && (
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-300/30">
+                          🔍 Filtros Activos
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {(fechaDesde || fechaHasta) && (
+                    <div className="mt-2 p-3 bg-blue-500/10 border border-blue-300/20 rounded-lg">
+                      <p className="font-semibold text-blue-300 mb-1">Filtros aplicados:</p>
+                      <div className="space-y-1 text-xs">
+                        {fechaDesde && (
+                          <p>📅 Desde: {new Date(fechaDesde).toLocaleDateString('es-ES', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}</p>
+                        )}
+                        {fechaHasta && (
+                          <p>📅 Hasta: {new Date(fechaHasta).toLocaleDateString('es-ES', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Paso 3: Seleccionar Noticias */}
+          {eventoTemaSeleccionado && (
+            <div className="mt-8 mb-40">
+              <div className="flex items-center justify-center mb-4">
                 <h3 className="text-xl font-bold text-white drop-shadow-md">
-                  Paso 2: Selecciona las noticias para el clipping
+                  Paso 3: Selecciona las noticias para el clipping
                 </h3>
+              </div>
+              <div className="flex justify-center mb-4">
                 <div className="flex space-x-3">
                   <button
                     onClick={handleSeleccionarTodas}
@@ -662,11 +956,11 @@ export default function CreateClippingPage() {
             </div>
           )}
 
-          {/* Paso 3: Descargar Excel */}
+          {/* Paso 4: Descargar Excel */}
           {eventoTemaSeleccionado && noticiasSeleccionadas.size > 0 && (
             <div className="mt-16 mb-40">
               <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">
-                Paso 3: Descargar Excel
+                Paso 4: Descargar Excel
               </h3>
               <p className="text-white/80 text-sm mb-4">
                 Opcional. Se descargará un archivo Excel con las noticias seleccionadas y sus respectivos campos de análisis
@@ -692,11 +986,11 @@ export default function CreateClippingPage() {
             </div>
           )}
 
-          {/* Paso 4: Generar Métricas e Informe */}
+          {/* Paso 5: Generar Métricas e Informe */}
           {eventoTemaSeleccionado && noticiasSeleccionadas.size > 0 && (
             <div className="mt-16 mb-40">
               <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">
-                Paso 4: Generar Métricas e Informe
+                Paso 5: Generar Métricas e Informe
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Card: Generar Métricas */}

@@ -72,13 +72,78 @@ export interface SoporteMetric {
   porcentaje: number;
 }
 
+export interface MetricItem {
+  nombre: string;
+  cantidad: number;
+  porcentaje: number;
+}
+
 export interface ClippingMetrics {
   totalNoticias: number;
-  soporte: SoporteMetric[];
-  resumen: {
+  soporte: MetricItem[];
+  medio: MetricItem[];
+  tema: MetricItem[];
+  valoracion: MetricItem[];
+  ejeComunicacional: MetricItem[];
+  factorPolitico: MetricItem[];
+  crisis: MetricItem[];
+  gestion: MetricItem[];
+  area: MetricItem[];
+  menciones: MetricItem[];
+  valoracionAnalysis: {
+    totalNoticias: number;
+    negativas: {
+      cantidad: number;
+      porcentaje: number;
+    };
+    positivas: {
+      cantidad: number;
+      porcentaje: number;
+    };
+    neutras: {
+      cantidad: number;
+      porcentaje: number;
+    };
+    noEspecificadas: {
+      cantidad: number;
+      porcentaje: number;
+    };
+          esTemaCritico: boolean;
+    };
+    mencionesAnalysis: {
+      totalNoticias: number;
+      mencion1: {
+        cantidad: number;
+        porcentaje: number;
+      };
+      mencion2: {
+        cantidad: number;
+        porcentaje: number;
+      };
+      mencion3: {
+        cantidad: number;
+        porcentaje: number;
+      };
+      mencion4: {
+        cantidad: number;
+        porcentaje: number;
+      };
+      mencion5: {
+        cantidad: number;
+        porcentaje: number;
+      };
+    };
+    resumen: {
     soportesUnicos: number;
+    mediosUnicos: number;
+    temasUnicos: number;
     soporteMasFrecuente: string;
     porcentajeSoporteMasFrecuente: number;
+    medioMasFrecuente: string;
+    temaMasFrecuente: string;
+    fechaMasAntigua: string;
+    fechaMasReciente: string;
+    rangoDias: number;
   };
 }
 
