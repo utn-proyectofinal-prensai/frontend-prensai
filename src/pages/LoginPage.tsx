@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
@@ -31,6 +31,10 @@ export default function LoginPage() {
       ...prev,
       [name]: value
     }));
+    // Limpiar error cuando el usuario empiece a escribir
+    if (error) {
+      clearError();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

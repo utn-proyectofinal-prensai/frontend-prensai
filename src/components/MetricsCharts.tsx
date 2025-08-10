@@ -1,4 +1,4 @@
-import React from 'react';
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -74,7 +74,7 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
         color: '#ffffff',
         font: {
           size: 18,
-          weight: 'bold',
+          weight: 'bold' as const,
         },
       },
       tooltip: {
@@ -86,7 +86,7 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
         cornerRadius: 8,
         displayColors: true,
         callbacks: {
-          label: function(context: any) {
+          label: function(context: { dataIndex: number; parsed: { y: number } }) {
             const percentage = metricas.soporte[context.dataIndex]?.porcentaje || 0;
             return `${context.parsed.y} noticias (${percentage}%)`;
           },
@@ -173,7 +173,7 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
         color: '#ffffff',
         font: {
           size: 18,
-          weight: 'bold',
+          weight: 'bold' as const,
         },
       },
       tooltip: {
@@ -184,7 +184,7 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
         borderWidth: 1,
         cornerRadius: 8,
         callbacks: {
-          label: function(context: any) {
+          label: function(context: { label: string; parsed: number }) {
             const soporte = context.label;
             const cantidad = metricas.soporte.find(item => item.soporte === soporte)?.cantidad || 0;
             return `${soporte}: ${context.parsed}% (${cantidad} noticias)`;

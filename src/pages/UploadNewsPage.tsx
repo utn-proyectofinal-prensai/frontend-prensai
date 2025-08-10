@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../services/api';
+
 
 interface NewsUrl {
   id: string;
@@ -11,7 +11,7 @@ interface NewsUrl {
 
 interface ExcelPreview {
   headers: string[];
-  preview_rows: Record<string, any>[];
+  preview_rows: Record<string, string | number | boolean>[];
   total_rows: number;
 }
 
@@ -152,7 +152,7 @@ export default function UploadNewsPage() {
         throw new Error('Error al importar archivo');
       }
 
-      const result = await response.json();
+      await response.json();
       
       setProcessingProgress(100);
       setProcessingStatus('Importación completada exitosamente');
@@ -180,7 +180,7 @@ export default function UploadNewsPage() {
 
     try {
       // Simular envío al backend
-      const validUrls = urls.filter(url => url.isValid).map(url => url.url);
+
       
       // Aquí iría la llamada real al backend
       // const response = await fetch('/api/news/process', {

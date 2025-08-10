@@ -1,12 +1,17 @@
 import { Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 
 const Layout = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
   };
+
+  // Mostrar nombre completo si está disponible
+  const displayName = user?.first_name && user?.last_name 
+    ? `${user.first_name} ${user.last_name}`
+    : user?.username || 'Usuario';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -17,11 +22,18 @@ const Layout = () => {
               <h1 className="text-xl font-bold text-blue-900">PrensAI</h1>
             </div>
             
-            {user && (
+            {isAuthenticated && user && (
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">
-                  Bienvenido, {user.username}
-                </span>
+                <div className="text-right">
+                  <span className="block text-sm font-medium text-gray-700">
+                    {displayName}
+                  </span>
+                  {user.email && (
+                    <span className="block text-xs text-gray-500">
+                      {user.email}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={handleLogout}
                   className="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700 transition-colors"

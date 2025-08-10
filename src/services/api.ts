@@ -1,5 +1,5 @@
 // Configuración de la API
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 // Tipos de datos
 export interface NewsItem {
@@ -82,6 +82,20 @@ export interface ClippingMetrics {
   };
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface UserInfo {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+}
+
 // Función helper para hacer requests
 async function apiRequest<T>(
   endpoint: string,
@@ -89,17 +103,21 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  // Obtener el token del localStorage
-  const token = localStorage.getItem('token');
+  // Obtener los headers de autenticación del localStorage
+  const accessToken = localStorage.getItem('access-token');
+  const uid = localStorage.getItem('uid');
+  const client = localStorage.getItem('client');
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers as Record<string, string>,
   };
 
-  // Agregar el token de autorización si existe
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  // Agregar los headers de autenticación si existen
+  if (accessToken && uid && client) {
+    headers['access-token'] = accessToken;
+    headers['uid'] = uid;
+    headers['client'] = client;
   }
   
   const config: RequestInit = {
@@ -113,7 +131,9 @@ async function apiRequest<T>(
     if (!response.ok) {
       if (response.status === 401) {
         // Token inválido, limpiar localStorage
-        localStorage.removeItem('token');
+        localStorage.removeItem('access-token');
+        localStorage.removeItem('uid');
+        localStorage.removeItem('client');
         localStorage.removeItem('user');
         window.location.href = '/login';
         throw new Error('Sesión expirada');
@@ -151,7 +171,7 @@ export const apiService = {
     const queryString = params.toString();
     const endpoint = `/news${queryString ? `?${queryString}` : ''}`;
     
-    const response = await apiRequest<{ noticias: NewsItem[]; pagination: any }>(endpoint);
+    const response = await apiRequest<{ noticias: NewsItem[]; pagination: PaginationInfo }>(endpoint);
     return response.noticias; // Extraer solo el array de noticias
   },
 
@@ -176,13 +196,17 @@ export const apiService = {
     formData.append('excel', file);
 
     const url = `${API_BASE_URL}/news/import`;
-    const token = localStorage.getItem('token');
+    const accessToken = localStorage.getItem('access-token');
+    const uid = localStorage.getItem('uid');
+    const client = localStorage.getItem('client');
     
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'access-token': accessToken || '',
+          'uid': uid || '',
+          'client': client || '',
         },
         body: formData,
       });
@@ -198,21 +222,83 @@ export const apiService = {
     }
   },
 
-  // Autenticación
-  async login(email: string, password: string): Promise<{ token: string }> {
-    return apiRequest<{ token: string }>('/auth/login', {
+  // Autenticación con el backend de Rails
+  async login(email: string, password: string): Promise<{ user: any; headers: any }> {
+    console.log('Intentando login con:', { email });
+    
+    const response = await fetch(`${API_BASE_URL}/users/sign_in`, {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user: { email, password } }),
     });
+
+    console.log('Respuesta del backend:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error en login:', errorData);
+      // Manejar diferentes tipos de errores del backend
+      if (response.status === 401) {
+        throw new Error('Email o contraseña incorrectos');
+      } else if (response.status === 422) {
+        throw new Error(errorData.errors?.[0]?.message || 'Datos de entrada inválidos');
+      } else {
+        throw new Error(errorData.errors?.[0]?.message || 'Error de autenticación');
+      }
+    }
+
+    const data = await response.json();
+    console.log('Datos de respuesta:', data);
+    
+    // Extraer headers de autenticación de Devise Token Auth
+    const headers = {
+      'access-token': response.headers.get('access-token') || '',
+      'uid': response.headers.get('uid') || '',
+      'client': response.headers.get('client') || '',
+    };
+
+    console.log('Headers de autenticación:', headers);
+
+    // El backend devuelve { user: { ... } }, no { data: { ... } }
+    return { user: data.user, headers };
   },
 
-  // Verificar token
-  async verifyToken(token: string): Promise<{ valid: boolean; user?: any }> {
-    return apiRequest<{ valid: boolean; user?: any }>('/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  // Verificar token con el backend de Rails
+  async verifyToken(): Promise<{ valid: boolean; user?: any }> {
+    try {
+      const response = await apiRequest<{ user: any }>('/users/validate_token');
+      return { valid: true, user: response.user };
+    } catch (error) {
+      return { valid: false };
+    }
+  },
+
+  // Obtener usuario actual
+  async getCurrentUser(): Promise<any> {
+    return apiRequest<{ user: any }>('/user');
+  },
+
+  // Logout
+  async logout(): Promise<void> {
+    try {
+      await apiRequest('/users/sign_out', {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Error en logout:', error);
+    } finally {
+      // Limpiar localStorage independientemente del resultado
+      localStorage.removeItem('access-token');
+      localStorage.removeItem('uid');
+      localStorage.removeItem('client');
+      localStorage.removeItem('user');
+    }
   },
 
   // Gestión de menciones activas

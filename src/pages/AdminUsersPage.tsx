@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+
 
 interface Usuario {
   id: string;
@@ -16,9 +16,7 @@ interface Usuario {
 
 export default function AdminUsersPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'usuarios' | 'roles'>('usuarios');
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [adminCredentials, setAdminCredentials] = useState({ username: '', password: '' });
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     // Verificar si hay autenticación de admin guardada en localStorage
@@ -148,7 +146,7 @@ export default function AdminUsersPage() {
       if (adminCredentials.username === 'admin' && adminCredentials.password === 'admin123') {
         setIsAuthenticated(true);
         localStorage.setItem('adminAuthenticated', 'true');
-        setShowLoginModal(false);
+
         setLoginLoading(false);
       } else {
         setLoginError('Credenciales de administrador incorrectas');
@@ -400,7 +398,7 @@ export default function AdminUsersPage() {
                     <label className="block text-white/80 text-sm font-medium mb-2">Rol</label>
                     <select
                       value={filterRol}
-                      onChange={(e) => setFilterRol(e.target.value as any)}
+                      onChange={(e) => setFilterRol(e.target.value as 'todos' | 'admin' | 'editor' | 'viewer')}
                       className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
                     >
                       <option value="todos">Todos los roles</option>
@@ -413,7 +411,7 @@ export default function AdminUsersPage() {
                     <label className="block text-white/80 text-sm font-medium mb-2">Estado</label>
                     <select
                       value={filterEstado}
-                      onChange={(e) => setFilterEstado(e.target.value as any)}
+                      onChange={(e) => setFilterEstado(e.target.value as 'todos' | 'activo' | 'inactivo')}
                       className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
                     >
                       <option value="todos">Todos los estados</option>

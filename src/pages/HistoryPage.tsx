@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { NewsItem } from '../services/api';
@@ -64,21 +64,7 @@ export default function HistoryPage() {
     }
   };
 
-  const getSentimentColor = (sentiment?: string) => {
-    if (!sentiment) return 'text-gray-400';
-    
-    switch (sentiment.toLowerCase()) {
-      case 'muy positiva':
-      case 'positiva':
-        return 'text-green-400';
-      case 'negativa':
-        return 'text-red-400';
-      case 'neutral':
-        return 'text-blue-400';
-      default:
-        return 'text-gray-400';
-    }
-  };
+
 
   return (
     <div className="dashboard-container w-full h-screen relative overflow-x-hidden" style={{ backgroundColor: '#1e293b' }}>
