@@ -240,18 +240,19 @@ export const apiService = {
       headers: Object.fromEntries(response.headers.entries())
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error en login:', errorData);
-      // Manejar diferentes tipos de errores del backend
-      if (response.status === 401) {
-        throw new Error('Email o contraseña incorrectos');
-      } else if (response.status === 422) {
-        throw new Error(errorData.errors?.[0]?.message || 'Datos de entrada inválidos');
-      } else {
-        throw new Error(errorData.errors?.[0]?.message || 'Error de autenticación');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error en login:', errorData);
+        // Manejar diferentes tipos de errores del backend
+        if (response.status === 401) {
+          // Personalizar el mensaje de error para credenciales incorrectas
+          throw new Error('Email o contraseña incorrectos');
+        } else if (response.status === 422) {
+          throw new Error(errorData.errors?.[0]?.message || 'Datos de entrada inválidos');
+        } else {
+          throw new Error(errorData.errors?.[0]?.message || 'Error de autenticación');
+        }
       }
-    }
 
     const data = await response.json();
     console.log('Datos de respuesta:', data);

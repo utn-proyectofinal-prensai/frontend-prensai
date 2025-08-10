@@ -120,7 +120,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const clearError = () => {
-    setError(null);
+    // Agregar un delay antes de limpiar el error para que el snackbar sea visible
+    setTimeout(() => {
+      setError(null);
+    }, 5000); // 5 segundos de delay
   };
 
   const value: AuthContextType = {
