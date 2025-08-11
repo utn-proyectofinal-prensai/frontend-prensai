@@ -11,6 +11,9 @@ export interface FormFieldProps {
   required?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  validationState?: 'default' | 'error' | 'success';
+  errorMessage?: string;
+  successMessage?: string;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -23,16 +26,48 @@ export const FormField: React.FC<FormFieldProps> = ({
   onChange,
   required = false,
   className = '',
-  style
+  style,
+  validationState = 'default',
+  errorMessage,
+  successMessage
 }) => {
+  // Determinar las clases CSS basadas en el estado de validación
+  const getInputClasses = () => {
+    const baseClasses = 'form-input';
+    const iconClass = icon ? 'has-icon' : '';
+    
+    switch (validationState) {
+      case 'error':
+        return `${baseClasses} ${iconClass} error`;
+      case 'success':
+        return `${baseClasses} ${iconClass} success`;
+      default:
+        return `${baseClasses} ${iconClass}`;
+    }
+  };
+
+  // Determinar las clases del icono basadas en el estado de validación
+  const getIconClasses = () => {
+    const baseClasses = 'form-field-icon';
+    
+    switch (validationState) {
+      case 'error':
+        return `${baseClasses} error`;
+      case 'success':
+        return `${baseClasses} success`;
+      default:
+        return baseClasses;
+    }
+  };
+
   return (
-    <div className={`space-y-4 animate-fade-in px-4 ${className}`} style={style}>
+    <div className={`space-y-4 px-4 animate-field-fade-in ${className}`} style={style}>
       <label htmlFor={name} className="block text-sm font-semibold text-gray-700 mb-2">
         {label}
       </label>
       <div className="relative">
         {icon && (
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <div className={getIconClasses()}>
             {icon}
           </div>
         )}
@@ -43,10 +78,24 @@ export const FormField: React.FC<FormFieldProps> = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full ${icon ? 'pl-12' : 'pl-4'} pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm input-focus text-lg`}
+          className={getInputClasses()}
           required={required}
         />
       </div>
+      
+      {/* Mostrar mensaje de error */}
+      {validationState === 'error' && errorMessage && (
+        <div className="validation-error">
+          {errorMessage}
+        </div>
+      )}
+      
+      {/* Mostrar mensaje de éxito */}
+      {validationState === 'success' && successMessage && (
+        <div className="validation-success">
+          {successMessage}
+        </div>
+      )}
     </div>
   );
 };

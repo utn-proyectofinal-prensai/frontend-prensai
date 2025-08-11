@@ -94,3 +94,36 @@ export const getErrorMessage = (error: unknown): string => {
   }
   return 'Error desconocido';
 };
+
+// Mensajes del sistema
+export const SYSTEM_MESSAGES = {
+  // Mensajes de validación de formularios
+  VALIDATION: {
+    EMAIL: {
+      REQUIRED: 'Por favor, ingresa tu dirección de email',
+      INVALID_FORMAT: 'Ingresa una dirección de email válida (ejemplo: usuario@empresa.com)',
+      MISSING_AT: 'Falta el símbolo @ en tu email',
+      MISSING_DOMAIN: 'Tu email debe incluir un dominio válido',
+      TOO_SHORT: 'Tu email parece ser muy corto'
+    },
+    PASSWORD: {
+      REQUIRED: 'Por favor, ingresa tu contraseña',
+      TOO_SHORT: 'Tu contraseña debe tener al menos 6 caracteres',
+      WEAK: 'Considera usar una contraseña más segura'
+    }
+  },
+  
+  // Mensajes de éxito
+  SUCCESS: {
+    EMAIL_VALID: '¡Email válido!',
+    PASSWORD_VALID: '¡Contraseña válida!',
+    FORM_VALID: '¡Formulario completo!'
+  },
+  
+  // Mensajes de error generales
+  ERROR: {
+    NETWORK: 'Error de conexión. Verifica tu internet e intenta nuevamente',
+    SERVER: 'Error del servidor. Intenta nuevamente en unos minutos',
+    UNKNOWN: 'Algo salió mal. Intenta nuevamente'
+  }
+};

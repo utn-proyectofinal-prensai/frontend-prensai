@@ -2,6 +2,7 @@ import { useLoginForm } from '../hooks';
 import { useNavigate } from 'react-router-dom';
 import { LoginHeader, LoginForm } from '../components/auth';
 import { Snackbar } from '../components/common';
+import { useAnimationControl } from '../hooks';
 import '../styles/auth.css';
 
 export default function LoginPage() {
@@ -15,6 +16,9 @@ export default function LoginPage() {
     handleSubmit
   } = useLoginForm();
 
+  // Control de animación para el contenedor principal
+  const { elementRef: containerRef, hasAnimated: containerHasAnimated } = useAnimationControl<HTMLDivElement>(800);
+
   return (
     <div className="fixed inset-0 w-full h-full">
       {/* Imagen de fondo */}
@@ -27,7 +31,10 @@ export default function LoginPage() {
 
       {/* Formulario flotante a la derecha */}
       <div className="relative z-20 flex items-center justify-end h-full pr-16">
-        <div className="auth-container rounded-2xl p-16 w-full max-w-lg animate-slide-in-right hover-lift min-h-[600px]">
+        <div 
+          ref={containerRef}
+          className={`auth-container rounded-2xl p-16 w-full max-w-lg ${containerHasAnimated ? 'container-animation-completed' : 'animate-slide-in-right'} hover-lift min-h-[600px]`}
+        >
           <LoginHeader />
           
           {/* Espaciado adicional antes del formulario */}

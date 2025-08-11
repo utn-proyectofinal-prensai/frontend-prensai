@@ -12,6 +12,30 @@
   }
 }
 
+/* Nueva animación específica para el formulario - solo se ejecuta una vez */
+@keyframes form-fade-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Animación para campos individuales - más sutil */
+@keyframes field-fade-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @keyframes slide-in-right {
   from {
     opacity: 0;
@@ -72,8 +96,50 @@
   animation: fade-in 0.6s ease-out forwards;
 }
 
+/* Nueva clase para el formulario completo - solo se ejecuta una vez */
+.animate-form-fade-in {
+  animation: form-fade-in 0.8s ease-out forwards;
+  will-change: opacity, transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  /* Estado final explícito para evitar re-triggering */
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+
+/* Nueva clase para campos individuales - más sutil */
+.animate-field-fade-in {
+  animation: field-fade-in 0.4s ease-out forwards;
+  will-change: opacity, transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  /* Estado final explícito para evitar re-triggering */
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+
+/* Clase para elementos que ya han sido animados - evita re-animación */
+.animation-completed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  animation: none !important;
+}
+
+/* Clase específica para el contenedor principal que ya fue animado */
+.container-animation-completed {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  animation: none !important;
+}
+
 .animate-slide-in-right {
   animation: slide-in-right 0.8s ease-out forwards;
+  will-change: opacity, transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  /* Estado final explícito para evitar re-triggering */
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
 }
 
 .animate-bounce-slow {
@@ -106,6 +172,224 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+/* Estilos específicos para inputs del formulario */
+.form-input {
+  width: 100%;
+  color: #111827 !important; /* text-gray-900 */
+  background-color: #ffffff !important;
+  border: 2px solid #e5e7eb !important; /* border-gray-200 */
+  border-radius: 0.75rem; /* rounded-xl */
+  padding: 1rem; /* py-4 px-4 */
+  font-size: 1.125rem; /* text-lg */
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6 !important; /* border-blue-500 */
+  box-shadow: 
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: scale(1.02);
+}
+
+.form-input::placeholder {
+  color: #6b7280 !important; /* text-gray-500 */
+  opacity: 1;
+}
+
+/* Estilos para inputs con iconos */
+.form-input.has-icon {
+  padding-left: 3rem !important; /* pl-12 */
+}
+
+/* Estilos para iconos de inputs - asegurar que siempre sean visibles */
+.form-field-icon {
+  position: absolute !important;
+  left: 1rem !important; /* left-4 */
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+  color: #9ca3af !important; /* text-gray-400 */
+  transition: color 0.2s ease;
+}
+
+/* Cambiar color del icono cuando el input tiene focus */
+.form-input:focus + .form-field-icon,
+.form-input:focus ~ .form-field-icon {
+  color: #3b82f6 !important; /* text-blue-500 */
+}
+
+/* Asegurar que el icono esté por encima del input */
+.form-field-icon svg {
+  width: 1.5rem !important; /* w-6 */
+  height: 1.5rem !important; /* h-6 */
+  display: block !important;
+}
+
+/* ===== ESTADOS DE VALIDACIÓN MODERNOS ===== */
+
+/* Estado por defecto del input */
+.form-input {
+  border-color: #e5e7eb !important; /* border-gray-200 */
+  transition: all 0.2s ease;
+}
+
+/* Estado de focus */
+.form-input:focus {
+  border-color: #3b82f6 !important; /* border-blue-500 */
+  box-shadow: 
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Estado de error */
+.form-input.error {
+  border-color: #ef4444 !important; /* border-red-500 */
+  background-color: #fef2f2 !important; /* bg-red-50 */
+  box-shadow: 
+    0 0 0 3px rgba(239, 68, 68, 0.1),
+    0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Estado de éxito */
+.form-input.success {
+  border-color: #10b981 !important; /* border-green-500 */
+  background-color: #f0fdf4 !important; /* bg-green-50 */
+  box-shadow: 
+    0 0 0 3px rgba(16, 185, 129, 0.1),
+    0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ===== MENSAJES DE ERROR MODERNOS ===== */
+
+/* Contenedor del mensaje de error */
+.validation-error {
+  background-color: #fef2f2 !important; /* bg-red-50 */
+  border: 1px solid #fecaca !important; /* border-red-200 */
+  border-radius: 0.5rem !important; /* rounded-lg */
+  padding: 0.75rem 1rem !important; /* py-3 px-4 */
+  margin-top: 0.5rem !important; /* mt-2 */
+  font-size: 0.875rem !important; /* text-sm */
+  color: #dc2626 !important; /* text-red-600 */
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important; /* gap-2 */
+  animation: slideInError 0.3s ease-out;
+}
+
+/* Icono de error */
+.validation-error::before {
+  content: "⚠️";
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ===== MENSAJES DE ÉXITO ===== */
+
+/* Contenedor del mensaje de éxito */
+.validation-success {
+  background-color: #f0fdf4 !important; /* bg-green-50 */
+  border: 1px solid #bbf7d0 !important; /* border-green-200 */
+  border-radius: 0.5rem !important; /* rounded-lg */
+  padding: 0.75rem 1rem !important; /* py-3 px-4 */
+  margin-top: 0.5rem !important; /* mt-2 */
+  font-size: 0.875rem !important; /* text-sm */
+  color: #16a34a !important; /* text-green-600 */
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important; /* gap-2 */
+  animation: slideInSuccess 0.3s ease-out;
+}
+
+/* Icono de éxito */
+.validation-success::before {
+  content: "✅";
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ===== ANIMACIONES ===== */
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInSuccess {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== ESTADOS DE LOS ICONOS ===== */
+
+/* Icono en estado de error */
+.form-field-icon.error {
+  color: #ef4444 !important; /* text-red-500 */
+}
+
+/* Icono en estado de éxito */
+.form-field-icon.success {
+  color: #10b981 !important; /* text-green-500 */
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  color: #111827 !important; /* text-gray-900 */
+  background-color: #ffffff !important;
+  border: 2px solid #e5e7eb !important; /* border-gray-200 */
+  border-radius: 0.75rem; /* rounded-xl */
+  padding: 1rem; /* py-4 px-4 */
+  font-size: 1.125rem; /* text-lg */
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus {
+  outline: none;
+  border-color: #3b82f6 !important; /* border-blue-500 */
+  box-shadow: 
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: scale(1.02);
+}
+
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="text"]::placeholder {
+  color: #6b7280 !important; /* text-gray-500 */
+  opacity: 1;
+}
+
+/* Estilos para labels de los campos */
+label {
+  color: #374151 !important; /* text-gray-700 */
+  font-weight: 600 !important; /* font-semibold */
+  font-size: 0.875rem !important; /* text-sm */
+  margin-bottom: 0.5rem !important; /* mb-2 */
+  display: block;
+}
+
 /* Estilos para botones */
 .btn-primary {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -120,14 +404,6 @@
 
 .btn-primary:active {
   transform: translateY(0);
-}
-
-/* Estilos para errores de validación */
-.validation-error {
-  color: #ef4444;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-  animation: fade-in 0.3s ease-out;
 }
 
 /* Estilos para el fondo */

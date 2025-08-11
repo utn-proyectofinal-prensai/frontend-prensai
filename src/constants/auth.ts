@@ -2,9 +2,9 @@ export const AUTH_CONFIG = {
   ANIMATION_DELAYS: {
     LOGO: 0,
     TITLE: 0.2,
-    FORM: 0.4,
-    PASSWORD: 0.6,
-    BUTTON: 0.8
+    FORM: 0.1,      // Más rápido para el formulario
+    PASSWORD: 0.2,   // Más rápido para el segundo campo
+    BUTTON: 0.4      // Más rápido para el botón
   },
   PLACEHOLDERS: {
     EMAIL: 'admin@prensai.com',

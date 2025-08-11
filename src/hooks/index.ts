@@ -7,3 +7,6 @@ export { useLoginForm } from './useLoginForm';
 // Hook para internacionalización
 export { useTranslations, useT } from './useTranslations';
 export type { Translations } from './useTranslations';
+
+// Hook para control de animaciones
+export { useAnimationControl } from './useAnimationControl';

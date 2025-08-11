@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { FormField } from '../common';
+import { useAnimationControl } from '../../hooks';
 import { AUTH_CONFIG } from '../../constants';
+import { SYSTEM_MESSAGES } from '../../constants/messages';
 import type { LoginFormData } from '../../types/auth';
 
 interface LoginFormProps {
@@ -20,6 +22,63 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
   onAdminClick
 }) => {
+  // Función para validar email en tiempo real - memoizada
+  const validateEmail = useCallback((email: string) => {
+    if (!email) return { state: 'default' as const, message: '' };
+    
+    if (!email.includes('@')) {
+      return { 
+        state: 'error' as const, 
+        message: SYSTEM_MESSAGES.VALIDATION.EMAIL.MISSING_AT 
+      };
+    }
+    
+    if (email.length < 5) {
+      return { 
+        state: 'error' as const, 
+        message: SYSTEM_MESSAGES.VALIDATION.EMAIL.TOO_SHORT 
+      };
+    }
+    
+    if (!email.includes('.') || email.split('@')[1].length < 2) {
+      return { 
+        state: 'error' as const, 
+        message: SYSTEM_MESSAGES.VALIDATION.EMAIL.MISSING_DOMAIN 
+      };
+    }
+    
+    return { 
+      state: 'success' as const, 
+      message: SYSTEM_MESSAGES.SUCCESS.EMAIL_VALID 
+    };
+  }, []);
+
+  // Función para validar contraseña en tiempo real - memoizada
+  const validatePassword = useCallback((password: string) => {
+    if (!password) return { state: 'default' as const, message: '' };
+    
+    if (password.length < 6) {
+      return { 
+        state: 'error' as const, 
+        message: SYSTEM_MESSAGES.VALIDATION.PASSWORD.TOO_SHORT 
+      };
+    }
+    
+    return { 
+      state: 'success' as const, 
+      message: SYSTEM_MESSAGES.SUCCESS.PASSWORD_VALID 
+    };
+  }, []);
+
+  // Estados de validación en tiempo real - memoizados
+  const emailValidation = useMemo(() => validateEmail(formData.email), [validateEmail, formData.email]);
+  const passwordValidation = useMemo(() => validatePassword(formData.password), [validatePassword, formData.password]);
+
+  // Control de animaciones para evitar re-triggering
+  const { elementRef: formRef, hasAnimated: formHasAnimated } = useAnimationControl<HTMLFormElement>(800);
+  const { elementRef: emailRef, hasAnimated: emailHasAnimated } = useAnimationControl(400);
+  const { elementRef: passwordRef, hasAnimated: passwordHasAnimated } = useAnimationControl(600);
+
   const emailIcon = (
     <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -33,48 +92,62 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   );
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
+    <form 
+      ref={formRef}
+      onSubmit={onSubmit} 
+      className={`space-y-8 ${formHasAnimated ? 'animation-completed' : 'animate-form-fade-in'}`}
+    >
       {/* Campo Email */}
-      <FormField
-        label="Email"
-        type="email"
-        name="email"
-        placeholder={AUTH_CONFIG.PLACEHOLDERS.EMAIL}
-        icon={emailIcon}
-        value={formData.email}
-        onChange={onInputChange}
-        required
-        style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.FORM}s`}}
-      />
+      <div ref={emailRef}>
+        <FormField
+          label="Email"
+          type="email"
+          name="email"
+          placeholder={AUTH_CONFIG.PLACEHOLDERS.EMAIL}
+          icon={emailIcon}
+          value={formData.email}
+          onChange={onInputChange}
+          required
+          validationState={emailValidation.state}
+          errorMessage={emailValidation.state === 'error' ? emailValidation.message : undefined}
+          successMessage={emailValidation.state === 'success' ? emailValidation.message : undefined}
+          style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.FORM}s`}}
+        />
+      </div>
       
-      {/* Mostrar error de validación del email */}
+      {/* Mostrar error de validación del email (solo si hay errores del servidor) */}
       {validationErrors.some(error => error.includes('email') || error.includes('Email')) && (
         <div className="px-4 -mt-2">
-          <p className="validation-error">
+          <div className="validation-error">
             {validationErrors.find(error => error.includes('email') || error.includes('Email'))}
-          </p>
+          </div>
         </div>
       )}
 
       {/* Campo Contraseña */}
-      <FormField
-        label="Contraseña"
-        type="password"
-        name="password"
-        placeholder={AUTH_CONFIG.PLACEHOLDERS.PASSWORD}
-        icon={passwordIcon}
-        value={formData.password}
-        onChange={onInputChange}
-        required
-        style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.PASSWORD}s`}}
-      />
+      <div ref={passwordRef}>
+        <FormField
+          label="Contraseña"
+          type="password"
+          name="password"
+          placeholder={AUTH_CONFIG.PLACEHOLDERS.PASSWORD}
+          icon={passwordIcon}
+          value={formData.password}
+          onChange={onInputChange}
+          required
+          validationState={passwordValidation.state}
+          errorMessage={passwordValidation.state === 'error' ? passwordValidation.message : undefined}
+          successMessage={passwordValidation.state === 'success' ? passwordValidation.message : undefined}
+          style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.PASSWORD}s`}}
+        />
+      </div>
       
-      {/* Mostrar error de validación de la contraseña */}
+      {/* Mostrar error de validación de la contraseña (solo si hay errores del servidor) */}
       {validationErrors.some(error => error.includes('contraseña') || error.includes('Contraseña')) && (
         <div className="px-4 -mt-2">
-          <p className="validation-error">
+          <div className="validation-error">
             {validationErrors.find(error => error.includes('contraseña') || error.includes('Contraseña'))}
-          </p>
+          </div>
         </div>
       )}
 
