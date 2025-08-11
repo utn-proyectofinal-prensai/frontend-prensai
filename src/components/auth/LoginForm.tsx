@@ -11,7 +11,6 @@ interface LoginFormProps {
   validationErrors: string[];
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
-  onAdminClick: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
@@ -19,8 +18,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   isLoading,
   validationErrors,
   onInputChange,
-  onSubmit,
-  onAdminClick
+  onSubmit
 }) => {
   // Función para validar email en tiempo real - memoizada
   const validateEmail = useCallback((email: string) => {
@@ -173,17 +171,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           ) : (
             <span>Iniciar sesión</span>
           )}
-        </button>
-      </div>
-
-      {/* Botón de Administración */}
-      <div className="text-center animate-fade-in pt-6 px-4 btn-admin" style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.BUTTON}s`}}>
-        <button
-          type="button"
-          onClick={onAdminClick}
-          className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors hover:scale-105 transform"
-        >
-          Administración
         </button>
       </div>
     </form>

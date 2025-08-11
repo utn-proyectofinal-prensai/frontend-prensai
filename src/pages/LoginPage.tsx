@@ -50,7 +50,6 @@ export default function LoginPage() {
               validationErrors={validationErrors}
               onInputChange={handleInputChange}
               onSubmit={handleSubmit}
-              onAdminClick={() => navigate('/admin-users')}
             />
           </div>
         </div>
