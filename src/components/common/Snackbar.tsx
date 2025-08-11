@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-interface SnackbarProps {
+export interface SnackbarProps {
   message: string;
   isOpen: boolean;
   onClose: () => void;

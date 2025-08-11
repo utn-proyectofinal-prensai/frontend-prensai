@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ADMIN_MESSAGES } from '../constants/messages';
 
 
 interface Usuario {
@@ -149,7 +150,7 @@ export default function AdminUsersPage() {
 
         setLoginLoading(false);
       } else {
-        setLoginError('Credenciales de administrador incorrectas');
+        setLoginError(ADMIN_MESSAGES.ERRORS.INVALID_CREDENTIALS);
         setLoginLoading(false);
       }
     }, 1000);

@@ -1,4 +1,6 @@
 // Configuración de la API
+import { AUTH_MESSAGES, API_MESSAGES } from '../constants/messages';
+
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 // Tipos de datos
@@ -136,9 +138,9 @@ async function apiRequest<T>(
         localStorage.removeItem('client');
         localStorage.removeItem('user');
         window.location.href = '/login';
-        throw new Error('Sesión expirada');
+        throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
     }
     
     return await response.json();
@@ -240,19 +242,12 @@ export const apiService = {
       headers: Object.fromEntries(response.headers.entries())
     });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error en login:', errorData);
-        // Manejar diferentes tipos de errores del backend
-        if (response.status === 401) {
-          // Personalizar el mensaje de error para credenciales incorrectas
-          throw new Error('Email o contraseña incorrectos');
-        } else if (response.status === 422) {
-          throw new Error(errorData.errors?.[0]?.message || 'Datos de entrada inválidos');
-        } else {
-          throw new Error(errorData.errors?.[0]?.message || 'Error de autenticación');
-        }
-      }
+                    if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error en login:', errorData);
+                // Usar el mensaje de error que devuelve el backend
+                throw new Error(errorData.errors?.[0]?.message || AUTH_MESSAGES.VALIDATION.AUTHENTICATION_ERROR);
+              }
 
     const data = await response.json();
     console.log('Datos de respuesta:', data);

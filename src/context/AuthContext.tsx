@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { apiService } from '../services/api';
+import { AUTH_MESSAGES } from '../constants/messages';
 
 interface User {
   id: string;
@@ -100,7 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return true;
       
     } catch (error: any) {
-      setError(error.message || 'Credenciales inválidas. Inténtalo de nuevo.');
+      setError(error.message || AUTH_MESSAGES.VALIDATION.CREDENTIALS_INVALID);
       return false;
     } finally {
       setIsLoading(false);
