@@ -74,8 +74,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   // Control de animaciones para evitar re-triggering
   const { elementRef: formRef, hasAnimated: formHasAnimated } = useAnimationControl<HTMLFormElement>(800);
-  const { elementRef: emailRef, hasAnimated: emailHasAnimated } = useAnimationControl(400);
-  const { elementRef: passwordRef, hasAnimated: passwordHasAnimated } = useAnimationControl(600);
+  const { elementRef: emailRef } = useAnimationControl(400);
+  const { elementRef: passwordRef } = useAnimationControl(600);
 
   const emailIcon = (
     <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

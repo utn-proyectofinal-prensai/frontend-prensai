@@ -1,12 +1,10 @@
-import { useLoginForm } from '../hooks';
-import { useNavigate } from 'react-router-dom';
 import { LoginHeader, LoginForm } from '../components/auth';
 import { Snackbar } from '../components/common';
+import { useLoginForm } from '../hooks';
 import { useAnimationControl } from '../hooks';
 import '../styles/auth.css';
 
 export default function LoginPage() {
-  const navigate = useNavigate();
   const {
     formData,
     isLoading,
