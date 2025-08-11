@@ -8,7 +8,7 @@ export const AUTH_MESSAGES = {
     EMAIL_INVALID_FORMAT: 'El formato del email no es válido',
     EMAIL_TOO_LONG: 'El email es demasiado largo',
     PASSWORD_REQUIRED: 'La contraseña es requerida',
-    PASSWORD_TOO_SHORT: 'La contraseña debe tener al menos 6 caracteres',
+    PASSWORD_TOO_SHORT: 'La contraseña debe tener al menos 8 caracteres',
     PASSWORD_TOO_LONG: 'La contraseña es demasiado larga',
     CREDENTIALS_INVALID: 'Credenciales inválidas. Inténtalo de nuevo.',
     AUTHENTICATION_ERROR: 'Error de autenticación',
@@ -108,7 +108,7 @@ export const SYSTEM_MESSAGES = {
     },
     PASSWORD: {
       REQUIRED: 'Por favor, ingresa tu contraseña',
-      TOO_SHORT: 'Tu contraseña debe tener al menos 6 caracteres',
+      TOO_SHORT: 'Tu contraseña debe tener al menos 8 caracteres',
       WEAK: 'Considera usar una contraseña más segura'
     }
   },

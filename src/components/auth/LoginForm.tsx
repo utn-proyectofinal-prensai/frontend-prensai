@@ -55,7 +55,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const validatePassword = useCallback((password: string) => {
     if (!password) return { state: 'default' as const, message: '' };
     
-    if (password.length < 6) {
+    if (password.length < 8) {
       return { 
         state: 'error' as const, 
         message: SYSTEM_MESSAGES.VALIDATION.PASSWORD.TOO_SHORT 

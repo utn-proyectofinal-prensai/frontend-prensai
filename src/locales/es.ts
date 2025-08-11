@@ -8,7 +8,7 @@ export const esTranslations = {
       emailInvalidFormat: 'El formato del email no es válido',
       emailTooLong: 'El email es demasiado largo',
       passwordRequired: 'La contraseña es requerida',
-      passwordTooShort: 'La contraseña debe tener al menos 6 caracteres',
+      passwordTooShort: 'La contraseña debe tener al menos 8 caracteres',
       passwordTooLong: 'La contraseña es demasiado larga',
       credentialsInvalid: 'Credenciales inválidas. Inténtalo de nuevo.',
       authenticationError: 'Error de autenticación',

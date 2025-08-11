@@ -23,7 +23,7 @@ export const validatePassword = (password: string): string | null => {
     return AUTH_MESSAGES.VALIDATION.PASSWORD_REQUIRED;
   }
   
-  if (password.length < 6) {
+  if (password.length < 8) {
     return AUTH_MESSAGES.VALIDATION.PASSWORD_TOO_SHORT;
   }
   

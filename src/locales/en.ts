@@ -8,7 +8,7 @@ export const enTranslations = {
       emailInvalidFormat: 'Email format is not valid',
       emailTooLong: 'Email is too long',
       passwordRequired: 'Password is required',
-      passwordTooShort: 'Password must be at least 6 characters',
+      passwordTooShort: 'Password must be at least 8 characters',
       passwordTooLong: 'Password is too long',
       credentialsInvalid: 'Invalid credentials. Please try again.',
       authenticationError: 'Authentication error',
