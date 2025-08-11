@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import type { NewsItem, DashboardStats } from '../services/api';
-import { DASHBOARD_MESSAGES } from '../constants/messages';
+import { DASHBOARD_MESSAGES, ADMIN_MESSAGES } from '../constants/messages';
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   
   // Estados para los datos
@@ -127,6 +127,11 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-white drop-shadow-md">Bienvenido, {user?.username}</p>
+                    {isAdmin && (
+                      <span className="inline-flex px-2 py-1 bg-red-500/20 text-red-300 rounded-full text-xs font-bold border border-red-300/30">
+                        ADMIN
+                      </span>
+                    )}
                   </div>
                 </div>
                 <button 
@@ -213,6 +218,86 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Panel de Administrador - Solo para usuarios admin */}
+          {isAdmin && (
+            <div className="admin-panel mb-32">
+              <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 backdrop-blur-sm rounded-2xl shadow-xl border border-red-300/30 p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-red-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-red-300/30">
+                      <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-2">{ADMIN_MESSAGES.PANEL.TITLE}</h2>
+                      <p className="text-red-200 text-lg font-medium">{ADMIN_MESSAGES.PANEL.SUBTITLE}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex px-4 py-2 bg-red-500/20 text-red-300 rounded-full text-sm font-bold border border-red-300/30">
+                      ADMIN
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <button 
+                    onClick={() => navigate('/admin')}
+                    className="group bg-black/30 backdrop-blur-sm rounded-xl border border-red-300/30 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-red-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-red-500/30 transition-all duration-300 border border-red-300/30">
+                        <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-lg font-bold text-white mb-1">{ADMIN_MESSAGES.PANEL.EVENTS_THEMES}</h3>
+                        <p className="text-red-200 text-sm">{ADMIN_MESSAGES.PANEL.EVENTS_DESCRIPTION}</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => navigate('/admin-users')}
+                    className="group bg-black/30 backdrop-blur-sm rounded-xl border border-red-300/30 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-red-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-red-500/30 transition-all duration-300 border border-red-300/30">
+                        <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-lg font-bold text-white mb-1">{ADMIN_MESSAGES.PANEL.USER_MANAGEMENT}</h3>
+                        <p className="text-red-200 text-sm">{ADMIN_MESSAGES.PANEL.USER_DESCRIPTION}</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => navigate('/admin')}
+                    className="group bg-black/30 backdrop-blur-sm rounded-xl border border-red-300/30 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-red-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center group-hover:bg-red-500/30 transition-all duration-300 border border-red-300/30">
+                        <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-lg font-bold text-white mb-1">{ADMIN_MESSAGES.PANEL.STATISTICS}</h3>
+                        <p className="text-red-200 text-sm">{ADMIN_MESSAGES.PANEL.STATS_DESCRIPTION}</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Acciones principales - MISMO ESTILO QUE LAS CARDS */}
           <div className="actions-section mb-32">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
@@ -270,24 +355,26 @@ export default function DashboardPage() {
                 </div>
               </button>
 
-              <button 
-                onClick={() => navigate('/admin')}
-                className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" 
-                style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}
-              >
-                <div className="flex items-center">
-                  <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
-                    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+              {isAdmin && (
+                <button 
+                  onClick={() => navigate('/admin')}
+                  className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" 
+                  style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}
+                >
+                  <div className="flex items-center">
+                    <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-8 group-hover:bg-white/30 transition-all duration-300 border border-white/20 shadow-md">
+                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Administración</h3>
+                      <p className="text-orange-300 text-base leading-relaxed font-medium drop-shadow-sm">Gestiona eventos, temas y menciones</p>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Administración</h3>
-                    <p className="text-orange-300 text-base leading-relaxed font-medium drop-shadow-sm">Gestiona eventos, temas y menciones</p>
-                  </div>
-                </div>
-              </button>
+                </button>
+              )}
             </div>
           </div>
 

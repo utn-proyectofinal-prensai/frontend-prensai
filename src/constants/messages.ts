@@ -40,10 +40,21 @@ export const DASHBOARD_MESSAGES = {
 export const ADMIN_MESSAGES = {
   ERRORS: {
     INVALID_CREDENTIALS: 'Credenciales de administrador incorrectas',
-    ACCESS_DENIED: 'Acceso denegado'
+    ACCESS_DENIED: 'Acceso denegado',
+    NOT_ADMIN: 'No tienes permisos de administrador para acceder a esta sección'
   },
   SUCCESS: {
     LOGIN_SUCCESS: 'Acceso de administrador concedido'
+  },
+  PANEL: {
+    TITLE: 'Panel de Administrador',
+    SUBTITLE: 'Acceso completo al sistema',
+    EVENTS_THEMES: 'Eventos y Temas',
+    EVENTS_DESCRIPTION: 'Gestiona eventos, temas y menciones',
+    USER_MANAGEMENT: 'Gestión de Usuarios',
+    USER_DESCRIPTION: 'Administra usuarios y permisos',
+    STATISTICS: 'Estadísticas',
+    STATS_DESCRIPTION: 'Reportes y métricas del sistema'
   }
 } as const;
 

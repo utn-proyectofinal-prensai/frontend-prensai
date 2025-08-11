@@ -20,6 +20,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   error: string | null;
   clearError: () => void;
+  isAdmin: boolean; // Nueva propiedad para verificar si es admin
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,7 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               email: userData.email,
               first_name: userData.first_name,
               last_name: userData.last_name,
-              role: 'user' // Por defecto, ajustar según tu lógica de roles
+              role: userData.role // Usar el rol real del backend
             };
             setUser(userInfo);
             localStorage.setItem('user', JSON.stringify(userInfo));
@@ -93,7 +94,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: userData.email,
         first_name: userData.first_name,
         last_name: userData.last_name,
-        role: 'user' // Por defecto, ajustar según tu lógica de roles
+        role: userData.role // Usar el rol real del backend
       };
       
       setUser(userInfo);
@@ -134,7 +135,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     error,
-    clearError
+    clearError,
+    isAdmin: user?.role === 'admin' // Verificar si el usuario es admin
   };
 
   return (
