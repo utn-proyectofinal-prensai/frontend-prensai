@@ -12,6 +12,18 @@
   }
 }
 
+/* Animación específica para el header - desde abajo hacia arriba */
+@keyframes header-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Nueva animación específica para el formulario - solo se ejecuta una vez */
 @keyframes form-fade-in {
   0% {
@@ -96,6 +108,16 @@
   animation: fade-in 0.6s ease-out forwards;
 }
 
+/* Animación específica para el header */
+.animate-header-fade-in {
+  animation: header-fade-in 0.8s ease-out forwards;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+
 /* Nueva clase para el formulario completo - solo se ejecuta una vez */
 .animate-form-fade-in {
   animation: form-fade-in 0.8s ease-out forwards;
@@ -120,16 +142,22 @@
 
 /* Clase para elementos que ya han sido animados - evita re-animación */
 .animation-completed {
-  opacity: 1 !important;
-  transform: translate3d(0, 0, 0) !important;
   animation: none !important;
+  transform: translateY(0) !important;
+  opacity: 1 !important;
 }
 
 /* Clase específica para el contenedor principal que ya fue animado */
 .container-animation-completed {
-  opacity: 1 !important;
-  transform: translateX(0) !important;
   animation: none !important;
+  transform: translateX(0) !important;
+  opacity: 1 !important;
+}
+
+.header-animation-completed {
+  animation: none !important;
+  transform: translateY(0) !important;
+  opacity: 1 !important;
 }
 
 .animate-slide-in-right {
@@ -434,5 +462,108 @@ label {
   
   .auth-background {
     background-attachment: scroll;
+  }
+}
+
+/* ===== MEJORAS DE TIPOGRAFÍA Y ESPACIADO ===== */
+
+/* Labels de campos - más definidos */
+.form-label {
+  font-size: 0.75rem !important; /* text-xs */
+  font-weight: 600 !important; /* font-semibold */
+  color: #374151 !important; /* text-gray-700 */
+  margin-bottom: 0.75rem !important; /* mb-3 */
+  display: block !important;
+  letter-spacing: 0.025em !important;
+  text-transform: uppercase !important;
+}
+
+/* ===== ESPACIADO MEJORADO ===== */
+
+/* Espaciado entre secciones del formulario */
+.form-section {
+  margin-bottom: 1.5rem !important; /* mb-6 - reducido de mb-10 */
+}
+
+.form-section:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Espaciado entre campos */
+.form-field-spacing {
+  margin-bottom: 1rem !important; /* mb-4 - reducido de mb-8 */
+}
+
+/* Espaciado para botones */
+.button-spacing {
+  margin-top: 1.5rem !important; /* mt-6 - reducido de mt-10 */
+  margin-bottom: 1rem !important; /* mb-4 - reducido de mb-6 */
+}
+
+/* ===== MEJORAS EN EL CONTENEDOR ===== */
+
+/* Contenedor principal con mejor espaciado */
+.auth-container {
+  padding: 2rem 2rem !important; /* p-8 - reducido de p-12 px-10 */
+  min-height: 600px !important; /* min-h-[600px] - reducido de min-h-[700px] */
+}
+
+/* Espaciado interno del formulario */
+.auth-form-content {
+  padding-top: 0.5rem !important; /* pt-2 - reducido de pt-4 */
+}
+
+/* ===== MEJORAS EN CAMPOS DE FORMULARIO ===== */
+
+/* Inputs con mejor espaciado */
+.form-input {
+  padding: 1rem 0.875rem !important; /* py-4 px-3.5 - reducido de py-5 px-4 */
+  margin-bottom: 0.25rem !important; /* mb-1 - reducido de mb-2 */
+}
+
+/* Espaciado entre campos del formulario */
+.form-field {
+  margin-bottom: 1rem !important; /* mb-4 - reducido de mb-6 */
+}
+
+/* ===== MEJORAS EN BOTONES ===== */
+
+/* Botón principal con mejor espaciado */
+.btn-primary {
+  padding: 1rem 2rem !important; /* py-4 px-8 - reducido de py-5 px-10 */
+  margin-top: 1rem !important; /* mt-4 - reducido de mt-8 */
+  margin-bottom: 1rem !important; /* mb-4 - reducido de mb-6 */
+}
+
+/* Botón de administración */
+.btn-admin {
+  margin-top: 0.5rem !important; /* mt-2 - reducido de mt-4 */
+  padding: 0.75rem 1.25rem !important; /* py-3 px-5 - reducido de py-3.5 px-6 */
+}
+
+/* ===== MEJORAS EN ENLACES ===== */
+
+/* Enlace de "olvidaste contraseña" */
+.forgot-password-link {
+  margin-top: 0.75rem !important; /* mt-3 - reducido de mt-6 */
+  margin-bottom: 1rem !important; /* mb-4 - reducido de mb-8 */
+  display: block !important;
+  text-align: center !important;
+}
+
+/* ===== RESPONSIVE MEJORADO ===== */
+
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 2rem 1.5rem !important; /* p-8 px-6 */
+    min-height: 600px !important; /* min-h-[600px] */
+  }
+  
+  .form-section {
+    margin-bottom: 2rem !important; /* mb-8 */
+  }
+  
+  .btn-primary {
+    padding: 1rem 2rem !important; /* py-4 px-8 */
   }
 }

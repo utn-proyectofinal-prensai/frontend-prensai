@@ -92,13 +92,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   );
 
   return (
-    <form 
+    <form
       ref={formRef}
-      onSubmit={onSubmit} 
-      className={`space-y-8 ${formHasAnimated ? 'animation-completed' : 'animate-form-fade-in'}`}
+      onSubmit={onSubmit}
+      className={`space-y-6 ${formHasAnimated ? 'animation-completed' : 'animate-form-fade-in'}`}
     >
       {/* Campo Email */}
-      <div ref={emailRef}>
+      <div ref={emailRef} className="form-field">
         <FormField
           label="Email"
           type="email"
@@ -125,7 +125,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       )}
 
       {/* Campo Contraseña */}
-      <div ref={passwordRef}>
+      <div ref={passwordRef} className="form-field">
         <FormField
           label="Contraseña"
           type="password"
@@ -151,19 +151,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </div>
       )}
 
-      {/* Espaciado */}
-      <div className="h-6"></div>
-      <div className="h-6"></div>
-
       {/* Opciones adicionales */}
-      <div className="text-center animate-fade-in py-6 px-4" style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.FORM}s`}}>
+      <div className="text-center animate-fade-in py-6 px-4 forgot-password-link" style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.FORM}s`}}>
         <a href="#" className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors hover:scale-105 transform block">
           ¿Olvidaste tu contraseña?
         </a>
       </div>
 
       {/* Botón principal */}
-      <div className="px-4">
+      <div className="px-4 button-spacing">
         <button
           type="submit"
           disabled={isLoading}
@@ -181,7 +177,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       </div>
 
       {/* Botón de Administración */}
-      <div className="text-center animate-fade-in pt-6 px-4" style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.BUTTON}s`}}>
+      <div className="text-center animate-fade-in pt-6 px-4 btn-admin" style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.BUTTON}s`}}>
         <button
           type="button"
           onClick={onAdminClick}

@@ -62,7 +62,7 @@ export const FormField: React.FC<FormFieldProps> = ({
 
   return (
     <div className={`space-y-4 px-4 animate-field-fade-in ${className}`} style={style}>
-      <label htmlFor={name} className="block text-sm font-semibold text-gray-700 mb-2">
+      <label htmlFor={name} className="form-label">
         {label}
       </label>
       <div className="relative">

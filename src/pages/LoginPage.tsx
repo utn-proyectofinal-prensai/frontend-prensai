@@ -17,12 +17,15 @@ export default function LoginPage() {
   } = useLoginForm();
 
   // Control de animación para el contenedor principal
-  const { elementRef: containerRef, hasAnimated: containerHasAnimated } = useAnimationControl<HTMLDivElement>(800);
+  const { elementRef: containerRef, hasAnimated: containerHasAnimated } = useAnimationControl<HTMLDivElement>(800, 'container-animation-completed');
+
+  // Control de animación para el header
+  const { elementRef: headerRef, hasAnimated: headerHasAnimated } = useAnimationControl<HTMLDivElement>(800, 'header-animation-completed');
 
   return (
     <div className="fixed inset-0 w-full h-full">
       {/* Imagen de fondo */}
-      <div 
+      <div
         className="absolute inset-0 w-full h-full auth-background"
         style={{
           backgroundImage: `url('/images/fondo.png')`
@@ -30,24 +33,26 @@ export default function LoginPage() {
       ></div>
 
       {/* Formulario flotante a la derecha */}
-      <div className="relative z-20 flex items-center justify-end h-full pr-16">
-        <div 
+      <div className="relative z-20 flex items-center justify-end h-full pr-12">
+        <div
           ref={containerRef}
-          className={`auth-container rounded-2xl p-16 w-full max-w-lg ${containerHasAnimated ? 'container-animation-completed' : 'animate-slide-in-right'} hover-lift min-h-[600px]`}
+          className={`auth-container rounded-2xl p-8 w-full max-w-lg ${containerHasAnimated ? 'container-animation-completed' : 'animate-slide-in-right'} hover-lift min-h-[500px]`}
         >
-          <LoginHeader />
-          
-          {/* Espaciado adicional antes del formulario */}
-          <div className="h-8"></div>
+          <div ref={headerRef} className={headerHasAnimated ? 'header-animation-completed' : ''}>
+            <LoginHeader />
+          </div>
 
-          <LoginForm
-            formData={formData}
-            isLoading={isLoading}
-            validationErrors={validationErrors}
-            onInputChange={handleInputChange}
-            onSubmit={handleSubmit}
-            onAdminClick={() => navigate('/admin-users')}
-          />
+          {/* Contenido del formulario con mejor espaciado */}
+          <div className="auth-form-content">
+            <LoginForm
+              formData={formData}
+              isLoading={isLoading}
+              validationErrors={validationErrors}
+              onInputChange={handleInputChange}
+              onSubmit={handleSubmit}
+              onAdminClick={() => navigate('/admin-users')}
+            />
+          </div>
         </div>
       </div>
 
