@@ -105,21 +105,15 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  // Obtener los headers de autenticación del localStorage
-  const accessToken = localStorage.getItem('access-token');
-  const uid = localStorage.getItem('uid');
-  const client = localStorage.getItem('client');
+  const jwtToken = localStorage.getItem('jwt-token');
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers as Record<string, string>,
   };
 
-  // Agregar los headers de autenticación si existen
-  if (accessToken && uid && client) {
-    headers['access-token'] = accessToken;
-    headers['uid'] = uid;
-    headers['client'] = client;
+  if (jwtToken) {
+    headers['Authorization'] = `Bearer ${jwtToken}`;
   }
   
   const config: RequestInit = {
@@ -132,10 +126,8 @@ async function apiRequest<T>(
     
     if (!response.ok) {
       if (response.status === 401) {
-        // Token inválido, limpiar localStorage
-        localStorage.removeItem('access-token');
-        localStorage.removeItem('uid');
-        localStorage.removeItem('client');
+        // Token inválido o expirado, limpiar localStorage
+        localStorage.removeItem('jwt-token');
         localStorage.removeItem('user');
         window.location.href = '/login';
         throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
@@ -198,17 +190,13 @@ export const apiService = {
     formData.append('excel', file);
 
     const url = `${API_BASE_URL}/news/import`;
-    const accessToken = localStorage.getItem('access-token');
-    const uid = localStorage.getItem('uid');
-    const client = localStorage.getItem('client');
+    const jwtToken = localStorage.getItem('jwt-token');
     
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'access-token': accessToken || '',
-          'uid': uid || '',
-          'client': client || '',
+          'Authorization': `Bearer ${jwtToken || ''}`,
         },
         body: formData,
       });
@@ -224,8 +212,7 @@ export const apiService = {
     }
   },
 
-  // Autenticación con el backend de Rails
-  async login(email: string, password: string): Promise<{ user: any; headers: any }> {
+  async login(email: string, password: string): Promise<{ token: string }> {
     console.log('Intentando login con:', { email });
     
     const response = await fetch(`${API_BASE_URL}/users/sign_in`, {
@@ -242,45 +229,36 @@ export const apiService = {
       headers: Object.fromEntries(response.headers.entries())
     });
 
-                    if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error en login:', errorData);
-                // Usar el mensaje de error que devuelve el backend
-                throw new Error(errorData.errors?.[0]?.message || AUTH_MESSAGES.VALIDATION.AUTHENTICATION_ERROR);
-              }
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error en login:', errorData);
+      // Usar el mensaje de error que devuelve el backend
+      throw new Error(errorData.errors?.[0]?.message || AUTH_MESSAGES.VALIDATION.AUTHENTICATION_ERROR);
+    }
 
     const data = await response.json();
     console.log('Datos de respuesta:', data);
     
-    // Extraer headers de autenticación de Devise Token Auth
-    const headers = {
-      'access-token': response.headers.get('access-token') || '',
-      'uid': response.headers.get('uid') || '',
-      'client': response.headers.get('client') || '',
-    };
-
-    console.log('Headers de autenticación:', headers);
-
-    // El backend devuelve { user: { ... } }, no { data: { ... } }
-    return { user: data.user, headers };
+    return { token: data.token };
   },
 
-  // Verificar token con el backend de Rails
-  async verifyToken(): Promise<{ valid: boolean; user?: any }> {
+  async verifyToken(): Promise<{ valid: boolean }> {
     try {
-      const response = await apiRequest<{ user: any }>('/users/validate_token');
-      return { valid: true, user: response.user };
+      const response = await fetch(`${API_BASE_URL}/status`);
+      if (response.ok) {
+        return { valid: true };
+      }
+      return { valid: false };
     } catch (error) {
       return { valid: false };
     }
   },
 
-  // Obtener usuario actual
+  // Obtener usuario actual usando el token JWT
   async getCurrentUser(): Promise<any> {
     return apiRequest<{ user: any }>('/user');
   },
 
-  // Logout
   async logout(): Promise<void> {
     try {
       await apiRequest('/users/sign_out', {
@@ -289,10 +267,7 @@ export const apiService = {
     } catch (error) {
       console.error('Error en logout:', error);
     } finally {
-      // Limpiar localStorage independientemente del resultado
-      localStorage.removeItem('access-token');
-      localStorage.removeItem('uid');
-      localStorage.removeItem('client');
+      localStorage.removeItem('jwt-token');
       localStorage.removeItem('user');
     }
   },
