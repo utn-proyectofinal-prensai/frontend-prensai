@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
-import type { NewsItem, ClippingMetrics } from '../services/api';
+import type { ClippingMetrics } from '../services/api';
 import * as XLSX from 'xlsx';
 import MetricsCharts from '../components/MetricsCharts';
 
@@ -86,7 +86,7 @@ export default function CreateClippingPage() {
     loadTemas();
   }, []);
 
-  const [noticias, setNoticias] = useState<Noticia[]>([]);
+
   const [isLoadingNoticias, setIsLoadingNoticias] = useState(false);
 
   const [eventoTemaSeleccionado, setEventoTemaSeleccionado] = useState<string>('');

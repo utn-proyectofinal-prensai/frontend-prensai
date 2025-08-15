@@ -1,11 +1,15 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { apiService } from '../services/api';
+import { AUTH_MESSAGES } from '../constants/messages';
 
 interface User {
   id: string;
   username: string;
   email?: string;
   role?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 interface AuthContextType {
@@ -13,21 +17,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   error: string | null;
   clearError: () => void;
-  token: string | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
-  }
-  return context;
-};
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -39,61 +34,109 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('token');
-  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Verificar token al cargar la aplicación
+  useEffect(() => {
+    const verifyToken = async () => {
+      const jwtToken = localStorage.getItem('jwt-token');
+      
+      if (jwtToken) {
+        try {
+          // Verificar si el token es válido
+          const { valid } = await apiService.verifyToken();
+          if (valid) {
+            // Token válido, obtener información del usuario
+            try {
+              const userData = await apiService.getCurrentUser();
+              if (userData && userData.user) {
+                const userInfo: User = {
+                  id: userData.user.id.toString(),
+                  username: userData.user.username || userData.user.email,
+                  email: userData.user.email,
+                  first_name: userData.user.first_name,
+                  last_name: userData.user.last_name,
+                  role: userData.user.role || 'user'
+                };
+                setUser(userInfo);
+                localStorage.setItem('user', JSON.stringify(userInfo));
+              }
+            } catch (userError) {
+              console.error('Error obteniendo usuario:', userError);
+              // Si no se puede obtener el usuario, limpiar localStorage
+              localStorage.clear();
+              setUser(null);
+            }
+          } else {
+            // Token inválido, limpiar localStorage
+            localStorage.clear();
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error verificando token:', error);
+          localStorage.clear();
+          setUser(null);
+        }
+      }
+    };
+
+    verifyToken();
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Credenciales inválidas');
+      const { token } = await apiService.login(email, password);
+      
+      localStorage.setItem('jwt-token', token);
+      
+      const userData = await apiService.getCurrentUser();
+      
+      if (userData && userData.user) {
+        // Crear objeto de usuario con la estructura del backend
+        const userInfo: User = {
+          id: userData.user.id.toString(),
+          username: userData.user.username || userData.user.email,
+          email: userData.user.email,
+          first_name: userData.user.first_name,
+          last_name: userData.user.last_name,
+          role: userData.user.role || 'user'
+        };
+        
+        setUser(userInfo);
+        localStorage.setItem('user', JSON.stringify(userInfo));
+        return true;
+      } else {
+        throw new Error('No se pudo obtener la información del usuario');
       }
-
-      const data = await response.json();
       
-      const userData: User = {
-        id: data.user.id.toString(),
-        username: data.user.email,
-        email: data.user.email,
-        role: data.user.role
-      };
-      
-      setUser(userData);
-      setToken(data.token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', data.token);
-      return true;
-      
-    } catch (err) {
-      setError('Credenciales inválidas. Inténtalo de nuevo.');
+    } catch (error: any) {
+      setError(error.message || AUTH_MESSAGES.VALIDATION.CREDENTIALS_INVALID);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+  const logout = async () => {
+    try {
+      await apiService.logout();
+    } catch (error) {
+      console.error('Error en logout:', error);
+    } finally {
+      // Limpiar estado local independientemente del resultado
+      setUser(null);
+      localStorage.clear();
+    }
   };
 
   const clearError = () => {
-    setError(null);
+    setTimeout(() => {
+      setError(null);
+    }, 5000); 
   };
 
   const value: AuthContextType = {
@@ -103,8 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     error,
-    clearError,
-    token
+    clearError
   };
 
   return (

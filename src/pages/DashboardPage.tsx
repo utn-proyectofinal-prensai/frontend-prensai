@@ -1,8 +1,9 @@
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import type { NewsItem, DashboardStats } from '../services/api';
+import { DASHBOARD_MESSAGES } from '../constants/messages';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -39,7 +40,7 @@ export default function DashboardPage() {
         setError(null);
       } catch (err) {
         console.error('Error cargando datos del dashboard:', err);
-        setError('Error al cargar los datos del dashboard');
+        setError(DASHBOARD_MESSAGES.ERRORS.LOAD_DATA_ERROR);
       } finally {
         setLoading(false);
       }
@@ -56,7 +57,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="dashboard-container w-full h-screen relative overflow-x-hidden flex items-center justify-center" style={{ backgroundColor: '#1e293b' }}>
-        <div className="text-white text-xl font-semibold">Cargando dashboard...</div>
+        <div className="text-white text-xl font-semibold">{DASHBOARD_MESSAGES.COMMON?.LOADING || 'Cargando dashboard...'}</div>
       </div>
     );
   }

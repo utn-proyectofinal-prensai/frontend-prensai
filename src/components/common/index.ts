@@ -1,0 +1,10 @@
+// Exportar todos los componentes comunes
+// Componentes reutilizables que se usan en toda la aplicación
+
+// Componentes de formulario
+export { FormField } from './FormField';
+export type { FormFieldProps } from './FormField';
+
+// Componentes de notificación
+export { default as Snackbar } from './Snackbar';
+export type { SnackbarProps } from './Snackbar';

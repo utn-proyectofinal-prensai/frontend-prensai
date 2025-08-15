@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
-import type { ActiveMention, Mention, Event } from '../services/api';
+
 
 interface EventoTema {
   id: string;
@@ -576,7 +576,7 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {mencionesActivas.map((mencion, index) => (
+                    {mencionesActivas.map((mencion) => (
                       <div
                         key={mencion.id}
                         draggable

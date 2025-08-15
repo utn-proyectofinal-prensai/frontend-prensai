@@ -1,5 +1,7 @@
 // Configuración de la API
-const API_BASE_URL = 'http://localhost:3000/api';
+import { AUTH_MESSAGES, API_MESSAGES } from '../constants/messages';
+
+const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 // Tipos de datos
 export interface NewsItem {
@@ -82,6 +84,20 @@ export interface ClippingMetrics {
   };
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface UserInfo {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+}
+
 // Función helper para hacer requests
 async function apiRequest<T>(
   endpoint: string,
@@ -89,17 +105,15 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  // Obtener el token del localStorage
-  const token = localStorage.getItem('token');
+  const jwtToken = localStorage.getItem('jwt-token');
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers as Record<string, string>,
   };
 
-  // Agregar el token de autorización si existe
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (jwtToken) {
+    headers['Authorization'] = `Bearer ${jwtToken}`;
   }
   
   const config: RequestInit = {
@@ -112,13 +126,13 @@ async function apiRequest<T>(
     
     if (!response.ok) {
       if (response.status === 401) {
-        // Token inválido, limpiar localStorage
-        localStorage.removeItem('token');
+        // Token inválido o expirado, limpiar localStorage
+        localStorage.removeItem('jwt-token');
         localStorage.removeItem('user');
         window.location.href = '/login';
-        throw new Error('Sesión expirada');
+        throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
     }
     
     return await response.json();
@@ -151,7 +165,7 @@ export const apiService = {
     const queryString = params.toString();
     const endpoint = `/news${queryString ? `?${queryString}` : ''}`;
     
-    const response = await apiRequest<{ noticias: NewsItem[]; pagination: any }>(endpoint);
+    const response = await apiRequest<{ noticias: NewsItem[]; pagination: PaginationInfo }>(endpoint);
     return response.noticias; // Extraer solo el array de noticias
   },
 
@@ -176,13 +190,13 @@ export const apiService = {
     formData.append('excel', file);
 
     const url = `${API_BASE_URL}/news/import`;
-    const token = localStorage.getItem('token');
+    const jwtToken = localStorage.getItem('jwt-token');
     
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${jwtToken || ''}`,
         },
         body: formData,
       });
@@ -198,21 +212,64 @@ export const apiService = {
     }
   },
 
-  // Autenticación
   async login(email: string, password: string): Promise<{ token: string }> {
-    return apiRequest<{ token: string }>('/auth/login', {
+    console.log('Intentando login con:', { email });
+    
+    const response = await fetch(`${API_BASE_URL}/users/sign_in`, {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user: { email, password } }),
     });
+
+    console.log('Respuesta del backend:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error en login:', errorData);
+      // Usar el mensaje de error que devuelve el backend
+      throw new Error(errorData.errors?.[0]?.message || AUTH_MESSAGES.VALIDATION.AUTHENTICATION_ERROR);
+    }
+
+    const data = await response.json();
+    console.log('Datos de respuesta:', data);
+    
+    return { token: data.token };
   },
 
-  // Verificar token
-  async verifyToken(token: string): Promise<{ valid: boolean; user?: any }> {
-    return apiRequest<{ valid: boolean; user?: any }>('/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  async verifyToken(): Promise<{ valid: boolean }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/status`);
+      if (response.ok) {
+        return { valid: true };
+      }
+      return { valid: false };
+    } catch (error) {
+      return { valid: false };
+    }
+  },
+
+  // Obtener usuario actual usando el token JWT
+  async getCurrentUser(): Promise<any> {
+    return apiRequest<{ user: any }>('/user');
+  },
+
+  async logout(): Promise<void> {
+    try {
+      await apiRequest('/users/sign_out', {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Error en logout:', error);
+    } finally {
+      localStorage.removeItem('jwt-token');
+      localStorage.removeItem('user');
+    }
   },
 
   // Gestión de menciones activas

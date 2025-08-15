@@ -1,5 +1,6 @@
-import React from 'react';
+
 import { useNavigate } from 'react-router-dom';
+import { NOT_FOUND_MESSAGES } from '../constants/messages';
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ export default function NotFoundPage() {
                   <h1 className="text-2xl font-bold text-white drop-shadow-lg">
                     PrensAI
                   </h1>
-                  <p className="text-white/80 text-sm font-medium">Página no encontrada</p>
+                  <p className="text-white/80 text-sm font-medium">{NOT_FOUND_MESSAGES.TITLE}</p>
                 </div>
               </div>
             </div>
@@ -73,14 +74,14 @@ export default function NotFoundPage() {
 
             {/* Mensaje principal */}
             <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-12 mb-8">
-              <h2 className="text-3xl font-bold text-white mb-4 drop-shadow-lg">
-                ¡Ups! Página no encontrada
+                              <h2 className="text-3xl font-bold text-white mb-4 drop-shadow-lg">
+                ¡Ups! {NOT_FOUND_MESSAGES.TITLE}
               </h2>
               <p className="text-white/90 text-lg font-medium drop-shadow-md mb-6">
-                La página que buscas no existe o ha sido movida.
+                {NOT_FOUND_MESSAGES.DESCRIPTION}
               </p>
               <p className="text-white/70 text-base">
-                Verifica la URL o navega usando los enlaces de abajo.
+                {NOT_FOUND_MESSAGES.CONTACT_ADMIN}
               </p>
             </div>
 
