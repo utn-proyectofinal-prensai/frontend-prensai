@@ -5,7 +5,7 @@ import { apiService } from '../services/api';
 import type { AdminUser, CreateUserData, UpdateUserData } from '../services/api';
 
 interface Usuario extends AdminUser {
-  is_active: boolean; // Calculado basado en last_sign_in_at
+  // Extendemos AdminUser sin campos adicionales
 }
 
 export default function AdminUsersPage() {
@@ -23,7 +23,7 @@ export default function AdminUsersPage() {
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRol, setFilterRol] = useState<'todos' | 'admin' | 'user'>('todos');
-  const [filterEstado, setFilterEstado] = useState<'todos' | 'activo' | 'inactivo'>('todos');
+
 
   // Roles disponibles (coinciden con el backend)
   const roles = [
@@ -44,7 +44,6 @@ export default function AdminUsersPage() {
         // Convertir el formato de la API al formato del componente
         const usuariosFormateados: Usuario[] = users.map(user => ({
           ...user,
-          is_active: !!user.last_sign_in_at, // Usuario activo si tiene último acceso
           role: user.role === 'admin' ? 'admin' : 'user' // Mapear roles del backend
         }));
         
@@ -80,9 +79,7 @@ export default function AdminUsersPage() {
         
         // Actualizar estado local
         setUsuarios(usuarios.map(u => 
-          u.id === editingUser.id 
-            ? { ...updatedUser, is_active: !!updatedUser.last_sign_in_at }
-            : u
+          u.id === editingUser.id ? updatedUser : u
         ));
       } else {
         // Crear nuevo usuario
@@ -99,7 +96,7 @@ export default function AdminUsersPage() {
         const { user: newUser } = await apiService.createUser(createData);
         
         // Agregar nuevo usuario al estado local
-        setUsuarios([...usuarios, { ...newUser, is_active: false }]);
+        setUsuarios([...usuarios, newUser]);
       }
       
       setShowUserForm(false);
@@ -113,11 +110,25 @@ export default function AdminUsersPage() {
   const handleUserDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
+        console.log('Intentando eliminar usuario con ID:', id);
         await apiService.deleteUser(id);
+        console.log('Usuario eliminado exitosamente');
         setUsuarios(usuarios.filter(u => u.id !== id));
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error eliminando usuario:', error);
-        alert('Error al eliminar el usuario. Intenta nuevamente.');
+        
+        // Mostrar mensaje de error más específico
+        let errorMessage = 'Error al eliminar el usuario.';
+        
+        if (error.message?.includes('401')) {
+          errorMessage = 'No tienes permisos para eliminar usuarios o tu sesión expiró.';
+        } else if (error.message?.includes('404')) {
+          errorMessage = 'Usuario no encontrado o endpoint no disponible.';
+        } else if (error.message?.includes('500')) {
+          errorMessage = 'Error interno del servidor. Intenta más tarde.';
+        }
+        
+        alert(errorMessage);
       }
     }
   };
@@ -127,18 +138,7 @@ export default function AdminUsersPage() {
     setShowUserForm(true);
   };
 
-  const handleUserToggleStatus = async (id: string) => {
-    try {
-      // Por ahora solo actualizamos el estado local
-      // En el futuro se podría implementar un endpoint para activar/desactivar usuarios
-      setUsuarios(usuarios.map(u => 
-        u.id === id ? { ...u, is_active: !u.is_active } : u
-      ));
-    } catch (error) {
-      console.error('Error cambiando estado del usuario:', error);
-      alert('Error al cambiar el estado del usuario. Intenta nuevamente.');
-    }
-  };
+
 
   // Filtros
   const filteredUsuarios = usuarios.filter(usuario => {
@@ -148,11 +148,9 @@ export default function AdminUsersPage() {
                          usuario.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesRol = filterRol === 'todos' || usuario.role === filterRol;
-    const matchesEstado = filterEstado === 'todos' || 
-                         (filterEstado === 'activo' && usuario.is_active) ||
-                         (filterEstado === 'inactivo' && !usuario.is_active);
+    
 
-    return matchesSearch && matchesRol && matchesEstado;
+    return matchesSearch && matchesRol;
   });
 
   const getRolInfo = (rol: string) => {
@@ -303,24 +301,12 @@ export default function AdminUsersPage() {
                       <option value="user">Usuario</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-white/80 text-sm font-medium mb-2">📊 Estado</label>
-                    <select
-                      value={filterEstado}
-                      onChange={(e) => setFilterEstado(e.target.value as 'todos' | 'activo' | 'inactivo')}
-                      className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="todos">Todos los estados</option>
-                      <option value="activo">Activo</option>
-                      <option value="inactivo">Inactivo</option>
-                    </select>
-                  </div>
+
                   <div className="flex items-end">
                     <button
                       onClick={() => {
                         setSearchTerm('');
                         setFilterRol('todos');
-                        setFilterEstado('todos');
                       }}
                       className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
                     >
@@ -353,46 +339,82 @@ export default function AdminUsersPage() {
                     <table className="min-w-full">
                       <thead className="bg-black/20">
                         <tr>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Usuario</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Email</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Información Personal</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Credenciales</th>
                           <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Rol</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Estado</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Último Acceso</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Actividad</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Sistema</th>
                           <th className="px-6 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/10">
                         {filteredUsuarios.map((usuario) => (
                           <tr key={usuario.id} className="hover:bg-black/20 transition-colors duration-200">
+                            {/* Información Personal */}
                             <td className="px-6 py-4">
-                              <div>
+                              <div className="space-y-1">
                                 <div className="text-sm font-semibold text-white">
-                                  {usuario.first_name} {usuario.last_name}
+                                  {usuario.first_name || 'Sin nombre'} {usuario.last_name || 'Sin apellido'}
                                 </div>
-                                <div className="text-sm text-white/70">@{usuario.username}</div>
+                                <div className="text-sm text-white/70">
+                                  @{usuario.username}
+                                </div>
                               </div>
                             </td>
+                            
+                            {/* Credenciales */}
                             <td className="px-6 py-4">
-                              <div className="text-sm text-white/90">{usuario.email}</div>
+                              <div className="space-y-1">
+                                <div className="text-sm text-white/90">{usuario.email}</div>
+                                {usuario.allow_password_change && (
+                                  <span className="inline-flex px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">
+                                    🔑 Cambio pendiente
+                                  </span>
+                                )}
+                              </div>
                             </td>
+                            
+                            {/* Rol */}
                             <td className="px-6 py-4">
                               <span className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full border ${getRolInfo(usuario.role).color}`}>
                                 <span className="mr-1">{getRolInfo(usuario.role).icon}</span>
                                 {getRolInfo(usuario.role).label}
                               </span>
                             </td>
+                            
+                            {/* Actividad */}
                             <td className="px-6 py-4">
-                              <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full ${
-                                usuario.is_active 
-                                  ? 'bg-green-500/20 text-green-400 border border-green-300/30' 
-                                  : 'bg-red-500/20 text-red-400 border border-red-300/30'
-                              }`}>
-                                {usuario.is_active ? '✅ Activo' : '❌ Inactivo'}
-                              </span>
+                              <div className="space-y-1">
+                                <div className="text-sm text-white/70">
+                                  <span className="inline-flex items-center px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
+                                    {usuario.sign_in_count || 0} logins
+                                  </span>
+                                </div>
+                                <div className="text-xs text-white/60">
+                                  {usuario.last_sign_in_at ? new Date(usuario.last_sign_in_at).toLocaleDateString('es-ES') : 'Nunca accedió'}
+                                </div>
+                                {usuario.current_sign_in_at && (
+                                  <div className="text-xs text-green-400">
+                                    🟢 Sesión activa
+                                  </div>
+                                )}
+                              </div>
                             </td>
+                            
+                            {/* Sistema */}
                             <td className="px-6 py-4">
-                              <div className="text-sm text-white/70">
-                                {usuario.last_sign_in_at ? usuario.last_sign_in_at : 'Nunca'}
+                              <div className="space-y-1">
+                                <div className="text-xs text-white/60">
+                                  Creado: {usuario.created_at ? new Date(usuario.created_at).toLocaleDateString('es-ES') : 'N/A'}
+                                </div>
+                                <div className="text-xs text-white/60">
+                                  Modificado: {usuario.updated_at ? new Date(usuario.updated_at).toLocaleDateString('es-ES') : 'N/A'}
+                                </div>
+                                {usuario.last_sign_in_ip && (
+                                  <div className="text-xs text-white/50 font-mono">
+                                    IP: {usuario.last_sign_in_ip}
+                                  </div>
+                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4">
@@ -404,17 +426,7 @@ export default function AdminUsersPage() {
                                 >
                                   ✏️
                                 </button>
-                                <button
-                                  onClick={() => handleUserToggleStatus(usuario.id)}
-                                  className={`transition-colors p-2 hover:bg-yellow-500/20 rounded-lg ${
-                                    usuario.is_active 
-                                      ? 'text-yellow-400 hover:text-yellow-300' 
-                                      : 'text-green-400 hover:text-green-300'
-                                  }`}
-                                  title={usuario.is_active ? 'Desactivar' : 'Activar'}
-                                >
-                                  {usuario.is_active ? '⏸️' : '▶️'}
-                                </button>
+
                                 <button
                                   onClick={() => handleUserDelete(usuario.id)}
                                   className="text-red-400 hover:text-red-300 transition-colors p-2 hover:bg-red-500/20 rounded-lg"
