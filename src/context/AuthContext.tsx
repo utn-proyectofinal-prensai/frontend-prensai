@@ -20,7 +20,6 @@ interface AuthContextType {
   logout: () => Promise<void>;
   error: string | null;
   clearError: () => void;
-  isAdmin: boolean; // Nueva propiedad para verificar si es admin
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,24 +40,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Verificar token al cargar la aplicación
   useEffect(() => {
     const verifyToken = async () => {
-      const accessToken = localStorage.getItem('access-token');
-      const uid = localStorage.getItem('uid');
-      const client = localStorage.getItem('client');
+      const jwtToken = localStorage.getItem('jwt-token');
       
-      if (accessToken && uid && client) {
+      if (jwtToken) {
         try {
-          const { valid, user: userData } = await apiService.verifyToken();
-          if (valid && userData) {
-            const userInfo: User = {
-              id: userData.id.toString(),
-              username: userData.username || userData.email,
-              email: userData.email,
-              first_name: userData.first_name,
-              last_name: userData.last_name,
-              role: userData.role // Usar el rol real del backend
-            };
-            setUser(userInfo);
-            localStorage.setItem('user', JSON.stringify(userInfo));
+          // Verificar si el token es válido
+          const { valid } = await apiService.verifyToken();
+          if (valid) {
+            // Token válido, obtener información del usuario
+            try {
+              const userData = await apiService.getCurrentUser();
+              if (userData && userData.user) {
+                const userInfo: User = {
+                  id: userData.user.id.toString(),
+                  username: userData.user.username || userData.user.email,
+                  email: userData.user.email,
+                  first_name: userData.user.first_name,
+                  last_name: userData.user.last_name,
+                  role: userData.user.role || 'user'
+                };
+                setUser(userInfo);
+                localStorage.setItem('user', JSON.stringify(userInfo));
+              }
+            } catch (userError) {
+              console.error('Error obteniendo usuario:', userError);
+              // Si no se puede obtener el usuario, limpiar localStorage
+              localStorage.clear();
+              setUser(null);
+            }
           } else {
             // Token inválido, limpiar localStorage
             localStorage.clear();
@@ -80,26 +89,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
     
     try {
-      const { user: userData, headers } = await apiService.login(email, password);
+      const { token } = await apiService.login(email, password);
       
-      // Guardar headers de autenticación
-      localStorage.setItem('access-token', headers['access-token']);
-      localStorage.setItem('uid', headers['uid']);
-      localStorage.setItem('client', headers['client']);
+      localStorage.setItem('jwt-token', token);
       
-      // Crear objeto de usuario con la estructura del backend
-      const userInfo: User = {
-        id: userData.id.toString(),
-        username: userData.username || userData.email,
-        email: userData.email,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        role: userData.role // Usar el rol real del backend
-      };
+      const userData = await apiService.getCurrentUser();
       
-      setUser(userInfo);
-      localStorage.setItem('user', JSON.stringify(userInfo));
-      return true;
+      if (userData && userData.user) {
+        // Crear objeto de usuario con la estructura del backend
+        const userInfo: User = {
+          id: userData.user.id.toString(),
+          username: userData.user.username || userData.user.email,
+          email: userData.user.email,
+          first_name: userData.user.first_name,
+          last_name: userData.user.last_name,
+          role: userData.user.role || 'user'
+        };
+        
+        setUser(userInfo);
+        localStorage.setItem('user', JSON.stringify(userInfo));
+        return true;
+      } else {
+        throw new Error('No se pudo obtener la información del usuario');
+      }
       
     } catch (error: any) {
       setError(error.message || AUTH_MESSAGES.VALIDATION.CREDENTIALS_INVALID);
@@ -122,10 +134,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const clearError = () => {
-    // Agregar un delay antes de limpiar el error para que el snackbar sea visible
     setTimeout(() => {
       setError(null);
-    }, 5000); // 5 segundos de delay
+    }, 5000); 
   };
 
   const value: AuthContextType = {
@@ -135,8 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     error,
-    clearError,
-    isAdmin: user?.role === 'admin' // Verificar si el usuario es admin
+    clearError
   };
 
   return (

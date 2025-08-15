@@ -12,7 +12,9 @@ export const AUTH_MESSAGES = {
     PASSWORD_TOO_LONG: 'La contraseña es demasiado larga',
     CREDENTIALS_INVALID: 'Credenciales inválidas. Inténtalo de nuevo.',
     AUTHENTICATION_ERROR: 'Error de autenticación',
-    SESSION_EXPIRED: 'Sesión expirada'
+    SESSION_EXPIRED: 'Sesión expirada',
+    TOKEN_INVALID: 'Token de sesión inválido',
+    USER_FETCH_ERROR: 'Error al obtener información del usuario'
   },
   
   // Mensajes de estado
@@ -20,7 +22,9 @@ export const AUTH_MESSAGES = {
     LOGIN_SUCCESS: 'Inicio de sesión exitoso',
     LOGOUT_SUCCESS: 'Cierre de sesión exitoso',
     LOGIN_ERROR: 'Error al iniciar sesión',
-    LOGOUT_ERROR: 'Error al cerrar sesión'
+    LOGOUT_ERROR: 'Error al cerrar sesión',
+    TOKEN_VALID: 'Sesión válida',
+    TOKEN_INVALID: 'Sesión inválida o expirada'
   }
 } as const;
 
@@ -40,21 +44,10 @@ export const DASHBOARD_MESSAGES = {
 export const ADMIN_MESSAGES = {
   ERRORS: {
     INVALID_CREDENTIALS: 'Credenciales de administrador incorrectas',
-    ACCESS_DENIED: 'Acceso denegado',
-    NOT_ADMIN: 'No tienes permisos de administrador para acceder a esta sección'
+    ACCESS_DENIED: 'Acceso denegado'
   },
   SUCCESS: {
     LOGIN_SUCCESS: 'Acceso de administrador concedido'
-  },
-  PANEL: {
-    TITLE: 'Panel de Administrador',
-    SUBTITLE: 'Acceso completo al sistema',
-    EVENTS_THEMES: 'Eventos y Temas',
-    EVENTS_DESCRIPTION: 'Gestiona eventos, temas y menciones',
-    USER_MANAGEMENT: 'Gestión de Usuarios',
-    USER_DESCRIPTION: 'Administra usuarios y permisos',
-    STATISTICS: 'Estadísticas',
-    STATS_DESCRIPTION: 'Reportes y métricas del sistema'
   }
 } as const;
 

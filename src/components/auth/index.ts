@@ -2,6 +2,10 @@
 // Componentes específicos para el flujo de login y autenticación
 
 // Componente principal del formulario de login
-export { ProtectedRoute, AdminRoute } from './ProtectedRoute';
 export { LoginForm } from './LoginForm';
-export { LoginHeader } from './LoginHeader'; 
+
+// Componente del header de la página de login
+export { LoginHeader } from './LoginHeader';
+
+// Componente para rutas protegidas
+export { ProtectedRoute } from './ProtectedRoute'; 

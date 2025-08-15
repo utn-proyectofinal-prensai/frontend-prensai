@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import type { NewsItem, DashboardStats } from '../services/api';
-import { DASHBOARD_MESSAGES, ADMIN_MESSAGES } from '../constants/messages';
+import { DASHBOARD_MESSAGES } from '../constants/messages';
 
 export default function DashboardPage() {
   const { user, logout, isAdmin } = useAuth();
