@@ -98,6 +98,38 @@ export interface UserInfo {
   role: string;
 }
 
+export interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'user';
+  created_at: string;
+  updated_at: string;
+  last_sign_in_at?: string;
+  sign_in_count: number;
+  is_active?: boolean; // Calculado basado en last_sign_in_at
+}
+
+export interface CreateUserData {
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'user';
+  password: string;
+  password_confirmation: string;
+}
+
+export interface UpdateUserData {
+  username?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  role?: 'admin' | 'user';
+}
+
 // Función helper para hacer requests
 async function apiRequest<T>(
   endpoint: string,
@@ -257,6 +289,35 @@ export const apiService = {
   // Obtener usuario actual usando el token JWT
   async getCurrentUser(): Promise<any> {
     return apiRequest<{ user: any }>('/user');
+  },
+
+  // Métodos de gestión de usuarios (solo para admins)
+  async getUsers(): Promise<{ users: AdminUser[] }> {
+    return apiRequest<{ users: AdminUser[] }>('/users');
+  },
+
+  async getUser(id: string): Promise<{ user: AdminUser }> {
+    return apiRequest<{ user: AdminUser }>(`/users/${id}`);
+  },
+
+  async createUser(userData: CreateUserData): Promise<{ user: AdminUser }> {
+    return apiRequest<{ user: AdminUser }>('/users', {
+      method: 'POST',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async updateUser(id: string, userData: UpdateUserData): Promise<{ user: AdminUser }> {
+    return apiRequest<{ user: AdminUser }>(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    return apiRequest(`/users/${id}`, {
+      method: 'DELETE',
+    });
   },
 
   async logout(): Promise<void> {

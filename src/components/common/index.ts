@@ -8,3 +8,5 @@ export type { FormFieldProps } from './FormField';
 // Componentes de notificación
 export { default as Snackbar } from './Snackbar';
 export type { SnackbarProps } from './Snackbar';
+
+export { default as UserDropdown } from './UserDropdown';
