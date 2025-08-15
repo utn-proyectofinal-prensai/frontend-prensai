@@ -1,8 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
 import type { AdminUser, CreateUserData, UpdateUserData } from '../services/api';
+import {
+  AdminUsersHeader,
+  SearchFilters,
+  UsersTable,
+  UserFormModal,
+  UserViewModal
+} from '../components/admin';
 
 interface Usuario extends AdminUser {
   // Extendemos AdminUser sin campos adicionales
@@ -21,6 +28,7 @@ export default function AdminUsersPage() {
   // Estados para formularios
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
+  const [viewingUser, setViewingUser] = useState<Usuario | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRol, setFilterRol] = useState<'todos' | 'admin' | 'user'>('todos');
 
@@ -60,9 +68,7 @@ export default function AdminUsersPage() {
   }, []);
 
   // Funciones para Usuarios
-  const handleUserSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
+  const handleUserSubmit = async (formData: FormData) => {
     
     try {
       if (editingUser) {
@@ -138,6 +144,10 @@ export default function AdminUsersPage() {
     setShowUserForm(true);
   };
 
+  const handleUserView = (usuario: Usuario) => {
+    setViewingUser(usuario);
+  };
+
 
 
   // Filtros
@@ -186,48 +196,54 @@ export default function AdminUsersPage() {
 
       {/* Contenido principal */}
       <div className="relative z-10 w-full h-full">
-        {/* Header transparente */}
-        <div className="bg-black/20 backdrop-blur-md shadow-lg border-b border-white/10 w-full">
-          <div className="w-full py-4 px-6">
+        {/* Header moderno con gradiente */}
+        <div className="bg-gradient-to-r from-slate-900/90 via-blue-900/70 to-indigo-900/90 backdrop-blur-xl shadow-2xl border-b border-white/20 w-full">
+          <div className="w-full py-6 px-8">
             <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-8">
                 <button 
                   onClick={() => navigate('/dashboard')}
-                  className="text-white hover:text-blue-300 transition-colors"
+                  className="text-white/80 hover:text-blue-300 transition-all duration-300 p-2 rounded-lg hover:bg-white/10"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
-                <div className="w-32 h-32 flex items-center justify-center">
+                <div className="w-24 h-24 flex items-center justify-center">
                   <img 
                     src="/images/fondoblanco.png" 
                     alt="PrensAI Logo" 
-                    className="w-28 h-28 object-contain"
+                    className="w-20 h-20 object-contain"
                     onError={(e) => {
                       console.log('Error loading logo:', e);
                       e.currentTarget.style.display = 'none';
                     }}
                   />
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+                <div className="space-y-1">
+                  <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">
                     PrensAI
                   </h1>
-                  <p className="text-white/80 text-sm font-medium">Gestión de Usuarios</p>
+                  <p className="text-white/90 text-lg font-medium">Panel de Administración</p>
+                  <div className="flex items-center space-x-3">
+                    <span className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur-sm text-white/90 rounded-full text-sm font-medium border border-white/20">
+                      🚀 Sistema Activo
+                    </span>
+                    <span className="inline-flex items-center px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm font-medium border border-green-300/30">
+                      {usuarios.length} Usuarios
+                    </span>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-white text-sm font-bold">
-                    {user?.username?.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+              <div className="flex items-center space-x-4">
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-white drop-shadow-md">Bienvenido, {user?.username}</p>
-                  <span className="inline-flex px-2 py-1 bg-red-500/20 text-red-300 rounded-full text-xs font-bold border border-red-300/30">
-                    ADMIN
+                  <p className="text-sm font-medium text-white/80">Administrador</p>
+                  <p className="text-lg font-bold text-white">{user?.username}</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <span className="text-white text-lg font-bold">
+                    {user?.username?.charAt(0).toUpperCase()}
                   </span>
                 </div>
               </div>
@@ -237,27 +253,29 @@ export default function AdminUsersPage() {
 
         {/* Contenido principal */}
         <div className="w-full px-6 py-16 h-full">
-          {/* Tabs */}
-          <div className="flex space-x-1 mb-8 bg-black/20 backdrop-blur-sm rounded-lg p-1 w-fit">
+          {/* Tabs modernos */}
+          <div className="flex space-x-2 mb-8 bg-black/30 backdrop-blur-xl rounded-2xl p-2 w-fit border border-white/20 shadow-xl">
             <button
               onClick={() => setActiveTab('usuarios')}
-              className={`px-6 py-3 rounded-md font-medium transition-colors ${
+              className={`px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center space-x-3 ${
                 activeTab === 'usuarios'
-                  ? 'bg-white/20 text-white'
-                  : 'text-white/60 hover:text-white/80'
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              👥 Usuarios
+              <span className="text-xl">👥</span>
+              <span>Usuarios</span>
             </button>
             <button
               onClick={() => setActiveTab('roles')}
-              className={`px-6 py-3 rounded-md font-medium transition-colors ${
+              className={`px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center space-x-3 ${
                 activeTab === 'roles'
-                  ? 'bg-white/20 text-white'
-                  : 'text-white/60 hover:text-white/80'
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              🛡️ Roles y Permisos
+              <span className="text-xl">🛡️</span>
+              <span>Roles y Permisos</span>
             </button>
           </div>
 
@@ -265,56 +283,21 @@ export default function AdminUsersPage() {
           {activeTab === 'usuarios' && (
             <div className="space-y-6">
               {/* Header con botón agregar y filtros */}
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">Gestión de Usuarios</h2>
-                <button
-                  onClick={() => setShowUserForm(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
-                >
-                  <span>+</span>
-                  <span>Agregar Usuario</span>
-                </button>
-              </div>
+              <AdminUsersHeader
+                onAddUser={() => setShowUserForm(true)}
+              />
 
-              {/* Filtros */}
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-white/80 text-sm font-medium mb-2">🔍 Buscar</label>
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Buscar por nombre, usuario o email..."
-                      className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white/80 text-sm font-medium mb-2">🎭 Rol</label>
-                    <select
-                      value={filterRol}
-                      onChange={(e) => setFilterRol(e.target.value as 'todos' | 'admin' | 'user')}
-                      className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="todos">Todos los roles</option>
-                      <option value="admin">Administrador</option>
-                      <option value="user">Usuario</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-end">
-                    <button
-                      onClick={() => {
-                        setSearchTerm('');
-                        setFilterRol('todos');
-                      }}
-                      className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                      🧹 Limpiar
-                    </button>
-                  </div>
-                </div>
-              </div>
+              {/* Filtros modernos */}
+              <SearchFilters
+                searchTerm={searchTerm}
+                filterRol={filterRol}
+                onSearchChange={setSearchTerm}
+                onRolChange={setFilterRol}
+                onClearFilters={() => {
+                  setSearchTerm('');
+                  setFilterRol('todos');
+                }}
+              />
 
               {/* Lista de usuarios */}
               {loading ? (
@@ -334,114 +317,13 @@ export default function AdminUsersPage() {
                   </button>
                 </div>
               ) : (
-                <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                      <thead className="bg-black/20">
-                        <tr>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Información Personal</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Credenciales</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Rol</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Actividad</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-white/80 uppercase tracking-wider">Sistema</th>
-                          <th className="px-6 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/10">
-                        {filteredUsuarios.map((usuario) => (
-                          <tr key={usuario.id} className="hover:bg-black/20 transition-colors duration-200">
-                            {/* Información Personal */}
-                            <td className="px-6 py-4">
-                              <div className="space-y-1">
-                                <div className="text-sm font-semibold text-white">
-                                  {usuario.first_name || 'Sin nombre'} {usuario.last_name || 'Sin apellido'}
-                                </div>
-                                <div className="text-sm text-white/70">
-                                  @{usuario.username}
-                                </div>
-                              </div>
-                            </td>
-                            
-                            {/* Credenciales */}
-                            <td className="px-6 py-4">
-                              <div className="space-y-1">
-                                <div className="text-sm text-white/90">{usuario.email}</div>
-                                {usuario.allow_password_change && (
-                                  <span className="inline-flex px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs">
-                                    🔑 Cambio pendiente
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            
-                            {/* Rol */}
-                            <td className="px-6 py-4">
-                              <span className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full border ${getRolInfo(usuario.role).color}`}>
-                                <span className="mr-1">{getRolInfo(usuario.role).icon}</span>
-                                {getRolInfo(usuario.role).label}
-                              </span>
-                            </td>
-                            
-                            {/* Actividad */}
-                            <td className="px-6 py-4">
-                              <div className="space-y-1">
-                                <div className="text-sm text-white/70">
-                                  <span className="inline-flex items-center px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
-                                    {usuario.sign_in_count || 0} logins
-                                  </span>
-                                </div>
-                                <div className="text-xs text-white/60">
-                                  {usuario.last_sign_in_at ? new Date(usuario.last_sign_in_at).toLocaleDateString('es-ES') : 'Nunca accedió'}
-                                </div>
-                                {usuario.current_sign_in_at && (
-                                  <div className="text-xs text-green-400">
-                                    🟢 Sesión activa
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            
-                            {/* Sistema */}
-                            <td className="px-6 py-4">
-                              <div className="space-y-1">
-                                <div className="text-xs text-white/60">
-                                  Creado: {usuario.created_at ? new Date(usuario.created_at).toLocaleDateString('es-ES') : 'N/A'}
-                                </div>
-                                <div className="text-xs text-white/60">
-                                  Modificado: {usuario.updated_at ? new Date(usuario.updated_at).toLocaleDateString('es-ES') : 'N/A'}
-                                </div>
-                                {usuario.last_sign_in_ip && (
-                                  <div className="text-xs text-white/50 font-mono">
-                                    IP: {usuario.last_sign_in_ip}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center justify-center space-x-2">
-                                <button
-                                  onClick={() => handleUserEdit(usuario)}
-                                  className="text-blue-400 hover:text-blue-300 transition-colors p-2 hover:bg-blue-500/20 rounded-lg"
-                                  title="Editar"
-                                >
-                                  ✏️
-                                </button>
-
-                                <button
-                                  onClick={() => handleUserDelete(usuario.id)}
-                                  className="text-red-400 hover:text-red-300 transition-colors p-2 hover:bg-red-500/20 rounded-lg"
-                                  title="Eliminar"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <UsersTable
+                  usuarios={filteredUsuarios}
+                  onViewUser={handleUserView}
+                  onEditUser={handleUserEdit}
+                  onDeleteUser={handleUserDelete}
+                  getRolInfo={getRolInfo}
+                />
               )}
             </div>
           )}
@@ -494,133 +376,24 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Modal para Usuario */}
-        {showUserForm && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-black/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 w-full max-w-md">
-              <h3 className="text-xl font-bold text-white mb-6">
-                {editingUser ? '✏️ Editar Usuario' : '➕ Agregar Usuario'}
-              </h3>
-              <form onSubmit={handleUserSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-white/80 text-sm font-medium mb-2">
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      name="first_name"
-                      defaultValue={editingUser?.first_name}
-                      required
-                      className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                      placeholder="Nombre"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-white/80 text-sm font-medium mb-2">
-                      Apellido
-                    </label>
-                    <input
-                      type="text"
-                      name="last_name"
-                      defaultValue={editingUser?.last_name}
-                      required
-                      className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                      placeholder="Apellido"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-white/80 text-sm font-medium mb-2">
-                    Usuario
-                  </label>
-                  <input
-                    type="text"
-                    name="username"
-                    defaultValue={editingUser?.username}
-                    required
-                    className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                    placeholder="usuario"
-                  />
-                </div>
-                <div>
-                  <label className="block text-white/80 text-sm font-medium mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    defaultValue={editingUser?.email}
-                    required
-                    className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                    placeholder="usuario@empresa.com"
-                  />
-                </div>
-                                  <div>
-                    <label className="block text-white/80 text-sm font-medium mb-2">
-                      Rol
-                    </label>
-                    <select
-                      name="role"
-                      defaultValue={editingUser?.role || 'user'}
-                      required
-                      className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="user">👤 Usuario</option>
-                      <option value="admin">👑 Administrador</option>
-                    </select>
-                  </div>
-                  
-                  {/* Campos de contraseña solo para nuevos usuarios */}
-                  {!editingUser && (
-                    <>
-                      <div>
-                        <label className="block text-white/80 text-sm font-medium mb-2">
-                          Contraseña
-                        </label>
-                        <input
-                          type="password"
-                          name="password"
-                          required
-                          className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                          placeholder="Contraseña"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white/80 text-sm font-medium mb-2">
-                          Confirmar Contraseña
-                        </label>
-                        <input
-                          type="password"
-                          name="password_confirmation"
-                          required
-                          className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                          placeholder="Confirmar contraseña"
-                        />
-                      </div>
-                    </>
-                  )}
-                <div className="flex space-x-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowUserForm(false);
-                      setEditingUser(null);
-                    }}
-                    className="flex-1 px-4 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors"
-                  >
-                    ❌ Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-                  >
-                    {editingUser ? '💾 Actualizar' : '➕ Agregar'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <UserFormModal
+          isOpen={showUserForm}
+          editingUser={editingUser}
+          onClose={() => {
+            setShowUserForm(false);
+            setEditingUser(null);
+          }}
+          onSubmit={handleUserSubmit}
+        />
+
+        {/* Modal para Ver Usuario */}
+        <UserViewModal
+          usuario={viewingUser}
+          onClose={() => setViewingUser(null)}
+          onEdit={handleUserEdit}
+          onDelete={handleUserDelete}
+          getRolInfo={getRolInfo}
+        />
       </div>
     </div>
   );
