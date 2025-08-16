@@ -96,7 +96,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
               onClick={onAddUser}
               className="w-full h-11 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <span>➕</span>
+              <span className="text-white font-bold mr-1">+</span>
               <span>Agregar</span>
             </button>
           </div>
