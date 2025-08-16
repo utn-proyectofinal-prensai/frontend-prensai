@@ -10,6 +10,7 @@ import {
   UserFormModal,
   UserViewModal
 } from '../components/admin';
+import { UserDropdown } from '../components/common';
 
 interface Usuario extends AdminUser {
   // Extendemos AdminUser sin campos adicionales
@@ -30,6 +31,9 @@ export default function AdminUsersPage() {
   const [viewingUser, setViewingUser] = useState<Usuario | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRol, setFilterRol] = useState<'todos' | 'admin' | 'user'>('todos');
+
+  // Estado para el dropdown del usuario
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Roles disponibles (coinciden con el backend)
   const roles = [
@@ -235,16 +239,37 @@ export default function AdminUsersPage() {
               </div>
               
               {/* Lado derecho: Información del usuario */}
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-3 relative">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-white/80">Administrador</p>
-                  <p className="text-lg font-bold text-white">{user?.username}</p>
+                  <p className="text-sm font-semibold text-white drop-shadow-md">Bienvenido, {user?.username}</p>
+                  {isAdmin && (
+                    <span className="inline-flex px-2 py-1 bg-red-500/20 text-red-300 rounded-full text-xs font-bold border border-red-300/30">
+                      ADMIN
+                    </span>
+                  )}
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                  <span className="text-white text-xl font-bold">
+                <button 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer group"
+                >
+                  <span className="text-white text-lg font-bold">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
-                </div>
+                  <svg 
+                    className={`w-4 h-4 text-white ml-1 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {/* Dropdown del usuario */}
+                <UserDropdown 
+                  isOpen={isDropdownOpen}
+                  onClose={() => setIsDropdownOpen(false)}
+                />
               </div>
             </div>
           </div>
