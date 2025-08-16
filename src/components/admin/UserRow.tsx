@@ -44,13 +44,15 @@ export const UserRow: React.FC<UserRowProps> = ({
     >
       {/* Checkbox */}
       <td className="px-6 py-4 text-left">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onSelect(usuario.id)}
-          onClick={handleCheckboxClick}
-          className="w-5 h-5 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer hover:border-blue-400 transition-colors"
-        />
+        <div className="flex items-center h-full">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onSelect(usuario.id)}
+            onClick={handleCheckboxClick}
+            className="w-5 h-5 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer hover:border-blue-400 transition-colors"
+          />
+        </div>
       </td>
       
       {/* Email */}
@@ -72,9 +74,9 @@ export const UserRow: React.FC<UserRowProps> = ({
       
       {/* Rol */}
       <td className="px-6 py-4 text-left">
-        <span className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full border ${getRolInfo(usuario.role).color}`}>
-          <span className="mr-1">{getRolInfo(usuario.role).icon}</span>
-          {getRolInfo(usuario.role).label}
+        <span className={`inline-flex items-center px-6 py-3 text-sm font-bold rounded-full border ${getRolInfo(usuario.role).color}`}>
+          <span className="mr-4 flex-shrink-0">{getRolInfo(usuario.role).icon}</span>
+          <span>{getRolInfo(usuario.role).label}</span>
         </span>
       </td>
       
