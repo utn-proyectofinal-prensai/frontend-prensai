@@ -53,6 +53,12 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Nombre, usuario o email..."
                 className="w-full h-11 px-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                style={{ 
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  appearance: 'none'
+                }}
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +72,8 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
             <select
               value={filterRol}
               onChange={(e) => onRolChange(e.target.value as 'todos' | 'admin' | 'user')}
-              className="w-full h-11 px-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+              className="w-full h-11 px-3 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
             >
               <option value="todos">🎯 Todos los roles</option>
               <option value="admin">👑 Administrador</option>
