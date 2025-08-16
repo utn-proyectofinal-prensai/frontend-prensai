@@ -18,7 +18,6 @@ interface Usuario extends AdminUser {
 export default function AdminUsersPage() {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<'usuarios' | 'roles'>('usuarios');
   
   // Estados para Usuarios
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -32,12 +31,15 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRol, setFilterRol] = useState<'todos' | 'admin' | 'user'>('todos');
 
-
   // Roles disponibles (coinciden con el backend)
   const roles = [
     { value: 'admin', label: 'Administrador', color: 'bg-red-500/20 text-red-400 border-red-300/30', icon: '👑' },
     { value: 'user', label: 'Usuario', color: 'bg-blue-500/20 text-blue-400 border-blue-300/30', icon: '👤' }
   ];
+
+  // Calcular estadísticas para el header
+  const totalUsers = usuarios.length;
+  const adminUsers = usuarios.filter(u => u.role === 'admin').length;
 
   // Cargar usuarios desde la API
   useEffect(() => {
@@ -198,51 +200,48 @@ export default function AdminUsersPage() {
       <div className="relative z-10 w-full h-full">
         {/* Header moderno con gradiente */}
         <div className="bg-gradient-to-r from-slate-900/90 via-blue-900/70 to-indigo-900/90 backdrop-blur-xl shadow-2xl border-b border-white/20 w-full">
-          <div className="w-full py-6 px-8">
+          <div className="w-full py-6 px-12">
             <div className="flex justify-between items-center">
+              {/* Lado izquierdo: Navegación y logo */}
               <div className="flex items-center space-x-8">
                 <button 
                   onClick={() => navigate('/dashboard')}
-                  className="text-white/80 hover:text-blue-300 transition-all duration-300 p-2 rounded-lg hover:bg-white/10"
+                  className="text-white/80 hover:text-blue-300 transition-all duration-300 p-3 rounded-xl hover:bg-white/10 hover:shadow-lg"
+                  title="Volver al Dashboard"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
-                <div className="w-24 h-24 flex items-center justify-center">
+                
+                <div className="w-20 h-20 flex items-center justify-center">
                   <img 
                     src="/images/fondoblanco.png" 
                     alt="PrensAI Logo" 
-                    className="w-20 h-20 object-contain"
+                    className="w-16 h-16 object-contain"
                     onError={(e) => {
                       console.log('Error loading logo:', e);
                       e.currentTarget.style.display = 'none';
                     }}
                   />
                 </div>
-                <div className="space-y-1">
+                
+                <div className="space-y-2">
                   <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">
                     PrensAI
                   </h1>
                   <p className="text-white/90 text-lg font-medium">Panel de Administración</p>
-                  <div className="flex items-center space-x-3">
-                    <span className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur-sm text-white/90 rounded-full text-sm font-medium border border-white/20">
-                      🚀 Sistema Activo
-                    </span>
-                    <span className="inline-flex items-center px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm font-medium border border-green-300/30">
-                      {usuarios.length} Usuarios
-                    </span>
-                  </div>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4">
+              {/* Lado derecho: Información del usuario */}
+              <div className="flex items-center space-x-6">
                 <div className="text-right">
                   <p className="text-sm font-medium text-white/80">Administrador</p>
                   <p className="text-lg font-bold text-white">{user?.username}</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                  <span className="text-white text-lg font-bold">
+                <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <span className="text-white text-xl font-bold">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -252,127 +251,39 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Contenido principal */}
-        <div className="w-full px-6 py-16 h-full">
-          {/* Tabs modernos */}
-          <div className="flex space-x-2 mb-8 bg-black/30 backdrop-blur-xl rounded-2xl p-2 w-fit border border-white/20 shadow-xl">
-            <button
-              onClick={() => setActiveTab('usuarios')}
-              className={`px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center space-x-3 ${
-                activeTab === 'usuarios'
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <span className="text-xl">👥</span>
-              <span>Usuarios</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('roles')}
-              className={`px-8 py-4 rounded-xl font-semibold transition-all duration-300 flex items-center space-x-3 ${
-                activeTab === 'roles'
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <span className="text-xl">🛡️</span>
-              <span>Roles y Permisos</span>
-            </button>
+        <div className="w-full px-12 py-6 h-full">
+          {/* Contenido principal de gestión de usuarios */}
+          <div className="w-full max-w-none">
+            {/* Header con título y estadísticas */}
+            <AdminUsersHeader
+              onAddUser={() => setShowUserForm(true)}
+              totalUsers={totalUsers}
+              adminUsers={adminUsers}
+            />
+
+            {/* Espacio entre secciones */}
+            <div className="h-12"></div>
+
+            {/* Filtros modernos */}
+            <SearchFilters
+              searchTerm={searchTerm}
+              filterRol={filterRol}
+              onSearchChange={setSearchTerm}
+              onRolChange={setFilterRol}
+              onClearFilters={() => {
+                setSearchTerm('');
+                setFilterRol('todos');
+              }}
+              onAddUser={() => setShowUserForm(true)}
+              usuarios={filteredUsuarios}
+              onViewUser={handleUserView}
+              onEditUser={handleUserEdit}
+              onDeleteUser={handleUserDelete}
+              getRolInfo={getRolInfo}
+              loading={loading}
+              error={error}
+            />
           </div>
-
-          {/* Contenido de Usuarios */}
-          {activeTab === 'usuarios' && (
-            <div className="space-y-6">
-              {/* Header con botón agregar y filtros */}
-              <AdminUsersHeader
-                onAddUser={() => setShowUserForm(true)}
-              />
-
-              {/* Filtros modernos */}
-              <SearchFilters
-                searchTerm={searchTerm}
-                filterRol={filterRol}
-                onSearchChange={setSearchTerm}
-                onRolChange={setFilterRol}
-                onClearFilters={() => {
-                  setSearchTerm('');
-                  setFilterRol('todos');
-                }}
-              />
-
-              {/* Lista de usuarios */}
-              {loading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                  <p className="text-white/80">Cargando usuarios...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-12">
-                  <div className="text-red-400 mb-4">⚠️</div>
-                  <p className="text-white/80 mb-4">{error}</p>
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Reintentar
-                  </button>
-                </div>
-              ) : (
-                <UsersTable
-                  usuarios={filteredUsuarios}
-                  onViewUser={handleUserView}
-                  onEditUser={handleUserEdit}
-                  onDeleteUser={handleUserDelete}
-                  getRolInfo={getRolInfo}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Contenido de Roles */}
-          {activeTab === 'roles' && (
-            <div className="space-y-6">
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 p-8">
-                <h3 className="text-xl font-bold text-white mb-6">Roles y Permisos del Sistema</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {roles.map((rol) => (
-                    <div key={rol.value} className="bg-black/20 backdrop-blur-sm rounded-xl border border-white/20 p-6 hover:bg-black/30 transition-all duration-300">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-semibold text-white">{rol.label}</h4>
-                        <span className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full border ${rol.color}`}>
-                          <span className="mr-1">{rol.icon}</span>
-                          {rol.value}
-                        </span>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="text-sm text-white/80">
-                          <strong>Permisos:</strong>
-                        </div>
-                        <ul className="text-sm text-white/70 space-y-1">
-                          {rol.value === 'admin' && (
-                            <>
-                              <li>• 👑 Gestión completa de usuarios</li>
-                              <li>• ⚙️ Acceso a todas las funcionalidades</li>
-                              <li>• 🔧 Configuración del sistema</li>
-                              <li>• 📊 Analytics avanzados</li>
-                              <li>• 🎯 Gestión de eventos y temas</li>
-                            </>
-                          )}
-                          {rol.value === 'user' && (
-                            <>
-                              <li>• 📤 Subir y procesar noticias</li>
-                              <li>• ✂️ Crear clippings</li>
-                              <li>• 📚 Ver histórico completo</li>
-                              <li>• 📈 Acceso a métricas básicas</li>
-                            </>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Modal para Usuario */}

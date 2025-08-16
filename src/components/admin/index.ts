@@ -4,3 +4,4 @@ export { UsersTable } from './UsersTable';
 export { UserRow } from './UserRow';
 export { UserFormModal } from './UserFormModal';
 export { UserViewModal } from './UserViewModal';
+export { UsersInsights } from './UsersInsights';
