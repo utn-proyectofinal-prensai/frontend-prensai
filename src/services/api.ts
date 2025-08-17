@@ -108,32 +108,32 @@ export interface ClippingMetrics {
       cantidad: number;
       porcentaje: number;
     };
-          esTemaCritico: boolean;
+    esTemaCritico: boolean;
+  };
+  mencionesAnalysis: {
+    totalNoticias: number;
+    mencion1: {
+      cantidad: number;
+      porcentaje: number;
     };
-    mencionesAnalysis: {
-      totalNoticias: number;
-      mencion1: {
-        cantidad: number;
-        porcentaje: number;
-      };
-      mencion2: {
-        cantidad: number;
-        porcentaje: number;
-      };
-      mencion3: {
-        cantidad: number;
-        porcentaje: number;
-      };
-      mencion4: {
-        cantidad: number;
-        porcentaje: number;
-      };
-      mencion5: {
-        cantidad: number;
-        porcentaje: number;
-      };
+    mencion2: {
+      cantidad: number;
+      porcentaje: number;
     };
-    resumen: {
+    mencion3: {
+      cantidad: number;
+      porcentaje: number;
+    };
+    mencion4: {
+      cantidad: number;
+      porcentaje: number;
+    };
+    mencion5: {
+      cantidad: number;
+      porcentaje: number;
+    };
+  };
+  resumen: {
     soportesUnicos: number;
     mediosUnicos: number;
     temasUnicos: number;
@@ -366,6 +366,28 @@ export const apiService = {
     return apiRequest<{ message: string; metricas: ClippingMetrics }>('/news/metrics', {
       method: 'POST',
       body: JSON.stringify({ newsIds }),
+    });
+  },
+
+  // Generar informe usando el módulo Python
+  async generateInforme(metricas: ClippingMetrics, contexto?: any): Promise<{
+    message: string;
+    informe: string;
+    metadatos: any;
+    wordBase64?: string;
+    wordDocument?: string;
+    wordError?: string;
+  }> {
+    return apiRequest<{
+      message: string;
+      informe: string;
+      metadatos: any;
+      wordBase64?: string;
+      wordDocument?: string;
+      wordError?: string;
+    }>('/news/generate-informe', {
+      method: 'POST',
+      body: JSON.stringify({ metricas, contexto }),
     });
   },
 };

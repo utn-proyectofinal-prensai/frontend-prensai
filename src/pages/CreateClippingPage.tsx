@@ -464,19 +464,76 @@ export default function CreateClippingPage() {
     }
   };
 
-  const handleGenerarInforme = () => {
+  const [isGenerandoInforme, setIsGenerandoInforme] = useState(false);
+  const [informeGenerado, setInformeGenerado] = useState<string | null>(null);
+  const [wordDocumentData, setWordDocumentData] = useState<{ base64: string; filename: string } | null>(null);
+
+  const handleGenerarInforme = async () => {
     if (noticiasSeleccionadas.size === 0) {
       alert('Por favor selecciona al menos una noticia para generar el informe.');
       return;
     }
 
-    const noticiasDelClipping = noticiasFiltradas.filter(noticia => 
-      noticiasSeleccionadas.has(noticia.id)
-    );
+    if (!metricas) {
+      alert('Primero debes generar las métricas para poder crear el informe.');
+      return;
+    }
 
-    // Aquí iría la lógica para generar informe
-    console.log('Generando informe con:', noticiasDelClipping);
-    alert(`Informe generado con ${noticiasDelClipping.length} noticias seleccionadas.`);
+    setIsGenerandoInforme(true);
+    setInformeGenerado(null);
+
+    try {
+      // Preparar datos para el informe
+      const noticiasDelClipping = noticiasFiltradas.filter(noticia => 
+        noticiasSeleccionadas.has(noticia.id)
+      );
+
+      // Crear contexto adicional para el informe
+      const contexto = {
+        voceros: ['GR', 'JM', 'PB'], // Voceros principales (puedes personalizar)
+        mediosPrimeraLinea: ['Infobae', 'Clarín', 'La Nación', 'Perfil'], // Medios de primera línea
+        eventosEspeciales: [], // Eventos especiales del período
+        mensajesClave: [
+          'Trabajo proactivo del ministerio',
+          'Calidad de la información',
+          'Posicionamiento de voceros oficiales',
+          'Gestión colaborativa'
+        ]
+      };
+
+      // Agregar tema seleccionado a las métricas
+      const metricasConTema = {
+        ...metricas,
+        temaSeleccionado: getEventoTemaById(eventoTemaSeleccionado)?.nombre || 'Tema no especificado',
+        fechaGeneracion: new Date().toISOString().split('T')[0]
+      };
+
+      console.log('Generando informe con métricas:', metricasConTema);
+
+      // Llamar al backend para generar el informe usando apiService
+      const data = await apiService.generateInforme(metricasConTema, contexto);
+      
+      if (data.informe) {
+        setInformeGenerado(data.informe);
+        // Guardar datos del Word si están disponibles
+        if (data.wordBase64) {
+          setWordDocumentData({
+            base64: data.wordBase64,
+            filename: `informe-${getEventoTemaById(eventoTemaSeleccionado)?.nombre || 'clipping'}-${new Date().toISOString().split('T')[0]}.docx`
+          });
+        }
+        console.log('Informe generado exitosamente:', data);
+      } else {
+        throw new Error('No se pudo generar el informe');
+      }
+
+    } catch (error) {
+      console.error('Error generando informe:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`Error al generar el informe: ${errorMessage}`);
+    } finally {
+      setIsGenerandoInforme(false);
+    }
   };
 
   const getEventoTemaById = (id: string) => {
@@ -1029,9 +1086,19 @@ export default function CreateClippingPage() {
                   </p>
                   <button
                     onClick={handleGenerarInforme}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    disabled={isGenerandoInforme}
+                    className={`w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                      isGenerandoInforme ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   >
-                    Generar Informe
+                    {isGenerandoInforme ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Generando...
+                      </div>
+                    ) : (
+                      'Generar Informe'
+                    )}
                   </button>
                 </div>
               </div>
@@ -1072,6 +1139,80 @@ export default function CreateClippingPage() {
                 <div className="mt-8 flex justify-center items-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
                   <span className="ml-3 text-white/80">Calculando métricas...</span>
+                </div>
+              )}
+
+              {/* Visualización del Informe Generado */}
+              {informeGenerado && (
+                <div className="mt-8">
+                  <h4 className="text-lg font-bold text-white mb-4 drop-shadow-md">
+                    📋 Informe Generado
+                  </h4>
+                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
+                    <div className="prose prose-invert max-w-none">
+                      <div 
+                        className="text-white/90 whitespace-pre-wrap leading-relaxed"
+                        style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+                      >
+                        {informeGenerado}
+                      </div>
+                    </div>
+                    
+                    {/* Botones para descargar informe */}
+                    <div className="flex justify-center gap-4 mt-6">
+                      {/* Botón para descargar como Word */}
+                      {wordDocumentData ? (
+                        <button
+                          onClick={() => {
+                            // Convertir base64 a blob y descargar
+                            const byteCharacters = atob(wordDocumentData.base64);
+                            const byteNumbers = new Array(byteCharacters.length);
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = wordDocumentData.filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                        >
+                          📄 Descargar Informe como Word
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="px-6 py-3 bg-gray-500 text-white rounded-xl font-semibold cursor-not-allowed opacity-50"
+                        >
+                          📄 Word no disponible
+                        </button>
+                        )}
+                      
+                      {/* Botón para descargar como texto (respaldo) */}
+                      <button
+                        onClick={() => {
+                          const blob = new Blob([informeGenerado], { type: 'text/plain;charset=utf-8' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `informe-${getEventoTemaById(eventoTemaSeleccionado)?.nombre || 'clipping'}-${new Date().toISOString().split('T')[0]}.txt`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      >
+                        💾 Descargar como TXT (respaldo)
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
