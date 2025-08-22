@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
@@ -34,6 +34,9 @@ export default function AdminUsersPage() {
 
   // Estado para el dropdown del usuario
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // Referencia para el botón del usuario
+  const userButtonRef = useRef<HTMLDivElement>(null);
 
   // Roles disponibles (coinciden con el backend)
   const roles = [
@@ -239,36 +242,39 @@ export default function AdminUsersPage() {
               </div>
               
               {/* Lado derecho: Información del usuario */}
-              <div className="flex items-center space-x-3 relative">
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-white drop-shadow-md">Bienvenido, {user?.username}</p>
+              <div className="flex items-center space-x-6 relative user-section">
+                <div className="text-right mr-3">
+                  <p className="text-sm font-semibold text-white drop-shadow-md mb-2">Bienvenido, {user?.username}</p>
                   {isAdmin && (
-                    <span className="inline-flex px-2 py-1 bg-red-500/20 text-red-300 rounded-full text-xs font-bold border border-red-300/30">
+                    <span className="inline-flex items-center px-8 py-4 text-sm font-bold rounded-full border border-red-300/30 bg-red-500/20 text-red-400">
                       ADMIN
                     </span>
                   )}
                 </div>
-                <button 
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer group"
-                >
-                  <span className="text-white text-lg font-bold">
-                    {user?.username?.charAt(0).toUpperCase()}
-                  </span>
+                <div className="relative" ref={userButtonRef}>
+                  <button 
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-14 h-14 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-full flex items-center justify-center shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group border-2 border-white/20"
+                  >
+                    <span className="text-white text-xl font-bold drop-shadow-lg">
+                      {user?.username?.charAt(0).toUpperCase()}
+                    </span>
+                  </button>
                   <svg 
-                    className={`w-4 h-4 text-white ml-1 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                    className={`absolute -bottom-2 -right-2 w-6 h-6 text-white bg-gray-800 rounded-full p-1.5 transition-all duration-300 shadow-lg border border-gray-700 ${isDropdownOpen ? 'rotate-180 scale-110' : 'hover:scale-110'}`} 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                   </svg>
-                </button>
+                </div>
                 
                 {/* Dropdown del usuario */}
                 <UserDropdown 
                   isOpen={isDropdownOpen}
                   onClose={() => setIsDropdownOpen(false)}
+                  triggerRef={userButtonRef}
                 />
               </div>
             </div>
