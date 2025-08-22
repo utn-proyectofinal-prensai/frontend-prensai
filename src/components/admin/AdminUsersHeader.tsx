@@ -1,13 +1,11 @@
 import React from 'react';
 
 interface AdminUsersHeaderProps {
-  onAddUser: () => void;
   totalUsers: number;
   adminUsers: number;
 }
 
 export const AdminUsersHeader: React.FC<AdminUsersHeaderProps> = ({ 
-  onAddUser,
   totalUsers,
   adminUsers
 }) => {

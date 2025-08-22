@@ -88,6 +88,13 @@ export const UsersTable: React.FC<UsersTableProps> = ({
             </div>
             <div className="flex flex-wrap gap-3">
               <button
+                onClick={handleBulkEdit}
+                className="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                <span className="text-lg">✏️</span>
+                <span>Editar Seleccionados</span>
+              </button>
+              <button
                 onClick={handleBulkDelete}
                 className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
               >

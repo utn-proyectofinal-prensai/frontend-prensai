@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
@@ -6,11 +6,10 @@ import type { AdminUser, CreateUserData, UpdateUserData } from '../services/api'
 import {
   AdminUsersHeader,
   SearchFilters,
-  UsersTable,
   UserFormModal,
   UserViewModal
 } from '../components/admin';
-import { UserDropdown } from '../components/common';
+import { PageHeader, PageBackground } from '../components/common';
 
 interface Usuario extends AdminUser {
   // Extendemos AdminUser sin campos adicionales
@@ -18,7 +17,7 @@ interface Usuario extends AdminUser {
 
 export default function AdminUsersPage() {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   
   // Estados para Usuarios
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -31,12 +30,6 @@ export default function AdminUsersPage() {
   const [viewingUser, setViewingUser] = useState<Usuario | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRol, setFilterRol] = useState<'todos' | 'admin' | 'user'>('todos');
-
-  // Estado para el dropdown del usuario
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  // Referencia para el botón del usuario
-  const userButtonRef = useRef<HTMLDivElement>(null);
 
   // Roles disponibles (coinciden con el backend)
   const roles = [
@@ -157,8 +150,6 @@ export default function AdminUsersPage() {
     setViewingUser(usuario);
   };
 
-
-
   // Filtros
   const filteredUsuarios = usuarios.filter(usuario => {
     const matchesSearch = (usuario.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
@@ -183,160 +174,71 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="dashboard-container w-full h-screen relative overflow-x-hidden" style={{ backgroundColor: '#1e293b' }}>
-      {/* Fondo que cubre TODA la pantalla */}
-      <div 
-        className="fixed top-0 left-0 w-screen h-screen"
-        style={{
-          backgroundImage: `url('/images/fondodashboard.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
-          zIndex: 0
-        }}
-      ></div>
-
-      {/* Overlay muy sutil */}
-      <div 
-        className="fixed top-0 left-0 w-screen h-screen bg-black/5" 
-        style={{ zIndex: 1 }}
-      ></div>
+    <PageBackground>
+      {/* Header moderno con gradiente */}
+      <PageHeader 
+        title="PrensAI"
+        subtitle="Panel de Administración"
+        showBackButton={true}
+        backButtonPath="/dashboard"
+        backButtonLabel="Volver al Dashboard"
+        variant="transparent"
+      />
 
       {/* Contenido principal */}
-      <div className="relative z-10 w-full h-full">
-        {/* Header moderno con gradiente */}
-        <div className="bg-gradient-to-r from-slate-900/90 via-blue-900/70 to-indigo-900/90 backdrop-blur-xl shadow-2xl border-b border-white/20 w-full">
-          <div className="w-full py-6 px-12">
-            <div className="flex justify-between items-center">
-              {/* Lado izquierdo: Navegación y logo */}
-              <div className="flex items-center space-x-8">
-                <button 
-                  onClick={() => navigate('/dashboard')}
-                  className="text-white/80 hover:text-blue-300 transition-all duration-300 p-3 rounded-xl hover:bg-white/10 hover:shadow-lg"
-                  title="Volver al Dashboard"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                </button>
-                
-                <div className="w-20 h-20 flex items-center justify-center">
-                  <img 
-                    src="/images/fondoblanco.png" 
-                    alt="PrensAI Logo" 
-                    className="w-16 h-16 object-contain"
-                    onError={(e) => {
-                      console.log('Error loading logo:', e);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">
-                    PrensAI
-                  </h1>
-                  <p className="text-white/90 text-lg font-medium">Panel de Administración</p>
-                </div>
-              </div>
-              
-              {/* Lado derecho: Información del usuario */}
-              <div className="flex items-center space-x-6 relative user-section">
-                <div className="text-right mr-3">
-                  <p className="text-sm font-semibold text-white drop-shadow-md mb-2">Bienvenido, {user?.username}</p>
-                  {isAdmin && (
-                    <span className="inline-flex items-center px-8 py-4 text-sm font-bold rounded-full border border-red-300/30 bg-red-500/20 text-red-400">
-                      ADMIN
-                    </span>
-                  )}
-                </div>
-                <div className="relative" ref={userButtonRef}>
-                  <button 
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-14 h-14 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-full flex items-center justify-center shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group border-2 border-white/20"
-                  >
-                    <span className="text-white text-xl font-bold drop-shadow-lg">
-                      {user?.username?.charAt(0).toUpperCase()}
-                    </span>
-                  </button>
-                  <svg 
-                    className={`absolute -bottom-2 -right-2 w-6 h-6 text-white bg-gray-800 rounded-full p-1.5 transition-all duration-300 shadow-lg border border-gray-700 ${isDropdownOpen ? 'rotate-180 scale-110' : 'hover:scale-110'}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-                
-                {/* Dropdown del usuario */}
-                <UserDropdown 
-                  isOpen={isDropdownOpen}
-                  onClose={() => setIsDropdownOpen(false)}
-                  triggerRef={userButtonRef}
-                />
-              </div>
-            </div>
-          </div>
+      <div className="w-full px-6 py-6 h-full">
+        {/* Contenido principal de gestión de usuarios */}
+        <div className="w-full max-w-none">
+          {/* Header con título y estadísticas */}
+          <AdminUsersHeader
+            totalUsers={totalUsers}
+            adminUsers={adminUsers}
+          />
+
+          {/* Espacio entre secciones */}
+          <div className="h-12"></div>
+
+          {/* Filtros modernos */}
+          <SearchFilters
+            searchTerm={searchTerm}
+            filterRol={filterRol}
+            onSearchChange={setSearchTerm}
+            onRolChange={setFilterRol}
+            onClearFilters={() => {
+              setSearchTerm('');
+              setFilterRol('todos');
+            }}
+            onAddUser={() => setShowUserForm(true)}
+            usuarios={filteredUsuarios}
+            onViewUser={handleUserView}
+            onEditUser={handleUserEdit}
+            onDeleteUser={handleUserDelete}
+            getRolInfo={getRolInfo}
+            loading={loading}
+            error={error}
+          />
         </div>
-
-        {/* Contenido principal */}
-        <div className="w-full px-12 py-6 h-full">
-          {/* Contenido principal de gestión de usuarios */}
-          <div className="w-full max-w-none">
-            {/* Header con título y estadísticas */}
-            <AdminUsersHeader
-              onAddUser={() => setShowUserForm(true)}
-              totalUsers={totalUsers}
-              adminUsers={adminUsers}
-            />
-
-            {/* Espacio entre secciones */}
-            <div className="h-12"></div>
-
-            {/* Filtros modernos */}
-            <SearchFilters
-              searchTerm={searchTerm}
-              filterRol={filterRol}
-              onSearchChange={setSearchTerm}
-              onRolChange={setFilterRol}
-              onClearFilters={() => {
-                setSearchTerm('');
-                setFilterRol('todos');
-              }}
-              onAddUser={() => setShowUserForm(true)}
-              usuarios={filteredUsuarios}
-              onViewUser={handleUserView}
-              onEditUser={handleUserEdit}
-              onDeleteUser={handleUserDelete}
-              getRolInfo={getRolInfo}
-              loading={loading}
-              error={error}
-            />
-          </div>
-        </div>
-
-        {/* Modal para Usuario */}
-        <UserFormModal
-          isOpen={showUserForm}
-          editingUser={editingUser}
-          onClose={() => {
-            setShowUserForm(false);
-            setEditingUser(null);
-          }}
-          onSubmit={handleUserSubmit}
-        />
-
-        {/* Modal para Ver Usuario */}
-        <UserViewModal
-          usuario={viewingUser}
-          onClose={() => setViewingUser(null)}
-          onEdit={handleUserEdit}
-          onDelete={handleUserDelete}
-          getRolInfo={getRolInfo}
-        />
       </div>
-    </div>
+
+      {/* Modal para Usuario */}
+      <UserFormModal
+        isOpen={showUserForm}
+        editingUser={editingUser}
+        onClose={() => {
+          setShowUserForm(false);
+          setEditingUser(null);
+        }}
+        onSubmit={handleUserSubmit}
+      />
+
+      {/* Modal para Ver Usuario */}
+      <UserViewModal
+        usuario={viewingUser}
+        onClose={() => setViewingUser(null)}
+        onEdit={handleUserEdit}
+        onDelete={handleUserDelete}
+        getRolInfo={getRolInfo}
+      />
+    </PageBackground>
   );
 } 

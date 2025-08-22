@@ -14,3 +14,6 @@ export type { Translations } from './useTranslations';
 
 // Hook para control de animaciones
 export { useAnimationControl } from './useAnimationControl';
+
+// Hook para manejo del dropdown del usuario
+export { useUserDropdown } from './useUserDropdown';

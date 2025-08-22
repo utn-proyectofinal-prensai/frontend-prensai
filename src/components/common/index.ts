@@ -10,3 +10,7 @@ export { default as Snackbar } from './Snackbar';
 export type { SnackbarProps } from './Snackbar';
 
 export { default as UserDropdown } from './UserDropdown';
+
+// Componentes de layout
+export { default as PageHeader } from './PageHeader';
+export { default as PageBackground } from './PageBackground';
