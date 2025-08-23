@@ -1,20 +1,20 @@
 import React from 'react';
 import type { AdminUser } from '../../services/api';
+import { USER_MESSAGES } from '../../constants/admin/userMessages';
+import { getRoleInfo } from '../../constants/admin/userRoles';
 
 interface UserViewModalProps {
   usuario: AdminUser | null;
   onClose: () => void;
   onEdit: (usuario: AdminUser) => void;
   onDelete: (id: string) => void;
-  getRolInfo: (role: string) => { icon: string; label: string; color: string };
 }
 
 export const UserViewModal: React.FC<UserViewModalProps> = ({
   usuario,
   onClose,
   onEdit,
-  onDelete,
-  getRolInfo
+  onDelete
 }) => {
   if (!usuario) return null;
 
@@ -24,9 +24,25 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({
   };
 
   const handleDelete = () => {
-    onClose();
-    onDelete(usuario.id);
+    if (window.confirm(USER_MESSAGES.CONFIRMATIONS.DELETE_USER)) {
+      onClose();
+      onDelete(usuario.id);
+    }
   };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('es-ES');
+  };
+
+  const getSessionStatus = () => {
+    if (usuario.current_sign_in_at) {
+      return { text: 'Activa', color: 'text-green-400', icon: '🟢' };
+    }
+    return { text: 'Inactiva', color: 'text-white/60', icon: '⚫' };
+  };
+
+  const sessionStatus = getSessionStatus();
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -49,6 +65,7 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({
           <button
             onClick={onClose}
             className="text-white/60 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-xl"
+            title={USER_MESSAGES.ACTIONS.BACK}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -61,7 +78,7 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({
           {/* Información Personal */}
           <div className="bg-black/30 rounded-2xl p-6 border border-white/10">
             <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <span className="mr-2">👤</span> Información Personal
+              <span className="mr-2">👤</span> {USER_MESSAGES.TITLES.VIEW_USER}
             </h4>
             <div className="space-y-3">
               <div className="flex justify-between">
@@ -69,11 +86,11 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({
                 <span className="text-white font-mono">{usuario.id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/60">Nombre:</span>
+                <span className="text-white/60">{USER_MESSAGES.FORMS.FIRST_NAME}:</span>
                 <span className="text-white">{usuario.first_name || 'No especificado'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/60">Apellido:</span>
+                <span className="text-white/60">{USER_MESSAGES.FORMS.LAST_NAME}:</span>
                 <span className="text-white">{usuario.last_name || 'No especificado'}</span>
               </div>
               <div className="flex justify-between">
@@ -90,14 +107,14 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({
             </h4>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-white/60">Email:</span>
+                <span className="text-white/60">{USER_MESSAGES.FORMS.EMAIL}:</span>
                 <span className="text-white">{usuario.email}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/60">Rol:</span>
-                <span className={`inline-flex items-center px-2 py-1 text-xs font-bold rounded-full border ${getRolInfo(usuario.role).color}`}>
-                  <span className="mr-1">{getRolInfo(usuario.role).icon}</span>
-                  {getRolInfo(usuario.role).label}
+                <span className="text-white/60">{USER_MESSAGES.FORMS.ROLE}:</span>
+                <span className={`inline-flex items-center px-2 py-1 text-xs font-bold rounded-full border ${getRoleInfo(usuario.role).color}`}>
+                  <span className="mr-1">{getRoleInfo(usuario.role).icon}</span>
+                  {getRoleInfo(usuario.role).label}
                 </span>
               </div>
               {usuario.allow_password_change && (
@@ -124,16 +141,14 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({
             </div>
             <div className="text-center">
               <div className="text-lg font-semibold text-white">
-                {usuario.last_sign_in_at ? new Date(usuario.last_sign_in_at).toLocaleDateString('es-ES') : 'Nunca'}
+                {usuario.last_sign_in_at ? formatDate(usuario.last_sign_in_at) : 'Nunca'}
               </div>
               <div className="text-white/60 text-sm">Último Acceso</div>
             </div>
             <div className="text-center">
-              {usuario.current_sign_in_at ? (
-                <div className="text-lg font-semibold text-green-400">🟢 Activa</div>
-              ) : (
-                <div className="text-lg font-semibold text-white/60">⚫ Inactiva</div>
-              )}
+              <div className={`text-lg font-semibold ${sessionStatus.color}`}>
+                {sessionStatus.icon} {sessionStatus.text}
+              </div>
               <div className="text-white/60 text-sm">Sesión</div>
             </div>
           </div>
@@ -148,11 +163,11 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-white/60">Creado:</span>
-                <span className="text-white">{usuario.created_at ? new Date(usuario.created_at).toLocaleDateString('es-ES') : 'N/A'}</span>
+                <span className="text-white">{formatDate(usuario.created_at)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-white/60">Modificado:</span>
-                <span className="text-white">{usuario.updated_at ? new Date(usuario.updated_at).toLocaleDateString('es-ES') : 'N/A'}</span>
+                <span className="text-white">{formatDate(usuario.updated_at)}</span>
               </div>
             </div>
             <div className="space-y-2">
@@ -181,16 +196,18 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({
             <button
               onClick={handleEdit}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center space-x-2"
+              title={USER_MESSAGES.ACTIONS.EDIT}
             >
               <span>✏️</span>
-              <span>Editar</span>
+              <span>{USER_MESSAGES.ACTIONS.EDIT}</span>
             </button>
             <button
               onClick={handleDelete}
               className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center space-x-2"
+              title={USER_MESSAGES.ACTIONS.DELETE}
             >
               <span>🗑️</span>
-              <span>Eliminar</span>
+              <span>{USER_MESSAGES.ACTIONS.DELETE}</span>
             </button>
           </div>
         </div>

@@ -1,24 +1,35 @@
 import React, { useState } from 'react';
-import type { AdminUser } from '../../services/api';
 import { UserRow } from './UserRow';
+import type { AdminUser } from '../../services/api';
+import { USER_MESSAGES } from '../../constants/admin/userMessages';
+import { getRoleInfo } from '../../constants/admin/userRoles';
 
 interface UsersTableProps {
   usuarios: AdminUser[];
   onViewUser: (usuario: AdminUser) => void;
   onEditUser: (usuario: AdminUser) => void;
   onDeleteUser: (id: string) => void;
-  getRolInfo: (role: string) => { icon: string; label: string; color: string };
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({
   usuarios,
   onViewUser,
   onEditUser,
-  onDeleteUser,
-  getRolInfo
+  onDeleteUser
 }) => {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
+
+  const handleSelectUser = (userId: string) => {
+    const newSelectedUsers = new Set(selectedUsers);
+    if (newSelectedUsers.has(userId)) {
+      newSelectedUsers.delete(userId);
+    } else {
+      newSelectedUsers.add(userId);
+    }
+    setSelectedUsers(newSelectedUsers);
+    setSelectAll(newSelectedUsers.size === usuarios.length);
+  };
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -30,24 +41,11 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     }
   };
 
-  const handleSelectUser = (userId: string) => {
-    const newSelected = new Set(selectedUsers);
-    if (newSelected.has(userId)) {
-      newSelected.delete(userId);
-    } else {
-      newSelected.add(userId);
-    }
-    setSelectedUsers(newSelected);
-    setSelectAll(newSelected.size === usuarios.length);
-  };
-
   const handleBulkDelete = () => {
     if (selectedUsers.size === 0) return;
     
-    if (window.confirm(`¿Estás seguro de que quieres eliminar ${selectedUsers.size} usuario(s)?`)) {
-      selectedUsers.forEach(userId => {
-        onDeleteUser(userId);
-      });
+    if (window.confirm(USER_MESSAGES.CONFIRMATIONS.BULK_DELETE)) {
+      selectedUsers.forEach(id => onDeleteUser(id));
       setSelectedUsers(new Set());
       setSelectAll(false);
     }
@@ -74,7 +72,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
             <div className="flex items-center space-x-4">
               <span className="inline-flex items-center px-6 py-3 bg-blue-500/30 text-blue-200 rounded-full text-sm font-semibold border border-blue-400/30">
-                {selectedUsers.size} usuario(s) seleccionado(s)
+                {selectedUsers.size} {USER_MESSAGES.STATES.USERS_COUNT}
               </span>
               <button
                 onClick={() => {
@@ -83,7 +81,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                 }}
                 className="text-blue-300 hover:text-blue-200 text-sm underline"
               >
-                Deseleccionar todo
+                {USER_MESSAGES.STATES.DESELECT_ALL}
               </button>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -92,14 +90,14 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                 className="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <span className="text-lg">✏️</span>
-                <span>Editar Seleccionados</span>
+                <span>{USER_MESSAGES.ACTIONS.EDIT} Seleccionados</span>
               </button>
               <button
                 onClick={handleBulkDelete}
                 className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <span className="text-lg">🗑️</span>
-                <span>Eliminar Seleccionados</span>
+                <span>{USER_MESSAGES.ACTIONS.DELETE} Seleccionados</span>
               </button>
             </div>
           </div>
@@ -121,7 +119,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                 </div>
               </th>
               <th className="px-6 py-6 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
-                Email
+                {USER_MESSAGES.FORMS.EMAIL}
               </th>
               <th className="px-6 py-6 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
                 Nombre Completo
@@ -130,7 +128,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                 Username
               </th>
               <th className="px-6 py-6 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
-                Rol
+                {USER_MESSAGES.FORMS.ROLE}
               </th>
               <th className="px-6 py-6 text-center text-sm font-bold text-white/90 uppercase tracking-wider">
                 Acciones
@@ -147,7 +145,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                 onView={onViewUser}
                 onEdit={onEditUser}
                 onDelete={onDeleteUser}
-                getRolInfo={getRolInfo}
+                getRolInfo={(role: string) => getRoleInfo(role as any)}
               />
             ))}
           </tbody>

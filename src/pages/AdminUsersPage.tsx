@@ -31,11 +31,7 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRol, setFilterRol] = useState<'todos' | 'admin' | 'user'>('todos');
 
-  // Roles disponibles (coinciden con el backend)
-  const roles = [
-    { value: 'admin', label: 'Administrador', color: 'bg-red-500/20 text-red-400 border-red-300/30', icon: '👑' },
-    { value: 'user', label: 'Usuario', color: 'bg-blue-500/20 text-blue-400 border-blue-300/30', icon: '👤' }
-  ];
+
 
   // Calcular estadísticas para el header
   const totalUsers = usuarios.length;
@@ -163,10 +159,6 @@ export default function AdminUsersPage() {
     return matchesSearch && matchesRol;
   });
 
-  const getRolInfo = (rol: string) => {
-    return roles.find(r => r.value === rol) || roles[2];
-  };
-
   // Redirigir si no es admin
   if (!isAdmin) {
     navigate('/dashboard');
@@ -213,7 +205,6 @@ export default function AdminUsersPage() {
             onViewUser={handleUserView}
             onEditUser={handleUserEdit}
             onDeleteUser={handleUserDelete}
-            getRolInfo={getRolInfo}
             loading={loading}
             error={error}
           />
@@ -237,7 +228,6 @@ export default function AdminUsersPage() {
         onClose={() => setViewingUser(null)}
         onEdit={handleUserEdit}
         onDelete={handleUserDelete}
-        getRolInfo={getRolInfo}
       />
     </PageBackground>
   );

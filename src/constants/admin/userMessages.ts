@@ -70,7 +70,8 @@ export const USER_MESSAGES = {
     NO_USERS: 'No hay usuarios disponibles',
     NO_RESULTS: 'No se encontraron resultados',
     SELECTED_USERS: 'usuario(s) seleccionado(s)',
-    DESELECT_ALL: 'Deseleccionar todo'
+    DESELECT_ALL: 'Deseleccionar todo',
+    USERS_COUNT: 'usuario(s)'
   },
 
   // Formularios

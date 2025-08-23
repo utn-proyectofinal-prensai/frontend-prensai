@@ -13,7 +13,6 @@ interface SearchFiltersProps {
   onViewUser: (usuario: AdminUser) => void;
   onEditUser: (usuario: AdminUser) => void;
   onDeleteUser: (id: string) => void;
-  getRolInfo: (role: string) => { icon: string; label: string; color: string };
   loading?: boolean;
   error?: string | null;
 }
@@ -29,7 +28,6 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
   onViewUser,
   onEditUser,
   onDeleteUser,
-  getRolInfo,
   loading = false,
   error = null
 }) => {
@@ -75,9 +73,9 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
               className="w-full h-11 px-3 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
               style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
             >
-              <option value="todos">🎯 Todos los roles</option>
-              <option value="admin">👑 Administrador</option>
-              <option value="user">👤 Usuario</option>
+              <option value="todos">🔥 Todos los roles</option>
+              <option value="admin">👑 Administradores</option>
+              <option value="user">👤 Usuarios</option>
             </select>
           </div>
           {/* Botón limpiar - ocupa 2 columnas */}
@@ -102,36 +100,32 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
           </div>
         </div>
 
-        {/* Espacio entre filtros y tabla */}
-        <div className="h-8"></div>
+        {/* Tabla de usuarios */}
+        {!loading && !error && (
+          <UsersTable
+            usuarios={usuarios}
+            onViewUser={onViewUser}
+            onEditUser={onEditUser}
+            onDeleteUser={onDeleteUser}
+          />
+        )}
 
-        {/* Contenido de usuarios */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-blue-500 mx-auto mb-5"></div>
-            <p className="text-white/80 text-lg">Cargando usuarios...</p>
+        {/* Estados de carga y error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="text-white/70 text-lg">Cargando...</div>
           </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <div className="text-red-400 text-4xl mb-5">⚠️</div>
-            <p className="text-white/80 mb-5 text-lg">{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-            >
-              Reintentar
-            </button>
+        )}
+
+        {error && (
+          <div className="text-center py-8">
+            <div className="text-red-400 text-lg">{error}</div>
           </div>
-        ) : (
-          /* Tabla de usuarios */
-          <div className="px-4">
-            <UsersTable
-              usuarios={usuarios}
-              onViewUser={onViewUser}
-              onEditUser={onEditUser}
-              onDeleteUser={onDeleteUser}
-              getRolInfo={getRolInfo}
-            />
+        )}
+
+        {!loading && !error && usuarios.length === 0 && (
+          <div className="text-center py-8">
+            <div className="text-white/70 text-lg">No hay usuarios disponibles</div>
           </div>
         )}
       </div>
