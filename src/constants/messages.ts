@@ -48,6 +48,16 @@ export const ADMIN_MESSAGES = {
   },
   SUCCESS: {
     LOGIN_SUCCESS: 'Acceso de administrador concedido'
+  },
+  PANEL: {
+    TITLE: 'Panel de Administración',
+    SUBTITLE: 'Gestiona usuarios, eventos y estadísticas del sistema',
+    EVENTS_THEMES: 'Eventos y Temas',
+    EVENTS_DESCRIPTION: 'Crea y gestiona eventos, temas y etiquetas para categorizar noticias',
+    USER_MANAGEMENT: 'Gestión de Usuarios',
+    USER_DESCRIPTION: 'Administra cuentas de usuario, roles y permisos del sistema',
+    STATISTICS: 'Estadísticas Avanzadas',
+    STATS_DESCRIPTION: 'Accede a métricas detalladas y reportes del sistema'
   }
 } as const;
 

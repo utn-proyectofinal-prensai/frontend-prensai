@@ -79,6 +79,29 @@ html, body {
   padding-right: 1.5rem !important;
 }
 
+/* Reglas mínimas para el header */
+.dashboard-container .header-padding {
+  padding: 0.5rem 1.5rem !important;
+}
+
+.dashboard-container .user-section .space-x-6 > * + * {
+  margin-left: 1.5rem !important;
+}
+
+.dashboard-container .user-section .mr-3 {
+  margin-right: 0.75rem !important;
+}
+
+.dashboard-container .user-section .mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+
+/* Permitir padding en el contenido principal */
+.dashboard-container .content-main {
+  padding-top: 1.5rem !important;
+  padding-bottom: 2rem !important;
+}
+
 /* Forzar ancho completo sin espacios */
 .dashboard-container > div {
   width: 100% !important;

@@ -98,6 +98,45 @@ export interface UserInfo {
   role: string;
 }
 
+export interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'user';
+  created_at: string;
+  updated_at: string;
+  last_sign_in_at?: string;
+  current_sign_in_at?: string;
+  last_sign_in_ip?: string;
+  current_sign_in_ip?: string;
+  sign_in_count: number;
+  allow_password_change: boolean;
+  reset_password_sent_at?: string;
+  reset_password_token?: string;
+  tokens?: any;
+  impersonated_by?: number;
+}
+
+export interface CreateUserData {
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'user';
+  password: string;
+  password_confirmation: string;
+}
+
+export interface UpdateUserData {
+  username?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  role?: 'admin' | 'user';
+}
+
 // Función helper para hacer requests
 async function apiRequest<T>(
   endpoint: string,
@@ -121,25 +160,37 @@ async function apiRequest<T>(
     ...options,
   };
 
-  try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Token inválido o expirado, limpiar localStorage
-        localStorage.removeItem('jwt-token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
+      try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token inválido o expirado, limpiar localStorage
+          localStorage.removeItem('jwt-token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
+        }
+        throw new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
       }
-      throw new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
+      
+      // Para respuestas 204 No Content, no intentar parsear JSON
+      if (response.status === 204) {
+        return {} as T;
+      }
+      
+      // Solo intentar parsear JSON si hay contenido
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      }
+      
+      // Para otros tipos de contenido, devolver texto vacío
+      return {} as T;
+    } catch (error) {
+      console.error('Error en API request:', error);
+      throw error;
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error en API request:', error);
-    throw error;
-  }
 }
 
 // Servicios de la API
@@ -257,6 +308,44 @@ export const apiService = {
   // Obtener usuario actual usando el token JWT
   async getCurrentUser(): Promise<any> {
     return apiRequest<{ user: any }>('/user');
+  },
+
+  // Métodos de gestión de usuarios (solo para admins)
+  async getUsers(): Promise<{ users: AdminUser[] }> {
+    return apiRequest<{ users: AdminUser[] }>('/users');
+  },
+
+  async getUser(id: string): Promise<{ user: AdminUser }> {
+    return apiRequest<{ user: AdminUser }>(`/users/${id}`);
+  },
+
+  async createUser(userData: CreateUserData): Promise<{ user: AdminUser }> {
+    return apiRequest<{ user: AdminUser }>('/users', {
+      method: 'POST',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async updateUser(id: string, userData: UpdateUserData): Promise<{ user: AdminUser }> {
+    return apiRequest<{ user: AdminUser }>(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    console.log('API: Eliminando usuario con ID:', id);
+    console.log('API: Token disponible:', !!localStorage.getItem('jwt-token'));
+    
+    try {
+      await apiRequest(`/users/${id}`, {
+        method: 'DELETE',
+      });
+      console.log('API: Usuario eliminado exitosamente');
+    } catch (error) {
+      console.error('API: Error en deleteUser:', error);
+      throw error;
+    }
   },
 
   async logout(): Promise<void> {

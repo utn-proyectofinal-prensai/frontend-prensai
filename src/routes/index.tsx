@@ -9,7 +9,7 @@ import AdminUsersPage from '../pages/AdminUsersPage';
 import CreateClippingPage from '../pages/CreateClippingPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
-import { ProtectedRoute } from '../components/auth/ProtectedRoute';
+import { ProtectedRoute, AdminRoute } from '../components/auth/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -55,14 +55,18 @@ export const router = createBrowserRouter([
       {
         path: 'admin',
         element: (
-          <ProtectedRoute>
+          <AdminRoute>
             <AdminPage />
-          </ProtectedRoute>
+          </AdminRoute>
         ),
       },
       {
         path: 'admin-users',
-        element: <AdminUsersPage />,
+        element: (
+          <AdminRoute>
+            <AdminUsersPage />
+          </AdminRoute>
+        ),
       },
       {
         path: 'create-clipping',
