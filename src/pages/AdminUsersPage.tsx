@@ -7,7 +7,7 @@ import {
   AdminUsersHeader,
   SearchFilters,
   UserFormModal,
-  UserViewModal
+  UserSidePanel
 } from '../components/admin';
 import { PageHeader, PageBackground } from '../components/common';
 
@@ -177,10 +177,10 @@ export default function AdminUsersPage() {
         variant="transparent"
       />
 
-      {/* Contenido principal */}
-      <div className="w-full px-6 py-6 h-full">
+      {/* Contenido principal con layout dinámico */}
+      <div className={`grid transition-all duration-300 ${viewingUser ? 'lg:grid-cols-[1fr_384px]' : 'grid-cols-1'}`}>
         {/* Contenido principal de gestión de usuarios */}
-        <div className="w-full max-w-none">
+        <div className="px-6 py-6 h-full">
           {/* Header con título y estadísticas */}
           <AdminUsersHeader
             totalUsers={totalUsers}
@@ -209,6 +209,19 @@ export default function AdminUsersPage() {
             error={error}
           />
         </div>
+
+        {/* Panel lateral integrado en el grid */}
+        {viewingUser && (
+          <div className="hidden lg:block border-l border-white/20 bg-gradient-to-br from-black/95 to-black/85 backdrop-blur-xl">
+            <UserSidePanel
+              usuario={viewingUser}
+              isOpen={true}
+              onClose={() => setViewingUser(null)}
+              onEdit={handleUserEdit}
+              onDelete={handleUserDelete}
+            />
+          </div>
+        )}
       </div>
 
       {/* Modal para Usuario */}
@@ -220,14 +233,6 @@ export default function AdminUsersPage() {
           setEditingUser(null);
         }}
         onSubmit={handleUserSubmit}
-      />
-
-      {/* Modal para Ver Usuario */}
-      <UserViewModal
-        usuario={viewingUser}
-        onClose={() => setViewingUser(null)}
-        onEdit={handleUserEdit}
-        onDelete={handleUserDelete}
       />
     </PageBackground>
   );

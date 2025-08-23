@@ -1,7 +1,7 @@
 export { AdminUsersHeader } from './AdminUsersHeader';
 export { SearchFilters } from './SearchFilters';
-export { UsersTable } from './UsersTable';
-export { UserRow } from './UserRow';
 export { UserFormModal } from './UserFormModal';
-export { UserViewModal } from './UserViewModal';
+export { UserSidePanel } from './UserSidePanel';
+export { UserRow } from './UserRow';
+export { UsersTable } from './UsersTable';
 export { UsersInsights } from './UsersInsights';
