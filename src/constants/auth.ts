@@ -7,7 +7,7 @@ export const AUTH_CONFIG = {
     BUTTON: 0.4      // Más rápido para el botón
   },
   PLACEHOLDERS: {
-    EMAIL: 'admin@prensai.com',
+    EMAIL: 'Ingresa tu email',
     PASSWORD: 'Ingresa tu contraseña'
   }
 } as const;
