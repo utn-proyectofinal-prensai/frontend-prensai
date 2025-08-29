@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
 import { apiService, type Topic, type Mention } from '../services/api';
 
 export default function AdminPage() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'eventos' | 'menciones'>('eventos');
   
   // Estados para Eventos/Temas
@@ -174,76 +170,9 @@ export default function AdminPage() {
   // Nota: Variables auxiliares removidas porque no se usan con la nueva interfaz
 
   return (
-    <div className="dashboard-container w-full h-screen relative overflow-x-hidden" style={{ backgroundColor: '#1e293b' }}>
-      {/* Fondo que cubre TODA la pantalla */}
-      <div 
-        className="fixed top-0 left-0 w-screen h-screen"
-        style={{
-          backgroundImage: `url('/images/fondodashboard.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
-          zIndex: 0
-        }}
-      ></div>
-
-      {/* Overlay muy sutil */}
-      <div 
-        className="fixed top-0 left-0 w-screen h-screen bg-black/5" 
-        style={{ zIndex: 1 }}
-      ></div>
-
+    <div className="w-full h-full">
       {/* Contenido principal */}
-      <div className="relative z-10 w-full h-full">
-        {/* Header transparente */}
-        <div className="bg-black/20 backdrop-blur-md shadow-lg border-b border-white/10 w-full">
-          <div className="w-full py-4 px-6">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-6">
-                <button 
-                  onClick={() => navigate('/dashboard')}
-                  className="text-white hover:text-blue-300 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                </button>
-                <div className="w-32 h-32 flex items-center justify-center">
-                  <img 
-                    src="/images/fondoblanco.png" 
-                    alt="PrensAI Logo" 
-                    className="w-28 h-28 object-contain"
-                    onError={(e) => {
-                      console.log('Error loading logo:', e);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-white drop-shadow-lg">
-                    PrensAI
-                  </h1>
-                  <p className="text-white/80 text-sm font-medium">Gestión de eventos/temas y menciones</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-white text-sm font-bold">
-                    {user?.username?.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-white drop-shadow-md">Bienvenido, {user?.username}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      {/* Contenido principal */}
-      <div className="w-full px-6 py-16 h-full">
+      <div className="w-full h-full">
         {/* Tabs */}
         <div className="flex space-x-1 mb-8 bg-black/20 backdrop-blur-sm rounded-lg p-1 w-fit">
           <button
@@ -582,7 +511,6 @@ export default function AdminPage() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 } 
