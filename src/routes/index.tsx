@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
-import Layout from '../components/layout/Layout';
+import AppLayout from '../components/layout/AppLayout';
 
 import DashboardPage from '../pages/DashboardPage';
 import UploadNewsPage from '../pages/UploadNewsPage';
@@ -7,6 +7,7 @@ import HistoryPage from '../pages/HistoryPage';
 import AdminPage from '../pages/AdminPage';
 import AdminUsersPage from '../pages/AdminUsersPage';
 import CreateClippingPage from '../pages/CreateClippingPage';
+import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
 import { ProtectedRoute, AdminRoute } from '../components/auth/ProtectedRoute';
@@ -14,7 +15,7 @@ import { ProtectedRoute, AdminRoute } from '../components/auth/ProtectedRoute';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: <AppLayout />,
     children: [
       {
         index: true,
@@ -73,6 +74,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <CreateClippingPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         ),
       }

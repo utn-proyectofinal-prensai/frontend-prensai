@@ -1,18 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../../services/api';
-import type { AdminUser, CreateUserData, UpdateUserData } from '../../services/api';
+import type { User, CreateUserData, UpdateUserData } from '../../services/api';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 
 interface UseUsersReturn {
   // Estado
-  usuarios: AdminUser[];
+  usuarios: User[];
   loading: boolean;
   error: string | null;
   
   // Estados de formularios
   showUserForm: boolean;
-  editingUser: AdminUser | null;
-  viewingUser: AdminUser | null;
+  editingUser: User | null;
+  viewingUser: User | null;
   
   // Estados de filtros
   searchTerm: string;
@@ -30,26 +30,26 @@ interface UseUsersReturn {
   
   // Gestión de estado
   setShowUserForm: (show: boolean) => void;
-  setEditingUser: (user: AdminUser | null) => void;
-  setViewingUser: (user: AdminUser | null) => void;
+  setEditingUser: (user: User | null) => void;
+  setViewingUser: (user: User | null) => void;
   setSearchTerm: (term: string) => void;
   setFilterRol: (role: 'todos' | 'admin' | 'user') => void;
   
   // Utilidades
-  filteredUsuarios: AdminUser[];
+  filteredUsuarios: User[];
   clearFilters: () => void;
 }
 
 export function useUsers(): UseUsersReturn {
   // Estados principales
-  const [usuarios, setUsuarios] = useState<AdminUser[]>([]);
+  const [usuarios, setUsuarios] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Estados de formularios
   const [showUserForm, setShowUserForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
-  const [viewingUser, setViewingUser] = useState<AdminUser | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
 
   // Estados de filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,7 +64,7 @@ export function useUsers(): UseUsersReturn {
       const { users } = await apiService.getUsers();
       
       // Convertir el formato de la API al formato del componente
-      const usuariosFormateados: AdminUser[] = users.map(user => ({
+      const usuariosFormateados: User[] = users.map(user => ({
         ...user,
         role: user.role === 'admin' ? 'admin' : 'user'
       }));

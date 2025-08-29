@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import type { NewsItem, DashboardStats } from '../services/api';
 import { DASHBOARD_MESSAGES } from '../constants/messages';
-import { PageHeader, PageBackground } from '../components/common';
 
 export default function DashboardPage() {
   const { isAdmin } = useAuth();
@@ -53,36 +52,23 @@ export default function DashboardPage() {
   // Mostrar loading mientras cargan los datos
   if (loading) {
     return (
-      <PageBackground>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-white text-xl font-semibold">{DASHBOARD_MESSAGES.COMMON?.LOADING || 'Cargando dashboard...'}</div>
-        </div>
-      </PageBackground>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-white text-xl font-semibold">{DASHBOARD_MESSAGES.COMMON?.LOADING || 'Cargando dashboard...'}</div>
+      </div>
     );
   }
 
   // Mostrar error si algo falló
   if (error) {
     return (
-      <PageBackground>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-red-400 text-xl font-semibold">{error}</div>
-        </div>
-      </PageBackground>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-red-400 text-xl font-semibold">{error}</div>
+      </div>
     );
   }
 
   return (
-    <PageBackground>
-      {/* Header transparente */}
-      <PageHeader 
-        title="PrensAI"
-        subtitle="Dashboard de análisis inteligente"
-        variant="transparent"
-      />
-
-      {/* Contenido principal */}
-      <div className="w-full px-6 h-full content-main" style={{ paddingTop: '1.5rem', paddingBottom: '2rem' }}>
+    <>
         {/* Título de bienvenida */}
         <div className="welcome-section mb-32 text-center">
           <h2 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">Bienvenido a tu dashboard</h2>
@@ -387,7 +373,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
-    </PageBackground>
+    </>
   );
 } 

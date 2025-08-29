@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import type { AdminUser } from '../../services/api';
+import type { User } from '../../services/api';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 
 interface UserSidePanelProps {
-  usuario: AdminUser | null;
+  usuario: User | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit: (usuario: AdminUser) => void;
+  onEdit: (usuario: User) => void;
   onDelete: (id: string) => void;
 }
 

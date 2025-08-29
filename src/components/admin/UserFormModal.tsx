@@ -1,9 +1,9 @@
 import React from 'react';
-import type { AdminUser } from '../../services/api';
+import type { User } from '../../services/api';
 
 interface UserFormModalProps {
   isOpen: boolean;
-  editingUser: AdminUser | null;
+  editingUser: User | null;
   onClose: () => void;
   onSubmit: (formData: FormData) => void;
 }

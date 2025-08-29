@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
-import type { AdminUser, CreateUserData, UpdateUserData } from '../services/api';
+import type { User, CreateUserData, UpdateUserData } from '../services/api';
 import {
   AdminUsersHeader,
   SearchFilters,
@@ -11,23 +11,19 @@ import {
 } from '../components/admin';
 import { PageHeader, PageBackground } from '../components/common';
 
-interface Usuario extends AdminUser {
-  // Extendemos AdminUser sin campos adicionales
-}
-
 export default function AdminUsersPage() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   
   // Estados para Usuarios
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarios, setUsuarios] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Estados para formularios
   const [showUserForm, setShowUserForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<Usuario | null>(null);
-  const [viewingUser, setViewingUser] = useState<Usuario | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRol, setFilterRol] = useState<'todos' | 'admin' | 'user'>('todos');
 
@@ -48,7 +44,7 @@ export default function AdminUsersPage() {
         const { users } = await apiService.getUsers();
         
         // Convertir el formato de la API al formato del componente
-        const usuariosFormateados: Usuario[] = users.map(user => ({
+        const usuariosFormateados: User[] = users.map(user => ({
           ...user,
           role: user.role === 'admin' ? 'admin' : 'user' // Mapear roles del backend
         }));

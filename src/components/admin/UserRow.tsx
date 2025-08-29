@@ -1,12 +1,12 @@
 import React from 'react';
-import type { AdminUser } from '../../services/api';
+import type { User } from '../../services/api';
 
 interface UserRowProps {
-  usuario: AdminUser;
+  usuario: User;
   isSelected: boolean;
   onSelect: (userId: string) => void;
-  onView: (usuario: AdminUser) => void;
-  onEdit: (usuario: AdminUser) => void;
+  onView: (usuario: User) => void;
+  onEdit: (usuario: User) => void;
   onDelete: (id: string) => void;
   getRolInfo: (role: string) => { icon: string; label: string; color: string };
 }

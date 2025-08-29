@@ -98,25 +98,16 @@ export interface UserInfo {
   role: string;
 }
 
-export interface AdminUser {
-  id: string;
-  username: string;
+export interface User {
+  id: number;
   email: string;
+  name: string;
+  username: string;
   first_name: string;
   last_name: string;
   role: 'admin' | 'user';
   created_at: string;
   updated_at: string;
-  last_sign_in_at?: string;
-  current_sign_in_at?: string;
-  last_sign_in_ip?: string;
-  current_sign_in_ip?: string;
-  sign_in_count: number;
-  allow_password_change: boolean;
-  reset_password_sent_at?: string;
-  reset_password_token?: string;
-  tokens?: any;
-  impersonated_by?: number;
 }
 
 export interface CreateUserData {
@@ -311,23 +302,23 @@ export const apiService = {
   },
 
   // Métodos de gestión de usuarios (solo para admins)
-  async getUsers(): Promise<{ users: AdminUser[] }> {
-    return apiRequest<{ users: AdminUser[] }>('/users');
+  async getUsers(): Promise<{ users: User[] }> {
+    return apiRequest<{ users: User[] }>('/users');
   },
 
-  async getUser(id: string): Promise<{ user: AdminUser }> {
-    return apiRequest<{ user: AdminUser }>(`/users/${id}`);
+  async getUser(id: string): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>(`/users/${id}`);
   },
 
-  async createUser(userData: CreateUserData): Promise<{ user: AdminUser }> {
-    return apiRequest<{ user: AdminUser }>('/users', {
+  async createUser(userData: CreateUserData): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>('/users', {
       method: 'POST',
       body: JSON.stringify({ user: userData }),
     });
   },
 
-  async updateUser(id: string, userData: UpdateUserData): Promise<{ user: AdminUser }> {
-    return apiRequest<{ user: AdminUser }>(`/users/${id}`, {
+  async updateUser(id: string, userData: UpdateUserData): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>(`/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ user: userData }),
     });

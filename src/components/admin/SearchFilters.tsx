@@ -1,6 +1,6 @@
 import React from 'react';
 import { UsersTable } from './UsersTable';
-import type { AdminUser } from '../../services/api';
+import type { User } from '../../services/api';
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -9,9 +9,9 @@ interface SearchFiltersProps {
   onRolChange: (value: 'todos' | 'admin' | 'user') => void;
   onClearFilters: () => void;
   onAddUser: () => void;
-  usuarios: AdminUser[];
-  onViewUser: (usuario: AdminUser) => void;
-  onEditUser: (usuario: AdminUser) => void;
+  usuarios: User[];
+  onViewUser: (usuario: User) => void;
+  onEditUser: (usuario: User) => void;
   onDeleteUser: (id: string) => void;
   loading?: boolean;
   error?: string | null;

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { UserRow } from './UserRow';
-import type { AdminUser } from '../../services/api';
+import type { User } from '../../services/api';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 
 interface UsersTableProps {
-  usuarios: AdminUser[];
-  onViewUser: (usuario: AdminUser) => void;
-  onEditUser: (usuario: AdminUser) => void;
+  usuarios: User[];
+  onViewUser: (usuario: User) => void;
+  onEditUser: (usuario: User) => void;
   onDeleteUser: (id: string) => void;
 }
 

@@ -1,11 +1,10 @@
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
 import UserDropdown from './UserDropdown';
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
   showBackButton?: boolean;
   backButtonPath?: string;
   backButtonLabel?: string;
@@ -15,7 +14,6 @@ interface PageHeaderProps {
 
 export default function PageHeader({
   title,
-  subtitle,
   showBackButton = false,
   backButtonPath = '/dashboard',
   backButtonLabel = 'Volver al Dashboard',
@@ -23,6 +21,7 @@ export default function PageHeader({
   className = ''
 }: PageHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAdmin } = useAuth();
   
   // Estado para el dropdown del usuario
@@ -56,17 +55,89 @@ export default function PageHeader({
     return variant === 'gradient' ? 'py-6 px-12' : 'py-2 px-6';
   };
 
+  // Detectar automáticamente si debe mostrar el botón de volver atrás
+  const shouldShowBackButton = () => {
+    // Si se especifica explícitamente, usar esa configuración
+    if (showBackButton !== undefined) {
+      return showBackButton;
+    }
+    
+    // Mostrar botón de volver en todas las páginas excepto dashboard y login
+    const currentPath = location.pathname;
+    console.log('Current path:', currentPath); // Debug
+    
+    // Lógica simplificada y más robusta
+    if (currentPath === '/' || currentPath === '/dashboard') {
+      console.log('Dashboard detected - no back button');
+      return false;
+    }
+    
+    if (currentPath === '/login') {
+      console.log('Login detected - no back button');
+      return false;
+    }
+    
+    console.log('Other page detected - showing back button');
+    return true;
+  };
+
+  // Determinar la ruta de destino del botón de volver
+  const getBackButtonPath = () => {
+    // Si se especifica explícitamente, usar esa configuración
+    if (showBackButton && backButtonPath !== '/dashboard') {
+      return backButtonPath;
+    }
+    
+    // Lógica automática para determinar la ruta de destino
+    const currentPath = location.pathname;
+    
+    if (currentPath.startsWith('/admin')) {
+      return '/admin';
+    } else if (currentPath === '/profile') {
+      return '/dashboard';
+    } else if (currentPath === '/upload-news' || currentPath === '/history' || currentPath === '/create-clipping') {
+      return '/dashboard';
+    }
+    
+    return '/dashboard';
+  };
+
+  // Determinar el texto del botón de volver
+  const getBackButtonLabel = () => {
+    // Si se especifica explícitamente, usar esa configuración
+    if (showBackButton && backButtonLabel !== 'Volver al Dashboard') {
+      return backButtonLabel;
+    }
+    
+    // Lógica automática para determinar el texto
+    const currentPath = location.pathname;
+    
+    if (currentPath.startsWith('/admin')) {
+      return 'Volver al Panel Admin';
+    } else if (currentPath === '/profile') {
+      return 'Volver al Dashboard';
+    } else if (currentPath === '/upload-news') {
+      return 'Volver al Dashboard';
+    } else if (currentPath === '/history') {
+      return 'Volver al Dashboard';
+    } else if (currentPath === '/create-clipping') {
+      return 'Volver al Dashboard';
+    }
+    
+    return 'Volver al Dashboard';
+  };
+
   return (
     <div className={`${getHeaderStyles()} w-full ${className}`}>
       <div className={`w-full ${getPadding()}`}>
         <div className="flex justify-between items-center">
           {/* Lado izquierdo: Navegación y logo */}
           <div className="flex items-center space-x-6">
-            {showBackButton && (
+            {shouldShowBackButton() && (
               <button 
-                onClick={() => navigate(backButtonPath)}
-                className="text-white/80 hover:text-blue-300 transition-all duration-300 p-3 rounded-xl hover:bg-white/10 hover:shadow-lg"
-                title={backButtonLabel}
+                onClick={() => navigate(getBackButtonPath())}
+                className="text-white/80 hover:text-blue-300 transition-all duration-300 p-3 rounded-xl hover:bg-white/10 hover:shadow-lg border border-white/20"
+                title={getBackButtonLabel()}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -88,10 +159,10 @@ export default function PageHeader({
             
             <div className="space-y-2">
               <h1 className={`${getTitleSize()} font-bold text-white tracking-tight drop-shadow-lg`}>
-                {title}
+                PrensAI
               </h1>
               <p className={`text-white/90 ${getSubtitleSize()} font-medium`}>
-                {subtitle || 'Dashboard de análisis inteligente'}
+                {title}
               </p>
             </div>
           </div>
