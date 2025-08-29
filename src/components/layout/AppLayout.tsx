@@ -52,14 +52,15 @@ const routeConfig: Record<string, RouteConfig> = {
     showBackButton: true,
     backTo: '/dashboard'
   },
-  '/admin': { 
-    title: 'Panel de Administración - Gestiona el sistema',
-    showBackButton: false
+  '/settings': { 
+    title: 'Configuración del Sistema',
+    showBackButton: true,
+    backTo: '/dashboard'
   },
-  '/admin-users': { 
+  '/users': { 
     title: 'Gestión de Usuarios - Administra cuentas del sistema',
     showBackButton: true,
-    backTo: '/admin'
+    backTo: '/dashboard'
   }
 };
 
@@ -91,13 +92,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   const config = getCurrentRouteConfig();
 
-  // Si la ruta debe ocultar el header (como login)
-  if (config.hideHeader) {
-    return (
-      <PageBackground>
-        {children || <Outlet />}
-      </PageBackground>
-    );
+  // Si la página maneja su propio layout completo (como login)
+  if (config.useCustomLayout) {
+    return children || <Outlet />;
   }
 
   const handleBackClick = () => {
@@ -120,7 +117,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 <button 
                   onClick={handleBackClick}
                   className="text-white/80 hover:text-blue-300 transition-all duration-300 p-3 rounded-xl hover:bg-white/10 hover:shadow-lg"
-                  title={`Volver ${config.backTo === '/admin' ? 'al Panel Admin' : 'al Dashboard'}`}
+                  title={`Volver ${config.backTo === '/settings' ? 'a Configuración' : 'al Dashboard'}`}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

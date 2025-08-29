@@ -112,8 +112,8 @@ export default function PageHeader({
     // Lógica automática para determinar el texto
     const currentPath = location.pathname;
     
-    if (currentPath.startsWith('/admin')) {
-      return 'Volver al Panel Admin';
+    if (currentPath.startsWith('/settings') || currentPath.startsWith('/users')) {
+      return 'Volver a Configuración';
     } else if (currentPath === '/profile') {
       return 'Volver al Dashboard';
     } else if (currentPath === '/upload-news') {

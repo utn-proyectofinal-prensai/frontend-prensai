@@ -199,7 +199,7 @@ export default function DashboardPage() {
 
             {isAdmin && (
               <button 
-                onClick={() => navigate('/admin')}
+                onClick={() => navigate('/settings')}
                 className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" 
                 style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}
               >

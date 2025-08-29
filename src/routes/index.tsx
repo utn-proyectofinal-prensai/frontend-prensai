@@ -4,8 +4,8 @@ import AppLayout from '../components/layout/AppLayout';
 import DashboardPage from '../pages/DashboardPage';
 import UploadNewsPage from '../pages/UploadNewsPage';
 import HistoryPage from '../pages/HistoryPage';
-import AdminPage from '../pages/AdminPage';
-import AdminUsersPage from '../pages/AdminUsersPage';
+import SettingsPage from '../pages/SettingsPage';
+import UsersPage from '../pages/UsersPage';
 import CreateClippingPage from '../pages/CreateClippingPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -54,18 +54,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'admin',
+        path: 'settings',
         element: (
           <AdminRoute>
-            <AdminPage />
+            <SettingsPage />
           </AdminRoute>
         ),
       },
       {
-        path: 'admin-users',
+        path: 'users',
         element: (
           <AdminRoute>
-            <AdminUsersPage />
+            <UsersPage />
           </AdminRoute>
         ),
       },

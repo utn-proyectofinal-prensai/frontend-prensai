@@ -106,7 +106,7 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
             </div>
 
             <button 
-              onClick={() => handleNavigation('/admin')}
+              onClick={() => handleNavigation('/settings')}
               className="w-full flex items-center px-6 py-5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 group mb-4"
             >
               <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:bg-green-500/30 transition-all duration-300">
@@ -121,7 +121,7 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
             </button>
 
             <button 
-              onClick={() => handleNavigation('/admin-users')}
+              onClick={() => handleNavigation('/users')}
               className="w-full flex items-center px-6 py-5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 group"
             >
               <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition-all duration-300">

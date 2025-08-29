@@ -9,7 +9,7 @@ import {
   UserFormModal,
   UserSidePanel
 } from '../components/admin';
-import { PageHeader, PageBackground } from '../components/common';
+
 
 export default function AdminUsersPage() {
   const navigate = useNavigate();
@@ -162,17 +162,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <PageBackground>
-      {/* Header moderno con gradiente */}
-      <PageHeader 
-        title="PrensAI"
-        subtitle="Panel de Administración"
-        showBackButton={true}
-        backButtonPath="/dashboard"
-        backButtonLabel="Volver al Dashboard"
-        variant="transparent"
-      />
-
+    <>
       {/* Contenido principal con layout dinámico */}
       <div className={`grid transition-all duration-300 ${viewingUser ? 'lg:grid-cols-[1fr_384px]' : 'grid-cols-1'}`}>
         {/* Contenido principal de gestión de usuarios */}
@@ -230,6 +220,6 @@ export default function AdminUsersPage() {
         }}
         onSubmit={handleUserSubmit}
       />
-    </PageBackground>
+    </>
   );
 } 
