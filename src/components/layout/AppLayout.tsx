@@ -14,7 +14,7 @@ interface RouteConfig {
   title: string;
   showBackButton: boolean;
   backTo?: string;
-  hideHeader?: boolean;
+  useCustomLayout?: boolean; // Páginas que manejan su propio layout completo
 }
 
 // Configuración de rutas y sus metadatos
@@ -30,7 +30,7 @@ const routeConfig: Record<string, RouteConfig> = {
   '/login': { 
     title: 'Iniciar sesión',
     showBackButton: false,
-    hideHeader: true
+    useCustomLayout: true // Login maneja su propio background y layout
   },
   '/profile': { 
     title: 'Mi Perfil - Información personal y detalles de la cuenta',
