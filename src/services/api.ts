@@ -108,6 +108,9 @@ export interface User {
   role: 'admin' | 'user';
   created_at: string;
   updated_at: string;
+  last_sign_in_at?: string;
+  current_sign_in_at?: string;
+  sign_in_count?: number;
 }
 
 export interface CreateUserData {

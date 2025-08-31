@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { User } from '../../services/api';
+import type { User } from '../../types/auth';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 
@@ -8,7 +8,7 @@ interface UserSidePanelProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit: (usuario: User) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
 }
 
 export const UserSidePanel: React.FC<UserSidePanelProps> = ({
@@ -30,7 +30,7 @@ export const UserSidePanel: React.FC<UserSidePanelProps> = ({
     role: 'user' as 'admin' | 'user'
   });
 
-  // Inicializar formulario de edición - MOVIDO ANTES DEL RETURN NULL
+  // Inicializar formulario de edición
   React.useEffect(() => {
     if (usuario) {
       setEditForm({
@@ -42,7 +42,7 @@ export const UserSidePanel: React.FC<UserSidePanelProps> = ({
     }
   }, [usuario]);
 
-  if (!usuario) return null;
+  if (!usuario || !isOpen) return null;
 
   const handleEdit = () => {
     if (isEditing) {
@@ -102,293 +102,337 @@ export const UserSidePanel: React.FC<UserSidePanelProps> = ({
 
   return (
     <>
-      {/* Overlay de fondo - solo en pantallas muy pequeñas */}
-      {isOpen && (
+      {/* Overlay de fondo semi-transparente */}
+      <div 
+        className="fixed inset-0 z-50 backdrop-blur-[2px]"
+        style={{
+          background: `
+            radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1), transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(255, 204, 112, 0.1), transparent 50%),
+            linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(59, 130, 246, 0.3) 25%, rgba(30, 64, 175, 0.3) 50%, rgba(30, 58, 138, 0.3) 75%, rgba(30, 64, 175, 0.3) 100%),
+            rgba(0, 0, 0, 0.2)
+          `,
+        }}
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
         <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 sm:hidden"
-          onClick={onClose}
-        />
-      )}
+          className="w-[600px] max-w-[90vw] max-h-[85vh] overflow-hidden bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl transform transition-all duration-300 scale-100"
+        >
+          
+          {/* Header del modal */}
+          <div className="bg-black/30 border-b border-white/10" style={{ padding: '16px 24px' }}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white/90">Detalles del Usuario</h2>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:scale-105 border border-white/20 flex-shrink-0"
+                title="Cerrar"
+              >
+                <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
-      {/* Panel lateral */}
-      <div className={`
-        ${isOpen ? 'lg:relative lg:block' : 'lg:hidden'} 
-        fixed lg:static top-0 right-0 h-full w-80 sm:w-96 bg-gradient-to-br from-black/95 to-black/85 backdrop-blur-xl 
-        border-l border-white/20 shadow-2xl transform transition-transform duration-300 ease-in-out z-40
-        ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
-      `}>
-        
-        {/* Header del panel */}
-        <div className="flex items-center justify-between p-6 border-b border-white/20">
-          <h2 className="text-xl font-bold text-white">Detalles del Usuario</h2>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:scale-105 border border-white/20"
-            title="Cerrar"
+                    {/* Header del usuario - Avatar y información básica */}
+          <div className="flex items-center justify-center" style={{ padding: '12px 24px' }}>
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-lg flex items-center justify-center shadow-xl border-2 border-white/20">
+                <span className="text-white text-lg font-bold drop-shadow-lg">
+                  {usuario.first_name?.charAt(0) || usuario.username?.charAt(0) || '?'}
+                </span>
+              </div>
+
+              <div className="flex flex-col" style={{ marginLeft: '32px' }}>
+                <h3 className="text-lg font-bold text-white/90 drop-shadow-lg mb-2">
+                  {usuario.first_name || 'Sin nombre'} {usuario.last_name || 'Sin apellido'}
+                </h3>
+                <span 
+                  className={`inline-flex items-center text-xs font-bold rounded-full border ${roleInfo.color} ${roleInfo.color.includes('bg-') ? '' : 'bg-white/10'}`}
+                  style={{ padding: '4px 16px' }}
+                >
+                  <span style={{ marginRight: '8px' }}>{roleInfo.icon}</span>
+                  {roleInfo.label}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Contenido del modal */}
+          <div 
+            className="overflow-y-auto max-h-[calc(85vh-280px)]" 
+            style={{ 
+              padding: '32px', 
+              paddingTop: '16px', 
+              paddingBottom: '24px', 
+              paddingLeft: '32px', 
+              paddingRight: '32px' 
+            }}
           >
-            <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Contenido del panel */}
-        <div className="p-6 overflow-y-auto h-full">
-          {/* Avatar y información básica */}
-          <div className="flex flex-col items-center justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 mb-3">
-              <span className="text-white text-2xl font-bold drop-shadow-lg">
-                {usuario.first_name?.charAt(0) || usuario.username?.charAt(0) || '?'}
-              </span>
-            </div>
-            
-            <h3 className="text-xl font-bold text-white drop-shadow-lg mb-2 text-center">
-              {usuario.first_name || 'Sin nombre'} {usuario.last_name || 'Sin apellido'}
-            </h3>
-            <span className={`inline-flex items-center px-3 py-1 text-sm font-bold rounded-full border ${roleInfo.color} ${roleInfo.color.includes('bg-') ? '' : 'bg-white/10'}`}>
-              <span className="mr-2">{roleInfo.icon}</span>
-              {roleInfo.label}
-            </span>
-          </div>
-
-          {/* Formulario de edición o información de solo lectura */}
-          <div className="space-y-4 mb-6">
-            {/* Username (solo lectura) */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-base">👤</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider block">Username</label>
-                  <div className="text-white font-semibold text-sm">@{usuario.username}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Nombre */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-base">📝</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider block">Nombre</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editForm.first_name}
-                      onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
-                      className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
-                      placeholder="Nombre"
-                    />
-                  ) : (
-                    <div className="text-white font-semibold text-sm">{usuario.first_name || 'No especificado'}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Apellido */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-base">📝</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider block">Apellido</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editForm.last_name}
-                      onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
-                      className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
-                      placeholder="Apellido"
-                    />
-                  ) : (
-                    <div className="text-white font-semibold text-sm">{usuario.last_name || 'No especificado'}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-base">📧</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider block">Correo Electrónico</label>
-                  {isEditing ? (
-                    <input
-                      type="email"
-                      value={editForm.email}
-                      onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                      className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
-                      placeholder="Email"
-                    />
-                  ) : (
-                    <div className="text-white font-semibold text-sm break-all">{usuario.email}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Rol */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-base">👑</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider block">Rol</label>
-                  {isEditing ? (
-                    <select
-                      value={editForm.role}
-                      onChange={(e) => setEditForm({...editForm, role: e.target.value as 'admin' | 'user'})}
-                      className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
-                    >
-                      <option value="user">Usuario</option>
-                      <option value="admin">Administrador</option>
-                    </select>
-                  ) : (
-                    <span className={`inline-flex items-center px-3 py-1 text-sm font-bold rounded-full border ${roleInfo.color}`}>
-                      <span className="mr-2">{roleInfo.icon}</span>
-                      {roleInfo.label}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Fecha de creación */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-base">📅</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider block">Fecha de Creación</label>
-                  <div className="text-white font-semibold text-sm">{formatDate(usuario.created_at)}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Fecha de modificación */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-base">✏️</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider block">Última Modificación</label>
-                  <div className="text-white font-semibold text-sm">{formatDate(usuario.updated_at)}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Último inicio de sesión */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-base">🕒</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider block">Último Inicio de Sesión</label>
-                  <div className="text-white font-semibold text-sm">
-                    {usuario.last_sign_in_at ? formatDate(usuario.last_sign_in_at) : 'Nunca'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Formulario de cambio de contraseña */}
-          {showPasswordForm && (
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/20 mb-6">
-              <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                <span className="mr-2">🔑</span>
-                Cambiar Contraseña
-              </h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider">Nueva Contraseña</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
-                    placeholder="Nueva contraseña"
-                  />
-                </div>
-                <div>
-                  <label className="text-white/60 text-xs font-medium uppercase tracking-wider">Confirmar Contraseña</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
-                    placeholder="Confirmar contraseña"
-                  />
-                </div>
-                {passwordError && (
-                  <div className="text-red-400 text-sm bg-red-500/20 p-2 rounded-lg border border-red-400/30">
-                    {passwordError}
-                  </div>
-                )}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handlePasswordChange}
-                    className="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-all duration-300 text-sm"
-                  >
-                    Cambiar Contraseña
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowPasswordForm(false);
-                      setNewPassword('');
-                      setConfirmPassword('');
-                      setPasswordError('');
-                    }}
-                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all duration-300 text-sm"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Acciones */}
-          <div className="space-y-3">
-            {/* Botón para cambiar contraseña */}
-            <button
-              onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-yellow-400/30"
+            <div 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '4px',
+                rowGap: '4px'
+              }}
             >
-              <span className="text-lg">🔑</span>
-              <span>{showPasswordForm ? 'Ocultar Formulario' : 'Cambiar Contraseña'}</span>
-            </button>
 
-            {/* Botones de editar/guardar y eliminar */}
-            <div className="grid grid-cols-2 gap-3">
+              {/* Username (solo lectura) */}
+              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                  <div className="col-span-1 flex justify-center">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <span className="text-base">👤</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Username</div>
+                  </div>
+                  <div className="col-span-8 flex items-center">
+                    <div className="text-white/90 font-semibold text-sm">@{usuario.username}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Nombre */}
+              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                  <div className="col-span-1 flex justify-center">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <span className="text-base">📝</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Nombre</div>
+                  </div>
+                  <div className="col-span-8 flex items-center">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editForm.first_name}
+                        onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
+                        placeholder="Nombre"
+                      />
+                    ) : (
+                      <div className="text-white/90 font-semibold text-sm">{usuario.first_name || 'No especificado'}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Apellido */}
+              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                  <div className="col-span-1 flex justify-center">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <span className="text-base">📝</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Apellido</div>
+                  </div>
+                  <div className="col-span-8 flex items-center">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editForm.last_name}
+                        onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
+                        placeholder="Apellido"
+                      />
+                    ) : (
+                      <div className="text-white/90 font-semibold text-sm">{usuario.last_name || 'No especificado'}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+
+
+
+
+              {/* Email */}
+              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                  <div className="col-span-1 flex justify-center">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <span className="text-base">📧</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Email</div>
+                  </div>
+                  <div className="col-span-8 flex items-center">
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
+                        placeholder="Email"
+                      />
+                    ) : (
+                      <div className="text-white/90 font-semibold text-sm break-all">{usuario.email}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Fecha de creación */}
+              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                  <div className="col-span-1 flex justify-center">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <span className="text-base">📅</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Creado</div>
+                  </div>
+                  <div className="col-span-8 flex items-center">
+                    <div className="text-white/90 font-semibold text-sm">{formatDate(usuario.created_at)}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fecha de modificación */}
+              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                  <div className="col-span-1 flex justify-center">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <span className="text-base">✏️</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Modificado</div>
+                  </div>
+                  <div className="col-span-8 flex items-center">
+                    <div className="text-white/90 font-semibold text-sm">{formatDate(usuario.updated_at)}</div>
+                  </div>
+                </div>
+              </div>
+
+
+
+              {/* Formulario de cambio de contraseña */}
+              {showPasswordForm && (
+                <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+                  <h4 className="text-lg font-bold text-white/90 mb-4 flex items-center">
+                    <span className="mr-2">🔑</span>
+                    Cambiar Contraseña
+                  </h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-white/60 text-xs font-medium uppercase tracking-wider">Nueva Contraseña</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
+                        placeholder="Nueva contraseña"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs font-medium uppercase tracking-wider">Confirmar Contraseña</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
+                        placeholder="Confirmar contraseña"
+                      />
+                    </div>
+                    {passwordError && (
+                      <div className="text-red-400 text-sm bg-red-500/20 p-2 rounded-lg border border-red-400/30">
+                        {passwordError}
+                      </div>
+                    )}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handlePasswordChange}
+                        className="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-all duration-300 text-sm"
+                      >
+                        Cambiar Contraseña
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowPasswordForm(false);
+                          setNewPassword('');
+                          setConfirmPassword('');
+                          setPasswordError('');
+                        }}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all duration-300 text-sm"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer con botones de acción */}
+          <div 
+            className="bg-black/30 border-t border-white/10" 
+            style={{ 
+              padding: '32px',
+              paddingTop: '24px', 
+              paddingBottom: '24px', 
+              paddingLeft: '32px', 
+              paddingRight: '32px',
+              flexShrink: 0
+            }}
+          >
+            <div 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '16px',
+                rowGap: '16px'
+              }}
+            >
+              {/* Botón para cambiar contraseña */}
               <button
-                onClick={handleEdit}
-                className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/30 text-sm"
-                title={isEditing ? 'Guardar Cambios' : 'Editar Usuario'}
+                onClick={() => setShowPasswordForm(!showPasswordForm)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-yellow-400/30"
               >
-                <span className="text-lg">{isEditing ? '💾' : '✏️'}</span>
-                <span>{isEditing ? 'Guardar' : 'Editar'}</span>
+                <span className="text-lg">🔑</span>
+                <span>{showPasswordForm ? 'Ocultar' : 'Cambiar Contraseña'}</span>
               </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-red-400/30 text-sm"
-                title="Eliminar Usuario"
+
+              {/* Botones de editar/guardar y eliminar */}
+              <div 
+                className="grid grid-cols-2" 
+                style={{ 
+                  gap: '24px',
+                  columnGap: '24px'
+                }}
               >
-                <span className="text-lg">🗑️</span>
-                <span>Eliminar</span>
-              </button>
+                <button
+                  onClick={handleEdit}
+                  className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/30 text-sm"
+                  title={isEditing ? 'Guardar Cambios' : 'Editar Usuario'}
+                >
+                  <span className="text-lg">{isEditing ? '💾' : '✏️'}</span>
+                  <span>{isEditing ? 'Guardar' : 'Editar'}</span>
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-red-400/30 text-sm"
+                  title="Eliminar Usuario"
+                >
+                  <span className="text-lg">🗑️</span>
+                  <span>Eliminar</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

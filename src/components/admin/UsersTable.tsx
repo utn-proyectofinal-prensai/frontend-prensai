@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserRow } from './UserRow';
-import type { User } from '../../services/api';
+import type { User } from '../../types/auth';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 
@@ -8,7 +8,7 @@ interface UsersTableProps {
   usuarios: User[];
   onViewUser: (usuario: User) => void;
   onEditUser: (usuario: User) => void;
-  onDeleteUser: (id: string) => void;
+  onDeleteUser: (id: number) => void;
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({
@@ -17,10 +17,10 @@ export const UsersTable: React.FC<UsersTableProps> = ({
   onEditUser,
   onDeleteUser
 }) => {
-  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
 
-  const handleSelectUser = (userId: string) => {
+  const handleSelectUser = (userId: number) => {
     const newSelectedUsers = new Set(selectedUsers);
     if (newSelectedUsers.has(userId)) {
       newSelectedUsers.delete(userId);
@@ -45,7 +45,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     if (selectedUsers.size === 0) return;
     
     if (window.confirm(USER_MESSAGES.CONFIRMATIONS.BULK_DELETE)) {
-      selectedUsers.forEach(id => onDeleteUser(id));
+      selectedUsers.forEach(id => onDeleteUser(Number(id)));
       setSelectedUsers(new Set());
       setSelectAll(false);
     }

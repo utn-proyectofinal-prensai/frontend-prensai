@@ -1,6 +1,6 @@
 import React from 'react';
 import { UsersTable } from './UsersTable';
-import type { User } from '../../services/api';
+import type { User } from '../../types/auth';
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -12,7 +12,7 @@ interface SearchFiltersProps {
   usuarios: User[];
   onViewUser: (usuario: User) => void;
   onEditUser: (usuario: User) => void;
-  onDeleteUser: (id: string) => void;
+  onDeleteUser: (id: number) => void;
   loading?: boolean;
   error?: string | null;
 }

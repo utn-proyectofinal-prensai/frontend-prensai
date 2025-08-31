@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
-import type { User, CreateUserData, UpdateUserData } from '../services/api';
+import type { User, CreateUserData, UpdateUserData } from '../types/auth';
 import {
   AdminUsersHeader,
   SearchFilters,
@@ -75,7 +75,7 @@ export default function AdminUsersPage() {
           role: (formData.get('role') as 'admin' | 'user') || 'user'
         };
 
-        const { user: updatedUser } = await apiService.updateUser(editingUser.id, updateData);
+        const { user: updatedUser } = await apiService.updateUser(editingUser.id.toString(), updateData);
         
         // Actualizar estado local
         setUsuarios(usuarios.map(u => 
@@ -107,11 +107,11 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleUserDelete = async (id: string) => {
+  const handleUserDelete = async (id: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
         console.log('Intentando eliminar usuario con ID:', id);
-        await apiService.deleteUser(id);
+        await apiService.deleteUser(id.toString());
         console.log('Usuario eliminado exitosamente');
         setUsuarios(usuarios.filter(u => u.id !== id));
       } catch (error: any) {
@@ -133,12 +133,12 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleUserEdit = (usuario: Usuario) => {
+  const handleUserEdit = (usuario: User) => {
     setEditingUser(usuario);
     setShowUserForm(true);
   };
 
-  const handleUserView = (usuario: Usuario) => {
+  const handleUserView = (usuario: User) => {
     setViewingUser(usuario);
   };
 
@@ -163,52 +163,45 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      {/* Contenido principal con layout dinámico */}
-      <div className={`grid transition-all duration-300 ${viewingUser ? 'lg:grid-cols-[1fr_384px]' : 'grid-cols-1'}`}>
-        {/* Contenido principal de gestión de usuarios */}
-        <div className="px-6 py-6 h-full">
-          {/* Header con título y estadísticas */}
-          <AdminUsersHeader
-            totalUsers={totalUsers}
-            adminUsers={adminUsers}
-          />
+      {/* Contenido principal */}
+      <div className="px-6 py-6 h-full">
+        {/* Header con título y estadísticas */}
+        <AdminUsersHeader
+          totalUsers={totalUsers}
+          adminUsers={adminUsers}
+        />
 
-          {/* Espacio entre secciones */}
-          <div className="h-12"></div>
+        {/* Espacio entre secciones */}
+        <div className="h-12"></div>
 
-          {/* Filtros modernos */}
-          <SearchFilters
-            searchTerm={searchTerm}
-            filterRol={filterRol}
-            onSearchChange={setSearchTerm}
-            onRolChange={setFilterRol}
-            onClearFilters={() => {
-              setSearchTerm('');
-              setFilterRol('todos');
-            }}
-            onAddUser={() => setShowUserForm(true)}
-            usuarios={filteredUsuarios}
-            onViewUser={handleUserView}
-            onEditUser={handleUserEdit}
-            onDeleteUser={handleUserDelete}
-            loading={loading}
-            error={error}
-          />
-        </div>
-
-        {/* Panel lateral integrado en el grid */}
-        {viewingUser && (
-          <div className="hidden lg:block border-l border-white/20 bg-gradient-to-br from-black/95 to-black/85 backdrop-blur-xl">
-            <UserSidePanel
-              usuario={viewingUser}
-              isOpen={true}
-              onClose={() => setViewingUser(null)}
-              onEdit={handleUserEdit}
-              onDelete={handleUserDelete}
-            />
-          </div>
-        )}
+        {/* Filtros modernos */}
+        <SearchFilters
+          searchTerm={searchTerm}
+          filterRol={filterRol}
+          onSearchChange={setSearchTerm}
+          onRolChange={setFilterRol}
+          onClearFilters={() => {
+            setSearchTerm('');
+            setFilterRol('todos');
+          }}
+          onAddUser={() => setShowUserForm(true)}
+          usuarios={filteredUsuarios}
+          onViewUser={handleUserView}
+          onEditUser={handleUserEdit}
+          onDeleteUser={handleUserDelete}
+          loading={loading}
+          error={error}
+        />
       </div>
+
+      {/* Modal para detalles del usuario */}
+      <UserSidePanel
+        usuario={viewingUser}
+        isOpen={!!viewingUser}
+        onClose={() => setViewingUser(null)}
+        onEdit={handleUserEdit}
+        onDelete={handleUserDelete}
+      />
 
       {/* Modal para Usuario */}
       <UserFormModal
