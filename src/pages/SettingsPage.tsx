@@ -47,7 +47,7 @@ export default function AdminPage() {
     loadMentions();
   }, []);
 
-  // Cargar eventos/temas desde la API
+  // Cargar temas desde la API
   useEffect(() => {
     const loadTopics = async () => {
       try {
@@ -58,9 +58,9 @@ export default function AdminPage() {
         const { topics } = await apiService.getAllTopics();
         setEventos(topics);
       } catch (err) {
-        console.error('Error cargando eventos/temas:', err);
+        console.error('Error cargando temas:', err);
         const apiMsg = err instanceof Error ? err.message : '';
-        const message = apiMsg?.trim() ? apiMsg : 'Error al cargar los eventos/temas';
+        const message = apiMsg?.trim() ? apiMsg : 'Error al cargar los temas';
         setEventosError(message);
         setSnackbar({ message, show: true });
       } finally {
@@ -79,7 +79,7 @@ export default function AdminPage() {
 
   // Nota: Eliminada la selección de colores - la nueva API no incluye este campo
 
-  // Funciones para Eventos/Temas
+  // Funciones para Temas
   const handleEventoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -89,14 +89,14 @@ export default function AdminPage() {
     
     try {
       if (editingEvento) {
-        // Editando evento/tema existente
+        // Editando tema existente
         await apiService.updateTopic(editingEvento.id.toString(), {
           name: nombre,
           description: descripcion,
           enabled
         });
       } else {
-        // Creando nuevo evento/tema
+        // Creando nuevo tema
         await apiService.createTopic({
           name: nombre,
           description: descripcion,
@@ -104,19 +104,16 @@ export default function AdminPage() {
         });
       }
       
-      // Recargar eventos/temas desde la API para asegurar sincronización
+      // Recargar temas desde la API para asegurar sincronización
       const { topics } = await apiService.getAllTopics();
       setEventos(topics);
       
       setShowEventoForm(false);
       setEditingEvento(null);
     } catch (error) {
-      console.error('❌ Error guardando evento/tema:', error);
+      console.error('❌ Error guardando tema:', error);
       const apiMsg = error instanceof Error ? error.message : '';
-      setSnackbar({
-        message: apiMsg?.trim() ? apiMsg : 'Error al guardar el evento/tema. Intenta nuevamente.',
-        show: true
-      });
+      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al guardar el tema. Intenta nuevamente.', show: true });
     }
   };
 
@@ -124,16 +121,13 @@ export default function AdminPage() {
     try {
       await apiService.deleteTopic(id.toString());
       
-      // Recargar eventos/temas desde la API
+      // Recargar temas desde la API
       const { topics } = await apiService.getAllTopics();
       setEventos(topics);
     } catch (error) {
-      console.error('❌ Error eliminando evento/tema:', error);
+      console.error('❌ Error eliminando tema:', error);
       const apiMsg = error instanceof Error ? error.message : '';
-      setSnackbar({
-        message: apiMsg?.trim() ? apiMsg : 'Error al eliminar el evento/tema. Intenta nuevamente.',
-        show: true
-      });
+      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al eliminar el tema. Intenta nuevamente.', show: true });
     }
   };
 
@@ -211,7 +205,7 @@ export default function AdminPage() {
                 : 'text-white/60 hover:text-white/80'
             }`}
           >
-            Eventos/Temas
+            Temas
           </button>
           <button
             onClick={() => setActiveTab('menciones')}
@@ -225,17 +219,17 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Contenido de Eventos/Temas */}
+        {/* Contenido de Temas */}
         {activeTab === 'eventos' && (
           <div className="space-y-6">
             {/* Header con botón agregar */}
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Eventos y Temas</h2>
+              <h2 className="text-xl font-bold text-white">Temas</h2>
               <button
                 onClick={() => setShowEventoForm(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
-                + Agregar Evento/Tema
+                + Agregar Tema
               </button>
             </div>
 
@@ -243,7 +237,7 @@ export default function AdminPage() {
             {eventosLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <p className="text-white/80">Cargando eventos...</p>
+                <p className="text-white/80">Cargando temas...</p>
               </div>
             ) : eventosError ? (
               <div className="text-center py-12">
@@ -379,12 +373,12 @@ export default function AdminPage() {
         )}
       </div>
 
-      {/* Modal para Evento/Tema */}
+      {/* Modal para Tema */}
       {showEventoForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-black/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 w-full max-w-md">
             <h3 className="text-xl font-bold text-white mb-6">
-              {editingEvento ? 'Editar Evento/Tema' : 'Agregar Evento/Tema'}
+              {editingEvento ? 'Editar Tema' : 'Agregar Tema'}
             </h3>
             <form onSubmit={handleEventoSubmit} className="space-y-4">
               <div>
@@ -400,7 +394,7 @@ export default function AdminPage() {
                   placeholder="Ej: Elecciones 2024"
                 />
                 <p className="text-white/60 text-xs mt-1">
-                  El sistema intentará asociar las noticias a alguno de los eventos o temas cargados. <strong>SE RECOMIENDA REVISIÓN POSTERIOR.</strong>
+                  El sistema intentará asociar las noticias a alguno de los temas cargados. <strong>SE RECOMIENDA REVISIÓN POSTERIOR.</strong>
                 </p>
               </div>
               <div>
@@ -412,7 +406,7 @@ export default function AdminPage() {
                   defaultValue={editingEvento?.description}
                   rows={3}
                   className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                  placeholder="Descripción del evento o tema"
+                  placeholder="Descripción del tema"
                 />
               </div>
               <div>
