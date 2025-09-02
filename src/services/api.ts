@@ -162,7 +162,23 @@ async function apiRequest<T>(
           window.location.href = '/login';
           throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
         }
-        throw new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
+
+        // Intentar extraer mensaje de error desde la API
+        let apiMessage: string | null = null;
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            const maybeMessage = data?.errors?.[0]?.message;
+            if (typeof maybeMessage === 'string' && maybeMessage.trim().length > 0) {
+              apiMessage = maybeMessage;
+            }
+          }
+        } catch (parseErr) {
+          console.warn('No se pudo parsear el error de la API:', parseErr);
+        }
+
+        throw new Error(apiMessage || `${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
       }
       
       // Para respuestas 204 No Content, no intentar parsear JSON

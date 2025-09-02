@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService, type Topic, type Mention } from '../services/api';
+import Snackbar from '../components/common/Snackbar';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'eventos' | 'menciones'>('eventos');
@@ -13,6 +14,12 @@ export default function AdminPage() {
   const [menciones, setMenciones] = useState<Mention[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Snackbar para errores
+  const [snackbar, setSnackbar] = useState<{ message: string; show: boolean }>({
+    message: '',
+    show: false
+  });
 
   // Nota: Eliminada funcionalidad de drag and drop - ahora se usa el campo enabled directamente
 
@@ -28,7 +35,10 @@ export default function AdminPage() {
         setMenciones(mentions);
       } catch (err) {
         console.error('Error cargando menciones:', err);
-        setError('Error al cargar las menciones');
+        const apiMsg = err instanceof Error ? err.message : '';
+        const message = apiMsg?.trim() ? apiMsg : 'Error al cargar las menciones';
+        setError(message);
+        setSnackbar({ message, show: true });
       } finally {
         setLoading(false);
       }
@@ -49,7 +59,10 @@ export default function AdminPage() {
         setEventos(topics);
       } catch (err) {
         console.error('Error cargando eventos/temas:', err);
-        setEventosError('Error al cargar los eventos/temas');
+        const apiMsg = err instanceof Error ? err.message : '';
+        const message = apiMsg?.trim() ? apiMsg : 'Error al cargar los eventos/temas';
+        setEventosError(message);
+        setSnackbar({ message, show: true });
       } finally {
         setEventosLoading(false);
       }
@@ -99,7 +112,11 @@ export default function AdminPage() {
       setEditingEvento(null);
     } catch (error) {
       console.error('❌ Error guardando evento/tema:', error);
-      alert('Error al guardar el evento/tema. Intenta nuevamente.');
+      const apiMsg = error instanceof Error ? error.message : '';
+      setSnackbar({
+        message: apiMsg?.trim() ? apiMsg : 'Error al guardar el evento/tema. Intenta nuevamente.',
+        show: true
+      });
     }
   };
 
@@ -112,7 +129,11 @@ export default function AdminPage() {
       setEventos(topics);
     } catch (error) {
       console.error('❌ Error eliminando evento/tema:', error);
-      alert('Error al eliminar el evento/tema. Intenta nuevamente.');
+      const apiMsg = error instanceof Error ? error.message : '';
+      setSnackbar({
+        message: apiMsg?.trim() ? apiMsg : 'Error al eliminar el evento/tema. Intenta nuevamente.',
+        show: true
+      });
     }
   };
 
@@ -145,7 +166,11 @@ export default function AdminPage() {
       setEditingMencion(null);
     } catch (error) {
       console.error('❌ Error guardando mención:', error);
-      alert('Error al guardar la mención. Intenta nuevamente.');
+      const apiMsg = error instanceof Error ? error.message : '';
+      setSnackbar({
+        message: apiMsg?.trim() ? apiMsg : 'Error al guardar la mención. Intenta nuevamente.',
+        show: true
+      });
     }
   };
 
@@ -158,7 +183,11 @@ export default function AdminPage() {
       setMenciones(mentions);
     } catch (error) {
       console.error('❌ Error eliminando mención:', error);
-      alert('Error al eliminar la mención. Intenta nuevamente.');
+      const apiMsg = error instanceof Error ? error.message : '';
+      setSnackbar({
+        message: apiMsg?.trim() ? apiMsg : 'Error al eliminar la mención. Intenta nuevamente.',
+        show: true
+      });
     }
   };
 
@@ -167,7 +196,6 @@ export default function AdminPage() {
     setShowMencionForm(true);
   };
 
-  // Nota: Variables auxiliares removidas porque no se usan con la nueva interfaz
 
   return (
     <div className="w-full h-full">
@@ -511,6 +539,14 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* Snackbar de errores */}
+      <Snackbar
+        message={snackbar.message}
+        isOpen={snackbar.show}
+        onClose={() => setSnackbar(prev => ({ ...prev, show: false }))}
+        duration={6000}
+      />
     </div>
   );
-} 
+}
