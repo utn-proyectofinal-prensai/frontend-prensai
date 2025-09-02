@@ -164,15 +164,13 @@ async function apiRequest<T>(
         }
 
         // Intentar extraer mensaje de error desde la API
-        let apiMessage: string | null = null;
+        let apiMessage = '';
         try {
           const contentType = response.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            const maybeMessage = data?.errors?.[0]?.message;
-            if (typeof maybeMessage === 'string' && maybeMessage.trim().length > 0) {
-              apiMessage = maybeMessage;
-            }
+            const raw = (data?.errors?.[0]?.message as string | undefined) ?? '';
+            apiMessage = raw.trim();
           }
         } catch (parseErr) {
           console.warn('No se pudo parsear el error de la API:', parseErr);
