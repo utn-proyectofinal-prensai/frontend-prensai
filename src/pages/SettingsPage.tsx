@@ -410,7 +410,6 @@ export default function AdminPage() {
                 <textarea
                   name="descripcion"
                   defaultValue={editingEvento?.description}
-                  required
                   rows={3}
                   className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
                   placeholder="Descripción del evento o tema"
