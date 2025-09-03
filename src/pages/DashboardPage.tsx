@@ -1,9 +1,8 @@
 import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api';
-import { useNews } from '../hooks/useNews';
-import type { DashboardStats } from '../services/api';
+import type { DashboardStats, NewsItem } from '../services/api';
 import { DASHBOARD_MESSAGES } from '../constants/messages';
 
 export default function DashboardPage() {
@@ -23,95 +22,100 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Hook para obtener las últimas noticias
-  const { news: ultimasNoticias, loading: newsLoading } = useNews({ limit: 4 });
-  
-  // Hook para obtener todas las noticias para calcular estadísticas
-  const { news: todasLasNoticias } = useNews({ limit: 1000 });
+  // Estados para las noticias
+  const [ultimasNoticias, setUltimasNoticias] = useState<NewsItem[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsError, setNewsError] = useState<string | null>(null);
 
-  // Cargar datos del dashboard
+  // Función para verificar el estado de la API
+  const checkApiStatus = useCallback(async () => {
+    try {
+      await apiService.verifyStatus();
+      return true;
+    } catch (error) {
+      console.error('API está caída:', error);
+      setError('La API no está disponible. Por favor, inténtalo más tarde.');
+      return false;
+    }
+  }, []);
+
+  // Función para cargar datos del usuario
+  const loadUserData = useCallback(async () => {
+    try {
+      await apiService.getCurrentUser();
+      return true;
+    } catch (error) {
+      console.error('Error cargando datos del usuario:', error);
+      setError('Error al cargar los datos del usuario.');
+      return false;
+    }
+  }, []);
+
+  // Función para cargar noticias (solo las últimas 4)
+  const loadNews = useCallback(async () => {
+    try {
+      setNewsLoading(true);
+      setNewsError(null);
+      
+      const response = await apiService.getNews({ limit: 4 });
+      setUltimasNoticias(response.news);
+    } catch (error) {
+      console.error('Error cargando noticias:', error);
+      setNewsError('Error al cargar las noticias');
+      setUltimasNoticias([]);
+    } finally {
+      setNewsLoading(false);
+    }
+  }, []);
+
+  // Función para cargar estadísticas
+  const loadStats = useCallback(async () => {
+    try {
+      const statsData = await apiService.getDashboardStats();
+      setStats(statsData);
+    } catch (statsError) {
+      console.error('Error cargando estadísticas:', statsError);
+      // No hacer nada si falla, dejar estadísticas en 0
+    }
+  }, []);
+
+  // Cargar datos del dashboard en el orden correcto
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
         setLoading(true);
-        
-        // Intentar cargar estadísticas, pero no fallar si no están disponibles
-        try {
-          const statsData = await apiService.getDashboardStats();
-          setStats(statsData);
-        } catch (statsError) {
-          console.warn('Endpoint de estadísticas no disponible, calculando estadísticas básicas:', statsError);
-          
-          // Calcular estadísticas básicas basadas en las noticias disponibles
-          const hoy = new Date();
-          const inicioSemana = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
-          const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-          
-          const noticiasHoy = todasLasNoticias.filter(noticia => {
-            const fechaNoticia = new Date(noticia.date);
-            return fechaNoticia.toDateString() === hoy.toDateString();
-          }).length;
-          
-          const noticiasEstaSemana = todasLasNoticias.filter(noticia => {
-            const fechaNoticia = new Date(noticia.date);
-            return fechaNoticia >= inicioSemana;
-          }).length;
-          
-          const noticiasEsteMes = todasLasNoticias.filter(noticia => {
-            const fechaNoticia = new Date(noticia.date);
-            return fechaNoticia >= inicioMes;
-          }).length;
-          
-          // Calcular noticias por tema
-          const temasCount: { [key: string]: number } = {};
-          todasLasNoticias.forEach(noticia => {
-            const tema = noticia.topic?.name || 'Sin tema';
-            temasCount[tema] = (temasCount[tema] || 0) + 1;
-          });
-          const noticiasPorTema = Object.entries(temasCount)
-            .map(([tema, count]) => ({ tema, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
-          
-          // Calcular noticias por medio
-          const mediosCount: { [key: string]: number } = {};
-          todasLasNoticias.forEach(noticia => {
-            const medio = noticia.media || 'Sin medio';
-            mediosCount[medio] = (mediosCount[medio] || 0) + 1;
-          });
-          const noticiasPorMedio = Object.entries(mediosCount)
-            .map(([medio, count]) => ({ medio, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
-          
-          setStats({
-            totalNoticias: todasLasNoticias.length,
-            noticiasHoy,
-            noticiasEstaSemana,
-            noticiasEsteMes,
-            noticiasPorTema,
-            noticiasPorMedio
-          });
-        }
-        
         setError(null);
+
+        // 1. Verificar estado de la API
+        const apiOnline = await checkApiStatus();
+        if (!apiOnline) {
+          return;
+        }
+
+        // 2. Cargar datos del usuario
+        const userLoadedSuccess = await loadUserData();
+        if (!userLoadedSuccess) {
+          return;
+        }
+
+        // 3. Cargar noticias
+        await loadNews();
+
+        // 4. Cargar estadísticas (solo una vez)
+        await loadStats();
+
       } catch (err) {
         console.error('Error cargando datos del dashboard:', err);
-        // Solo mostrar error si no hay noticias disponibles
-        if (todasLasNoticias.length === 0) {
-          setError(DASHBOARD_MESSAGES.ERRORS.LOAD_DATA_ERROR);
-        } else {
-          setError(null); // Si hay noticias, no mostrar error general
-        }
+        setError(DASHBOARD_MESSAGES.ERRORS.LOAD_DATA_ERROR);
       } finally {
         setLoading(false);
       }
     };
 
     loadDashboardData();
-  }, [ultimasNoticias, todasLasNoticias]);
+  }, [checkApiStatus, loadUserData, loadNews, loadStats]); // Incluir las dependencias necesarias
 
-  // Mostrar loading mientras cargan los datos
+  // Mostrar loading mientras cargan los datos principales
   if (loading || newsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -120,7 +124,7 @@ export default function DashboardPage() {
     );
   }
 
-  // Mostrar error si algo falló
+  // Mostrar error si la API está caída o hay error de usuario
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -298,138 +302,163 @@ export default function DashboardPage() {
                 </button>
               </div>
             </div>
+            
+            {/* Mostrar error de noticias si existe */}
+            {newsError && (
+              <div className="px-8 py-4 bg-red-500/20 border-b border-red-500/30">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-red-300 text-sm font-medium">
+                    Error al cargar las noticias: {newsError}
+                  </span>
+                </div>
+              </div>
+            )}
+            
             <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-black/20">
-                  <tr>
-                    <th className="px-4 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TÍTULO</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TIPO PUBLICACIÓN</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FECHA</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SOPORTE</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MEDIO</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SECCIÓN</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">AUTOR</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CONDUCTOR</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ENTREVISTADO</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TEMA</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_1</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_2</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">LINK</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ALCANCE</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">COTIZACIÓN</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TAPA</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">VALORACIÓN</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">EJE COMUNICACIONAL</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FACTOR POLÍTICO</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CRISIS</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">GESTIÓN</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ÁREA</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_1</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_2</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_3</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_4</th>
-                    <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_5</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10">
-                  {ultimasNoticias.map((noticia) => (
-                    <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
-                      <td className="px-4 py-3 text-center">
-                        <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.title}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.publication_type}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{new Date(noticia.date).toLocaleDateString()}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.support}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.media}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.section}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.author}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.interviewee || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.topic?.name || 'Sin tema'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90">
-                          <a href={noticia.link} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">
-                            Ver
-                          </a>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.audience_size || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.quotation || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
-                          noticia.valuation === 'positive' 
-                            ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
-                            : noticia.valuation === 'neutral'
-                            ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
-                            : noticia.valuation === 'negative'
-                            ? 'bg-red-500/20 text-red-300 border border-red-300/30'
-                            : 'bg-white/20 text-white/90 border border-white/30'
-                        }`}>
-                          {noticia.valuation || 'Sin valoración'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.political_factor || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.crisis ? 'Sí' : 'No'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[2]?.name || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[3]?.name || '-'}</div>
-                      </td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[4]?.name || '-'}</div>
-                      </td>
+              {newsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-white/70 text-lg">Cargando noticias...</div>
+                </div>
+              ) : ultimasNoticias.length === 0 ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-white/70 text-lg">No hay noticias disponibles</div>
+                </div>
+              ) : (
+                <table className="min-w-full">
+                  <thead className="bg-black/20">
+                    <tr>
+                      <th className="px-4 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TÍTULO</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TIPO PUBLICACIÓN</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FECHA</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SOPORTE</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MEDIO</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SECCIÓN</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">AUTOR</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CONDUCTOR</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ENTREVISTADO</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TEMA</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_1</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_2</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">LINK</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ALCANCE</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">COTIZACIÓN</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TAPA</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">VALORACIÓN</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">EJE COMUNICACIONAL</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FACTOR POLÍTICO</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CRISIS</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">GESTIÓN</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ÁREA</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_1</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_2</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_3</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_4</th>
+                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_5</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-white/10">
+                    {ultimasNoticias.map((noticia) => (
+                      <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
+                        <td className="px-4 py-3 text-center">
+                          <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.title}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.publication_type}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{new Date(noticia.date).toLocaleDateString()}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.support}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.media}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.section}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.author}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.interviewee || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.topic?.name || 'Sin tema'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90">
+                            <a href={noticia.link} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">
+                              Ver
+                            </a>
+                          </div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.audience_size || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.quotation || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
+                            noticia.valuation === 'positive' 
+                              ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
+                              : noticia.valuation === 'neutral'
+                              ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
+                              : noticia.valuation === 'negative'
+                              ? 'bg-red-500/20 text-red-300 border border-red-300/30'
+                              : 'bg-white/20 text-white/90 border border-white/30'
+                          }`}>
+                            {noticia.valuation || 'Sin valoración'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.political_factor || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.crisis ? 'Sí' : 'No'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[2]?.name || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[3]?.name || '-'}</div>
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[4]?.name || '-'}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>

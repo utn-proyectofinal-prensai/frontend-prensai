@@ -272,10 +272,37 @@ export const apiService = {
     });
   },
 
-  // Obtener estadísticas del dashboard
-  async getDashboardStats(): Promise<DashboardStats> {
-    return apiRequest<DashboardStats>('/news/stats');
-  },
+// Obtener estadísticas del dashboard (MOCK TEMPORAL)
+async getDashboardStats(): Promise<DashboardStats> {
+  // TODO: Reemplazar con llamada real cuando el backend implemente el endpoint
+  // return apiRequest<DashboardStats>('/news/stats');
+  
+  // Datos mockeados para desarrollo
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        totalNoticias: 1247,
+        noticiasHoy: 23,
+        noticiasEstaSemana: 156,
+        noticiasEsteMes: 634,
+        noticiasPorTema: [
+          { tema: 'Política', count: 342 },
+          { tema: 'Economía', count: 298 },
+          { tema: 'Deportes', count: 187 },
+          { tema: 'Tecnología', count: 156 },
+          { tema: 'Cultura', count: 134 }
+        ],
+        noticiasPorMedio: [
+          { medio: 'Clarín', count: 234 },
+          { medio: 'La Nación', count: 198 },
+          { medio: 'Página 12', count: 167 },
+          { medio: 'Infobae', count: 145 },
+          { medio: 'Ámbito', count: 123 }
+        ]
+      });
+    }, 500); // Simular delay de red
+  });
+},
 
   // Importar noticias desde Excel
   async importNews(file: File): Promise<{
@@ -340,7 +367,7 @@ export const apiService = {
     return { token: data.token };
   },
 
-  async verifyToken(): Promise<{ valid: boolean }> {
+  async verifyStatus(): Promise<{ valid: boolean }> {
     try {
       const response = await fetch(`${API_BASE_URL}/status`);
       if (response.ok) {
