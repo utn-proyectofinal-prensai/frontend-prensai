@@ -1,39 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../services/api';
+import { useNews } from '../hooks/useNews';
 import type { NewsItem } from '../services/api';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
-  const [newsHistory, setNewsHistory] = useState<NewsItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Cargar datos históricos reales
-  useEffect(() => {
-    const loadNewsHistory = async () => {
-      try {
-        setIsLoading(true);
-        const data = await apiService.getNews({ limit: 100 }); // Cargar hasta 100 noticias
-        setNewsHistory(data);
-      } catch (error) {
-        console.error('Error cargando historial de noticias:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadNewsHistory();
-  }, []);
+  // Hook para obtener las noticias
+  const { news: newsHistory, loading: isLoading, setFilters } = useNews({ limit: 100 });
 
   // Filtrar noticias basado en estado y término de búsqueda
   const filteredNews = newsHistory.filter(news => {
-    const matchesStatus = filterStatus === 'all' || news.status === filterStatus;
+    const matchesStatus = filterStatus === 'all'; // La nueva API no tiene status
     const matchesSearch = searchTerm === '' || 
-      news.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      news.medio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      news.tema.toLowerCase().includes(searchTerm.toLowerCase());
+      news.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      news.media.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (news.topic?.name && news.topic.name.toLowerCase().includes(searchTerm.toLowerCase()));
     
     return matchesStatus && matchesSearch;
   });
@@ -239,40 +223,40 @@ export default function HistoryPage() {
                       {filteredNews.map((item) => (
                         <tr key={item.id} className="hover:bg-black/20 transition-colors duration-200">
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{item.titulo}</div>
+                            <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{item.title}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.tipoPublicacion}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.publication_type}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{new Date(item.fecha).toLocaleDateString()}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{new Date(item.date).toLocaleDateString()}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.soporte}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.support}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.medio}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.media}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.seccion}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.section}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.autor}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.author}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.conductor || '-'}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.entrevistado || '-'}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.interviewee || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.tema}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.topic?.name || 'Sin tema'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.etiqueta1}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[0]?.name || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.etiqueta2}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[1]?.name || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
                             <div className="text-sm font-medium text-white/90">
@@ -282,56 +266,56 @@ export default function HistoryPage() {
                             </div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.alcance}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.audience_size || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.cotizacion}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.quotation || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.tapa}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                           </td>
                           <td className="px-6 py-3 text-center">
                             <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
-                              item.valoracion === 'Muy Positiva' 
+                              item.valuation === 'positive' 
                                 ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
-                                : item.valoracion === 'Positiva'
+                                : item.valuation === 'neutral'
                                 ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
-                                : item.valoracion === 'Negativa'
+                                : item.valuation === 'negative'
                                 ? 'bg-red-500/20 text-red-300 border border-red-300/30'
                                 : 'bg-white/20 text-white/90 border border-white/30'
                             }`}>
-                              {item.valoracion}
+                              {item.valuation || 'Sin valoración'}
                             </span>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.ejeComunicacional}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.factorPolitico}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.political_factor || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.crisis}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.crisis ? 'Sí' : 'No'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.gestion}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.area}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion1 || '-'}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[0]?.name || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion2 || '-'}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[1]?.name || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion3 || '-'}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[2]?.name || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion4 || '-'}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[3]?.name || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mencion5 || '-'}</div>
+                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[4]?.name || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(item.status)}`}>

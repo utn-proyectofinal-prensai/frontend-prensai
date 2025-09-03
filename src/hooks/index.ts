@@ -17,3 +17,6 @@ export { useAnimationControl } from './useAnimationControl';
 
 // Hook para manejo del dropdown del usuario
 export { useUserDropdown } from './useUserDropdown';
+
+// Hook para manejo de noticias
+export { useNews, useNewsById } from './useNews';
