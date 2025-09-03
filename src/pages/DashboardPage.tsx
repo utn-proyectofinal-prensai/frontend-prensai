@@ -264,8 +264,7 @@ export default function DashboardPage() {
               </div>
             </button>
 
-            {isAdmin && (
-              <button 
+            <button 
                 onClick={() => navigate('/settings')}
                 className="group bg-transparent backdrop-blur-sm rounded-2xl shadow-lg p-12 hover:bg-white/5 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 hover:shadow-xl" 
                 style={{ border: '1px solid rgba(255, 255, 255, 0.3)' }}
@@ -279,11 +278,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Administración</h3>
-                    <p className="text-orange-300 text-base leading-relaxed font-medium drop-shadow-sm">Gestiona eventos, temas y menciones</p>
+                    <p className="text-orange-300 text-base leading-relaxed font-medium drop-shadow-sm">Gestiona temas y menciones</p>
                   </div>
                 </div>
-              </button>
-            )}
+            </button>
           </div>
         </div>
 

@@ -3,6 +3,21 @@ import { AUTH_MESSAGES, API_MESSAGES } from '../constants/messages';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
 
+// Helper function para construir query parameters
+const buildQueryString = (params?: Record<string, string | number | boolean>): string => {
+  if (!params) return '';
+  
+  const urlParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      urlParams.append(key, value.toString());
+    }
+  });
+  
+  const queryString = urlParams.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
 // Tipos de datos según la nueva API
 export interface NewsItem {
   id: number;
@@ -43,13 +58,17 @@ export interface Pagination {
   next: number | null;
 }
 
-export interface Error {
+export interface ApiError {
   message: string;
 }
 
 export interface ProcessingError {
   url: string;
   reason: string;
+}
+
+export interface ErrorResponse {
+  errors: (ApiError | ProcessingError | string)[];
 }
 
 export interface BatchProcessRequest {
@@ -161,6 +180,45 @@ export interface UpdateUserData {
   first_name?: string;
   last_name?: string;
   role?: 'admin' | 'user';
+}
+
+// Función helper para manejar errores de la API
+export function parseApiError(error: unknown, defaultMessage: string): string {
+  if (error instanceof Error) {
+    // Si el mensaje contiene "HTTP error! status:", es un error de fetch
+    if (error.message.includes('HTTP error! status:')) {
+      return defaultMessage;
+    }
+    
+    try {
+      const errorData: ErrorResponse = JSON.parse(error.message);
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        // Si hay errores de procesamiento con URL y reason
+        const processingErrors = errorData.errors.filter((err): err is ProcessingError => 
+          typeof err === 'object' && err !== null && 'url' in err && 'reason' in err
+        );
+        
+        if (processingErrors.length > 0) {
+          return `Errores en URLs: ${processingErrors.map(err => `${err.url}: ${err.reason}`).join(', ')}`;
+        } else {
+          // Errores generales
+          return errorData.errors.map(err => {
+            if (typeof err === 'string') return err;
+            if (typeof err === 'object' && err !== null && 'message' in err) {
+              return (err as ApiError).message;
+            }
+            return String(err);
+          }).join(', ');
+        }
+      } else {
+        return error.message;
+      }
+    } catch {
+      // Si no es JSON válido, usar el mensaje tal como viene
+      return error.message;
+    }
+  }
+  return defaultMessage;
 }
 
 // Función helper para hacer requests
@@ -453,8 +511,9 @@ async getDashboardStats(): Promise<DashboardStats> {
     });
   },
 
-  async getAllMentions(): Promise<{ mentions: Mention[] }> {
-    return apiRequest<{ mentions: Mention[] }>('/mentions');
+   async getMentions(queryParams?: Record<string, string | number | boolean>): Promise<{ mentions: Mention[] }> {
+    const queryString = buildQueryString(queryParams);
+    return apiRequest<{ mentions: Mention[] }>(`/mentions${queryString}`);
   },
 
   // CRUD de menciones individuales
@@ -479,8 +538,9 @@ async getDashboardStats(): Promise<DashboardStats> {
   },
 
   // Eventos/Temas (Topics)
-  async getAllTopics(): Promise<{ topics: Topic[] }> {
-    return apiRequest<{ topics: Topic[] }>('/topics');
+  async getTopics(queryParams?: Record<string, string | number | boolean>): Promise<{ topics: Topic[] }> {
+    const queryString = buildQueryString(queryParams);
+    return apiRequest<{ topics: Topic[] }>(`/topics${queryString}`);
   },
 
   async createTopic(data: {

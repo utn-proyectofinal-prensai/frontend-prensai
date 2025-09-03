@@ -20,3 +20,9 @@ export { useUserDropdown } from './useUserDropdown';
 
 // Hook para manejo de noticias
 export { useNews, useNewsById } from './useNews';
+
+// Hook para manejo de temas
+export { useTopics } from './useTopics';
+
+// Hook para manejo de menciones
+export { useMentions } from './useMentions';
