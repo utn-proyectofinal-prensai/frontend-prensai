@@ -31,9 +31,8 @@ export default function UploadNewsPage() {
   const [excelPreview, setExcelPreview] = useState<ExcelPreview | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   
-  // Estados para procesamiento
+  // Estados para procesamiento (spinner simple por ahora)
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingProgress, setProcessingProgress] = useState(0);
   const [processingStatus, setProcessingStatus] = useState('');
   
   // Estados para temas y menciones
@@ -43,6 +42,7 @@ export default function UploadNewsPage() {
   // Estados para mensajes
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [successVariant, setSuccessVariant] = useState<'success' | 'warning'>('success');
   
   // Hooks para obtener solo datos habilitados desde el backend (enabled=true)
   const { topics: enabledTopics, loading: topicsLoading } = useEnabledTopics();
@@ -57,8 +57,6 @@ export default function UploadNewsPage() {
       return false;
     }
   };
-
-
 
   // Agregar URL al set
   const addUrl = () => {
@@ -155,19 +153,24 @@ export default function UploadNewsPage() {
     if (!selectedFile) return;
 
     setIsProcessing(true);
-    setProcessingProgress(0);
     setProcessingStatus('Iniciando importación...');
 
     try {
       const result = await apiService.importNews(selectedFile);
-      
-      setProcessingProgress(100);
-      setProcessingStatus('Importación completada exitosamente');
-      setSuccessMessage(`Importación exitosa: ${result.importadas} noticias importadas, ${result.errores} errores`);
-      
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+
+      const total = (result as any).totalProcesadas ?? (result.importadas + result.errores);
+      if (result.importadas > 0 && result.errores === 0) {
+        setSuccessVariant('success');
+        setProcessingStatus('Importación completada exitosamente');
+        setSuccessMessage(`Listo: ${result.importadas}/${total} noticias importadas correctamente.`);
+      } else if (result.importadas > 0 && result.errores > 0) {
+        setSuccessVariant('warning');
+        setProcessingStatus('Importación parcial');
+        setSuccessMessage(`Parcial: ${result.importadas}/${total} importadas. ${result.errores} con error.`);
+      } else {
+        setProcessingStatus('Error en la importación');
+        setErrorMessage('No se pudo importar ninguna noticia. Verifica el archivo.');
+      }
 
     } catch (error) {
       console.error('Error importando archivo:', error);
@@ -191,7 +194,6 @@ export default function UploadNewsPage() {
     }
 
     setIsProcessing(true);
-    setProcessingProgress(0);
     setProcessingStatus('Iniciando procesamiento...');
 
     try {
@@ -202,15 +204,27 @@ export default function UploadNewsPage() {
       };
 
       const response = await batchProcess(requestData);
-      
-      setProcessingProgress(100);
-      setProcessingStatus('Procesamiento completado exitosamente');
-      setSuccessMessage(`Procesamiento exitoso: ${response.persisted} noticias procesadas, ${response.errors.length} errores`);
-      
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
 
+      const allOk = response.received === response.persisted && response.persisted > 0;
+      const partial = response.persisted > 0 && response.errors.length > 0;
+      const none = response.persisted === 0 && response.errors.length > 0;
+
+      if (allOk) {
+        setSuccessVariant('success');
+        setProcessingStatus('Procesamiento completado exitosamente');
+        setSuccessMessage(`Listo: ${response.persisted}/${response.received} procesadas correctamente.`);
+      } else if (partial) {
+        setSuccessVariant('warning');
+        setProcessingStatus('Procesamiento parcial');
+        setSuccessMessage(`Parcial: ${response.persisted}/${response.received} OK. ${response.errors.length} con error.`);
+      } else if (none) {
+        setProcessingStatus('Error en el procesamiento');
+        setErrorMessage('No se pudo procesar ninguna noticia. Revisa las URLs ingresadas.');
+      } else {
+        setSuccessVariant('warning');
+        setProcessingStatus('Procesamiento finalizado');
+        setSuccessMessage(`Resultado: ${response.persisted}/${response.received} procesadas.`);
+      }
     } catch (error) {
       console.error('Error procesando noticias:', error);
       setProcessingStatus('Error en el procesamiento');
@@ -545,18 +559,23 @@ export default function UploadNewsPage() {
         </>
       )}
 
-      {/* Progreso de procesamiento */}
+      {/* Overlay de procesamiento con spinner*/}
       {(isProcessing || processing) && (
-        <div className="mt-8 bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-white mb-4">{processingStatus}</h3>
-            <div className="w-full bg-white/20 rounded-full h-3 mb-4">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${processingProgress}%` }}
-              ></div>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="processing-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        >
+          <div className="w-full max-w-md mx-4 rounded-2xl border border-white/20 bg-gradient-to-b from-slate-900/90 to-slate-800/90 shadow-2xl p-6 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center animate-pulse-glow mb-4">
+              <svg className="w-6 h-6 text-blue-300 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
             </div>
-            <p className="text-white/80">{processingProgress}% completado</p>
+            <h3 id="processing-title" className="text-white font-bold text-lg">{processingStatus || 'Procesando noticias…'}</h3>
+            <p className="text-white/70 text-sm mt-1">Esto puede tardar unos segundos.</p>
           </div>
         </div>
       )}
@@ -566,12 +585,14 @@ export default function UploadNewsPage() {
         message={errorMessage}
         isOpen={!!errorMessage}
         onClose={() => setErrorMessage('')}
+        variant="error"
       />
       
       <Snackbar
         message={successMessage}
         isOpen={!!successMessage}
         onClose={() => setSuccessMessage('')}
+        variant={successVariant}
       />
     </div>
   );
