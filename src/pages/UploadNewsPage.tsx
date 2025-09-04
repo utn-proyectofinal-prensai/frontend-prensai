@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNews, useTopics, useMentions } from '../hooks';
+import { useNews, useEnabledTopics, useEnabledMentions } from '../hooks';
 import { apiService, type BatchProcessRequest, parseApiError } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
 
@@ -44,9 +44,9 @@ export default function UploadNewsPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   
-  // Hooks para obtener datos
-  const { enabledTopics, loading: topicsLoading } = useTopics();
-  const { enabledMentions, loading: mentionsLoading } = useMentions();
+  // Hooks para obtener solo datos habilitados desde el backend (enabled=true)
+  const { topics: enabledTopics, loading: topicsLoading } = useEnabledTopics();
+  const { mentions: enabledMentions, loading: mentionsLoading } = useEnabledMentions();
 
   // Función para validar URL
   const isValidUrl = (url: string): boolean => {
@@ -344,7 +344,7 @@ export default function UploadNewsPage() {
                 type="text"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addUrl()}
+                onKeyDown={(e) => e.key === 'Enter' && addUrl()}
                 placeholder="https://ejemplo.com/noticia..."
                 className="flex-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-blue-400 transition-all"
               />

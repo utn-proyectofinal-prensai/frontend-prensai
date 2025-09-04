@@ -22,7 +22,7 @@ export { useUserDropdown } from './useUserDropdown';
 export { useNews, useNewsById } from './useNews';
 
 // Hook para manejo de temas
-export { useTopics } from './useTopics';
+export { useTopics, useEnabledTopics } from './useTopics';
 
 // Hook para manejo de menciones
-export { useMentions } from './useMentions';
+export { useMentions, useEnabledMentions } from './useMentions';
