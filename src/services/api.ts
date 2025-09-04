@@ -3,37 +3,91 @@ import { AUTH_MESSAGES, API_MESSAGES } from '../constants/messages';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
 
-// Tipos de datos
+// Helper function para construir query parameters
+const buildQueryString = (params?: Record<string, string | number | boolean>): string => {
+  if (!params) return '';
+  
+  const urlParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      urlParams.append(key, value.toString());
+    }
+  });
+  
+  const queryString = urlParams.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
+// Tipos de datos según la nueva API
 export interface NewsItem {
-  id: string;
-  titulo: string;
-  tipoPublicacion: string;
-  fecha: string;
-  soporte: string;
-  medio: string;
-  seccion: string;
-  autor: string;
-  conductor: string;
-  entrevistado: string;
-  tema: string;
-  etiqueta1: string;
-  etiqueta2: string;
+  id: number;
+  title: string;
+  publication_type: string;
+  date: string;
+  support: string;
+  media: string;
+  section: string;
+  author: string;
+  interviewee: string | null;
   link: string;
-  alcance: string;
-  cotizacion: string;
-  tapa: string;
-  valoracion: string;
-  ejeComunicacional: string;
-  factorPolitico: string;
-  crisis: string;
-  gestion: string;
-  area: string;
-  mencion1: string;
-  mencion2: string;
-  mencion3: string;
-  mencion4: string;
-  mencion5: string;
-  status: 'processed' | 'pending' | 'error';
+  audience_size: number | null;
+  quotation: number | null;
+  valuation: string | null;
+  political_factor: string | null;
+  plain_text: string | null;
+  crisis: boolean;
+  created_at: string;
+  updated_at: string;
+  topic: EntityRef | null;
+  mentions: EntityRef[];
+  creator: EntityRef | null;
+  reviewer: EntityRef | null;
+}
+
+// Tipos base para referencias simples
+export interface EntityRef {
+  id: number;
+  name: string;
+}
+
+export interface Pagination {
+  page: number;
+  count: number;
+  pages: number;
+  prev: number | null;
+  next: number | null;
+}
+
+export interface ApiError {
+  message: string;
+}
+
+export interface ProcessingError {
+  url: string;
+  reason: string;
+}
+
+export interface ErrorResponse {
+  errors: (ApiError | ProcessingError | string)[];
+}
+
+export interface BatchProcessRequest {
+  urls: string[];
+  topics: string[];
+  mentions: string[];
+}
+
+export interface BatchProcessResponse {
+  received: number;
+  processed_by_ai: number;
+  persisted: number;
+  news: NewsItem[];
+  errors: ProcessingError[];
+}
+
+export interface NewsListResponse {
+  news: NewsItem[];
+  pagination: Pagination;
 }
 
 export interface DashboardStats {
@@ -128,6 +182,45 @@ export interface UpdateUserData {
   role?: 'admin' | 'user';
 }
 
+// Función helper para manejar errores de la API
+export function parseApiError(error: unknown, defaultMessage: string): string {
+  if (error instanceof Error) {
+    // Si el mensaje contiene "HTTP error! status:", es un error de fetch
+    if (error.message.includes('HTTP error! status:')) {
+      return defaultMessage;
+    }
+    
+    try {
+      const errorData: ErrorResponse = JSON.parse(error.message);
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        // Si hay errores de procesamiento con URL y reason
+        const processingErrors = errorData.errors.filter((err): err is ProcessingError => 
+          typeof err === 'object' && err !== null && 'url' in err && 'reason' in err
+        );
+        
+        if (processingErrors.length > 0) {
+          return `Errores en URLs: ${processingErrors.map(err => `${err.url}: ${err.reason}`).join(', ')}`;
+        } else {
+          // Errores generales
+          return errorData.errors.map(err => {
+            if (typeof err === 'string') return err;
+            if (typeof err === 'object' && err !== null && 'message' in err) {
+              return (err as ApiError).message;
+            }
+            return String(err);
+          }).join(', ');
+        }
+      } else {
+        return error.message;
+      }
+    } catch {
+      // Si no es JSON válido, usar el mensaje tal como viene
+      return error.message;
+    }
+  }
+  return defaultMessage;
+}
+
 // Función helper para hacer requests
 async function apiRequest<T>(
   endpoint: string,
@@ -200,40 +293,74 @@ async function apiRequest<T>(
 
 // Servicios de la API
 export const apiService = {
-  // Obtener todas las noticias
+  // Obtener todas las noticias con paginación
   async getNews(filters?: {
-    tema?: string;
-    medio?: string;
-    fechaDesde?: string;
-    fechaHasta?: string;
+    page?: number;
     limit?: number;
-    offset?: number;
-  }): Promise<NewsItem[]> {
+    topic?: string;
+    media?: string;
+    date_from?: string;
+    date_to?: string;
+  }): Promise<NewsListResponse> {
     const params = new URLSearchParams();
     
-    if (filters?.tema) params.append('tema', filters.tema);
-    if (filters?.medio) params.append('medio', filters.medio);
-    if (filters?.fechaDesde) params.append('fechaDesde', filters.fechaDesde);
-    if (filters?.fechaHasta) params.append('fechaHasta', filters.fechaHasta);
+    if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
-    if (filters?.offset) params.append('offset', filters.offset.toString());
+    if (filters?.topic) params.append('topic', filters.topic);
+    if (filters?.media) params.append('media', filters.media);
+    if (filters?.date_from) params.append('date_from', filters.date_from);
+    if (filters?.date_to) params.append('date_to', filters.date_to);
 
     const queryString = params.toString();
     const endpoint = `/news${queryString ? `?${queryString}` : ''}`;
     
-    const response = await apiRequest<{ noticias: NewsItem[]; pagination: PaginationInfo }>(endpoint);
-    return response.noticias; // Extraer solo el array de noticias
+    return apiRequest<NewsListResponse>(endpoint);
   },
 
   // Obtener una noticia específica
-  async getNewsById(id: string): Promise<NewsItem> {
+  async getNewsById(id: number): Promise<NewsItem> {
     return apiRequest<NewsItem>(`/news/${id}`);
   },
 
-  // Obtener estadísticas del dashboard
-  async getDashboardStats(): Promise<DashboardStats> {
-    return apiRequest<DashboardStats>('/news/stats');
+  // Procesar noticias por lotes
+  async batchProcessNews(data: BatchProcessRequest): Promise<BatchProcessResponse> {
+    return apiRequest<BatchProcessResponse>('/news/batch_process', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
+
+// Obtener estadísticas del dashboard (MOCK TEMPORAL)
+async getDashboardStats(): Promise<DashboardStats> {
+  // TODO: Reemplazar con llamada real cuando el backend implemente el endpoint
+  // return apiRequest<DashboardStats>('/news/stats');
+  
+  // Datos mockeados para desarrollo
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        totalNoticias: 1247,
+        noticiasHoy: 23,
+        noticiasEstaSemana: 156,
+        noticiasEsteMes: 634,
+        noticiasPorTema: [
+          { tema: 'Política', count: 342 },
+          { tema: 'Economía', count: 298 },
+          { tema: 'Deportes', count: 187 },
+          { tema: 'Tecnología', count: 156 },
+          { tema: 'Cultura', count: 134 }
+        ],
+        noticiasPorMedio: [
+          { medio: 'Clarín', count: 234 },
+          { medio: 'La Nación', count: 198 },
+          { medio: 'Página 12', count: 167 },
+          { medio: 'Infobae', count: 145 },
+          { medio: 'Ámbito', count: 123 }
+        ]
+      });
+    }, 500); // Simular delay de red
+  });
+},
 
   // Importar noticias desde Excel
   async importNews(file: File): Promise<{
@@ -298,7 +425,7 @@ export const apiService = {
     return { token: data.token };
   },
 
-  async verifyToken(): Promise<{ valid: boolean }> {
+  async verifyStatus(): Promise<{ valid: boolean }> {
     try {
       const response = await fetch(`${API_BASE_URL}/status`);
       if (response.ok) {
@@ -384,8 +511,9 @@ export const apiService = {
     });
   },
 
-  async getAllMentions(): Promise<{ mentions: Mention[] }> {
-    return apiRequest<{ mentions: Mention[] }>('/mentions');
+   async getMentions(queryParams?: Record<string, string | number | boolean>): Promise<{ mentions: Mention[] }> {
+    const queryString = buildQueryString(queryParams);
+    return apiRequest<{ mentions: Mention[] }>(`/mentions${queryString}`);
   },
 
   // CRUD de menciones individuales
@@ -410,8 +538,9 @@ export const apiService = {
   },
 
   // Eventos/Temas (Topics)
-  async getAllTopics(): Promise<{ topics: Topic[] }> {
-    return apiRequest<{ topics: Topic[] }>('/topics');
+  async getTopics(queryParams?: Record<string, string | number | boolean>): Promise<{ topics: Topic[] }> {
+    const queryString = buildQueryString(queryParams);
+    return apiRequest<{ topics: Topic[] }>(`/topics${queryString}`);
   },
 
   async createTopic(data: {

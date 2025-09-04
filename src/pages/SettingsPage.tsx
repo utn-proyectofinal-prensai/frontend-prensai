@@ -1,19 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { apiService, type Topic, type Mention } from '../services/api';
+import { useTopics, useMentions } from '../hooks';
 import Snackbar from '../components/common/Snackbar';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'eventos' | 'menciones'>('eventos');
   
-  // Estados para Eventos/Temas
-  const [eventos, setEventos] = useState<Topic[]>([]);
-  const [eventosLoading, setEventosLoading] = useState(true);
-  const [eventosError, setEventosError] = useState<string | null>(null);
-  
-  // Estados para Menciones
-  const [menciones, setMenciones] = useState<Mention[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Usar hooks para obtener datos
+  const { topics: eventos, loading: eventosLoading, error: eventosError, refetch: refetchTopics } = useTopics();
+  const { mentions: menciones, loading, error, refetch: refetchMentions } = useMentions();
 
   // Snackbar para errores
   const [snackbar, setSnackbar] = useState<{ message: string; show: boolean }>({
@@ -21,63 +16,11 @@ export default function AdminPage() {
     show: false
   });
 
-  // Nota: Eliminada funcionalidad de drag and drop - ahora se usa el campo enabled directamente
-
-  // Cargar menciones desde la API
-  useEffect(() => {
-    const loadMentions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Cargar todas las menciones usando la nueva API
-        const { mentions } = await apiService.getAllMentions();
-        setMenciones(mentions);
-      } catch (err) {
-        console.error('Error cargando menciones:', err);
-        const apiMsg = err instanceof Error ? err.message : '';
-        const message = apiMsg?.trim() ? apiMsg : 'Error al cargar las menciones';
-        setError(message);
-        setSnackbar({ message, show: true });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMentions();
-  }, []);
-
-  // Cargar temas desde la API
-  useEffect(() => {
-    const loadTopics = async () => {
-      try {
-        setEventosLoading(true);
-        setEventosError(null);
-        
-        // Cargar todos los temas usando la nueva API
-        const { topics } = await apiService.getAllTopics();
-        setEventos(topics);
-      } catch (err) {
-        console.error('Error cargando temas:', err);
-        const apiMsg = err instanceof Error ? err.message : '';
-        const message = apiMsg?.trim() ? apiMsg : 'Error al cargar los temas';
-        setEventosError(message);
-        setSnackbar({ message, show: true });
-      } finally {
-        setEventosLoading(false);
-      }
-    };
-
-    loadTopics();
-  }, []);
-
   // Estados para formularios
   const [showEventoForm, setShowEventoForm] = useState(false);
   const [showMencionForm, setShowMencionForm] = useState(false);
   const [editingEvento, setEditingEvento] = useState<Topic | null>(null);
   const [editingMencion, setEditingMencion] = useState<Mention | null>(null);
-
-  // Nota: Eliminada la selección de colores - la nueva API no incluye este campo
 
   // Funciones para Temas
   const handleEventoSubmit = async (e: React.FormEvent) => {
@@ -104,9 +47,8 @@ export default function AdminPage() {
         });
       }
       
-      // Recargar temas desde la API para asegurar sincronización
-      const { topics } = await apiService.getAllTopics();
-      setEventos(topics);
+      // Recargar temas usando el hook
+      await refetchTopics();
       
       setShowEventoForm(false);
       setEditingEvento(null);
@@ -121,9 +63,8 @@ export default function AdminPage() {
     try {
       await apiService.deleteTopic(id.toString());
       
-      // Recargar temas desde la API
-      const { topics } = await apiService.getAllTopics();
-      setEventos(topics);
+      // Recargar temas usando el hook
+      await refetchTopics();
     } catch (error) {
       console.error('❌ Error eliminando tema:', error);
       const apiMsg = error instanceof Error ? error.message : '';
@@ -152,9 +93,8 @@ export default function AdminPage() {
         await apiService.createMention({ name: nombre, enabled });
       }
       
-      // Recargar menciones desde la API para asegurar sincronización
-      const { mentions } = await apiService.getAllMentions();
-      setMenciones(mentions);
+      // Recargar menciones usando el hook
+      await refetchMentions();
       
       setShowMencionForm(false);
       setEditingMencion(null);
@@ -172,9 +112,8 @@ export default function AdminPage() {
     try {
       await apiService.deleteMention(id.toString());
       
-      // Recargar menciones desde la API
-      const { mentions } = await apiService.getAllMentions();
-      setMenciones(mentions);
+      // Recargar menciones usando el hook
+      await refetchMentions();
     } catch (error) {
       console.error('❌ Error eliminando mención:', error);
       const apiMsg = error instanceof Error ? error.message : '';

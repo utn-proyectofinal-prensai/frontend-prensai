@@ -17,3 +17,12 @@ export { useAnimationControl } from './useAnimationControl';
 
 // Hook para manejo del dropdown del usuario
 export { useUserDropdown } from './useUserDropdown';
+
+// Hook para manejo de noticias
+export { useNews, useNewsById } from './useNews';
+
+// Hook para manejo de temas
+export { useTopics, useEnabledTopics } from './useTopics';
+
+// Hook para manejo de menciones
+export { useMentions, useEnabledMentions } from './useMentions';

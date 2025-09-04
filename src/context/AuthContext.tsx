@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (jwtToken) {
         try {
           // Verificar si el token es válido
-          const { valid } = await apiService.verifyToken();
+          const { valid } = await apiService.verifyStatus();
           if (valid) {
             // Token válido, obtener información del usuario
             try {
