@@ -9,6 +9,9 @@ export type { FormFieldProps } from './FormField';
 export { default as Snackbar } from './Snackbar';
 export type { SnackbarProps } from './Snackbar';
 
+// Componentes de confirmación
+export { default as ConfirmationModal } from './ConfirmationModal';
+
 export { default as UserDropdown } from './UserDropdown';
 
 // Componentes de layout

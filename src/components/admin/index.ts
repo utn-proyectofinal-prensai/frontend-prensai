@@ -5,3 +5,4 @@ export { UserSidePanel } from './UserSidePanel';
 export { UserRow } from './UserRow';
 export { UsersTable } from './UsersTable';
 export { UsersInsights } from './UsersInsights';
+export { default as PasswordChangeModal } from './PasswordChangeModal';

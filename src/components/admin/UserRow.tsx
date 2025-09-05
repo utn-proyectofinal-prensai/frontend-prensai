@@ -3,20 +3,18 @@ import type { User } from '../../types/auth';
 
 interface UserRowProps {
   usuario: User;
-  isSelected: boolean;
-  onSelect: (userId: number) => void;
   onView: (usuario: User) => void;
   onEdit: (usuario: User) => void;
+  onChangePassword: (usuario: User) => void;
   onDelete: (id: number) => void;
   getRolInfo: (role: string) => { icon: string; label: string; color: string };
 }
 
 export const UserRow: React.FC<UserRowProps> = ({
   usuario,
-  isSelected,
-  onSelect,
   onView,
   onEdit,
+  onChangePassword,
   onDelete,
   getRolInfo
 }) => {
@@ -26,15 +24,15 @@ export const UserRow: React.FC<UserRowProps> = ({
     e.stopPropagation();
     onEdit(usuario);
   };
+
+  const handleChangePasswordClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChangePassword(usuario);
+  };
   
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(usuario.id);
-  };
-
-  const handleCheckboxClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onSelect(usuario.id);
   };
 
   return (
@@ -42,19 +40,6 @@ export const UserRow: React.FC<UserRowProps> = ({
       className="hover:bg-white/5 transition-all duration-300 cursor-pointer group"
       onClick={handleRowClick}
     >
-      {/* Checkbox */}
-      <td className="px-6 py-4 text-left">
-        <div className="flex items-center h-full">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onSelect(usuario.id)}
-            onClick={handleCheckboxClick}
-            className="w-5 h-5 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer hover:border-blue-400 transition-colors"
-          />
-        </div>
-      </td>
-      
       {/* Email */}
       <td className="px-6 py-4 text-left">
         <div className="text-sm text-white/90 font-medium">{usuario.email}</div>
@@ -89,6 +74,13 @@ export const UserRow: React.FC<UserRowProps> = ({
             title="Editar usuario"
           >
             ✏️
+          </button>
+          <button
+            onClick={handleChangePasswordClick}
+            className="text-yellow-400 hover:text-yellow-300 transition-all duration-300 p-2 hover:bg-yellow-500/20 rounded-lg hover:scale-110"
+            title="Cambiar contraseña"
+          >
+            🔑
           </button>
           <button
             onClick={handleDeleteClick}

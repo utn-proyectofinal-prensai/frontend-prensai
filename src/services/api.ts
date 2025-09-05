@@ -165,7 +165,26 @@ async function apiRequest<T>(
           window.location.href = '/login';
           throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
         }
-        throw new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
+        
+        // Intentar obtener el mensaje de error del cuerpo de la respuesta
+        let errorData = null;
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await response.json();
+          }
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+        
+        // Crear error con información adicional
+        const error = new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`) as any;
+        error.response = {
+          status: response.status,
+          statusText: response.statusText,
+          data: errorData
+        };
+        throw error;
       }
       
       // Para respuestas 204 No Content, no intentar parsear JSON
@@ -324,6 +343,20 @@ export const apiService = {
     return apiRequest<{ user: User }>(`/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async changeUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
+    // NOTA: Este endpoint no existe actualmente en el backend
+    // Necesita ser implementado como /api/v1/users/:id/change_password
+    return apiRequest<{ message: string }>(`/users/${id}/change_password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        user: { 
+          password: newPassword,
+          password_confirmation: newPassword 
+        } 
+      }),
     });
   },
 
