@@ -1,7 +1,7 @@
 // Configuración de la API
 import { AUTH_MESSAGES, API_MESSAGES } from '../constants/messages';
 
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
 
 // Tipos de datos
 export interface NewsItem {
@@ -98,6 +98,39 @@ export interface UserInfo {
   role: string;
 }
 
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  username: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'user';
+  created_at: string;
+  updated_at: string;
+  last_sign_in_at?: string;
+  current_sign_in_at?: string;
+  sign_in_count?: number;
+}
+
+export interface CreateUserData {
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'user';
+  password: string;
+  password_confirmation: string;
+}
+
+export interface UpdateUserData {
+  username?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  role?: 'admin' | 'user';
+}
+
 // Función helper para hacer requests
 async function apiRequest<T>(
   endpoint: string,
@@ -121,25 +154,56 @@ async function apiRequest<T>(
     ...options,
   };
 
-  try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Token inválido o expirado, limpiar localStorage
-        localStorage.removeItem('jwt-token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
+      try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token inválido o expirado, limpiar localStorage
+          localStorage.removeItem('jwt-token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
+        }
+        
+        // Intentar obtener el mensaje de error del cuerpo de la respuesta
+        let errorData = null;
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await response.json();
+          }
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+        
+        // Crear error con información adicional
+        const error = new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`) as any;
+        error.response = {
+          status: response.status,
+          statusText: response.statusText,
+          data: errorData
+        };
+        throw error;
       }
-      throw new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
+      
+      // Para respuestas 204 No Content, no intentar parsear JSON
+      if (response.status === 204) {
+        return {} as T;
+      }
+      
+      // Solo intentar parsear JSON si hay contenido
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      }
+      
+      // Para otros tipos de contenido, devolver texto vacío
+      return {} as T;
+    } catch (error) {
+      console.error('Error en API request:', error);
+      throw error;
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error en API request:', error);
-    throw error;
-  }
 }
 
 // Servicios de la API
@@ -257,6 +321,58 @@ export const apiService = {
   // Obtener usuario actual usando el token JWT
   async getCurrentUser(): Promise<any> {
     return apiRequest<{ user: any }>('/user');
+  },
+
+  // Métodos de gestión de usuarios (solo para admins)
+  async getUsers(): Promise<{ users: User[] }> {
+    return apiRequest<{ users: User[] }>('/users');
+  },
+
+  async getUser(id: string): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>(`/users/${id}`);
+  },
+
+  async createUser(userData: CreateUserData): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>('/users', {
+      method: 'POST',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async updateUser(id: string, userData: UpdateUserData): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async changeUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
+    // NOTA: Este endpoint no existe actualmente en el backend
+    // Necesita ser implementado como /api/v1/users/:id/change_password
+    return apiRequest<{ message: string }>(`/users/${id}/change_password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        user: { 
+          password: newPassword,
+          password_confirmation: newPassword 
+        } 
+      }),
+    });
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    console.log('API: Eliminando usuario con ID:', id);
+    console.log('API: Token disponible:', !!localStorage.getItem('jwt-token'));
+    
+    try {
+      await apiRequest(`/users/${id}`, {
+        method: 'DELETE',
+      });
+      console.log('API: Usuario eliminado exitosamente');
+    } catch (error) {
+      console.error('API: Error en deleteUser:', error);
+      throw error;
+    }
   },
 
   async logout(): Promise<void> {

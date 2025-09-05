@@ -1,0 +1,455 @@
+import React, { useState, useEffect } from 'react';
+import { validatePassword } from '../../utils/validation';
+import { getRoleInfo } from '../../constants/admin/userRoles';
+import type { User } from '../../types/auth';
+
+interface PasswordChangeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (newPassword: string) => Promise<void>;
+  user: User | null;
+}
+
+const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  user
+}) => {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
+  const [confirmPasswordValidationMessage, setConfirmPasswordValidationMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Resetear el modal cuando se abre/cierra
+  useEffect(() => {
+    if (isOpen) {
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+      setPasswordValidationMessage('');
+      setConfirmPasswordValidationMessage('');
+      setIsLoading(false);
+      setError('');
+    }
+  }, [isOpen]);
+
+  // Validar nueva contraseña en tiempo real
+  useEffect(() => {
+    if (newPassword) {
+      const error = validatePassword(newPassword);
+      if (error) {
+        setPasswordValidationMessage(error);
+      } else {
+        setPasswordValidationMessage('Contraseña válida');
+      }
+    } else {
+      setPasswordValidationMessage('');
+    }
+  }, [newPassword]);
+
+  // Validar confirmación de contraseña en tiempo real
+  useEffect(() => {
+    if (confirmPassword) {
+      if (newPassword !== confirmPassword) {
+        setConfirmPasswordValidationMessage('Las contraseñas no coinciden');
+      } else if (newPassword && confirmPassword) {
+        setConfirmPasswordValidationMessage('Las contraseñas coinciden');
+      } else {
+        setConfirmPasswordValidationMessage('');
+      }
+    } else {
+      setConfirmPasswordValidationMessage('');
+    }
+  }, [newPassword, confirmPassword]);
+
+  // Función para obtener el mensaje de validación prioritario
+  const getValidationMessage = () => {
+    // Prioridad 1: Error de contraseña nueva
+    if (passwordValidationMessage && passwordValidationMessage !== 'Contraseña válida') {
+      return { message: passwordValidationMessage, type: 'error' };
+    }
+    
+    // Prioridad 2: Error de confirmación
+    if (confirmPasswordValidationMessage && confirmPasswordValidationMessage !== 'Las contraseñas coinciden') {
+      return { message: confirmPasswordValidationMessage, type: 'error' };
+    }
+    
+    // Prioridad 3: Éxito de confirmación (cuando ambas son válidas)
+    if (confirmPasswordValidationMessage === 'Las contraseñas coinciden' && passwordValidationMessage === 'Contraseña válida') {
+      return { message: 'Las contraseñas coinciden', type: 'success' };
+    }
+    
+    // Prioridad 4: Éxito de contraseña individual
+    if (passwordValidationMessage === 'Contraseña válida') {
+      return { message: passwordValidationMessage, type: 'success' };
+    }
+    
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+
+    // Validar contraseña nueva
+    const passwordValidationError = validatePassword(newPassword);
+    if (passwordValidationError) {
+      setError(passwordValidationError);
+      return;
+    }
+
+    // Validar confirmación de contraseña
+    if (newPassword !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await onConfirm(newPassword);
+      onClose();
+    } catch (error) {
+      setError('Error al cambiar la contraseña');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen || !user) return null;
+
+  const roleInfo = getRoleInfo(user.role);
+
+  return (
+    <>
+      {/* Overlay de fondo semi-transparente */}
+      <div 
+        className="fixed inset-0 z-50 backdrop-blur-[2px]"
+        style={{
+          background: `
+            radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1), transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1), transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(255, 204, 112, 0.1), transparent 50%),
+            linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(59, 130, 246, 0.3) 25%, rgba(30, 64, 175, 0.3) 50%, rgba(30, 58, 138, 0.3) 75%, rgba(30, 64, 175, 0.3) 100%),
+            rgba(0, 0, 0, 0.2)
+          `,
+        }}
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
+        <div 
+          className="w-[600px] max-w-[90vw] max-h-[85vh] overflow-hidden bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl transform transition-all duration-300 scale-100"
+        >
+          
+          {/* Header del modal */}
+          <div className="bg-black/30 border-b border-white/10" style={{ padding: '16px 24px' }}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white/90">
+                Cambiar Contraseña
+              </h2>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:scale-105 border border-white/20 flex-shrink-0"
+                title="Cerrar"
+                disabled={isLoading}
+              >
+                <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Header del usuario - Avatar y información básica */}
+          <div className="flex items-center justify-center" style={{ padding: '12px 24px' }}>
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-lg flex items-center justify-center shadow-xl border-2 border-white/20">
+                <span className="text-white text-lg font-bold drop-shadow-lg">
+                  {user.first_name?.charAt(0) || user.username?.charAt(0) || '?'}
+                </span>
+              </div>
+              
+              <div className="flex flex-col" style={{ marginLeft: '32px' }}>
+                <h3 className="text-lg font-bold text-white/90 drop-shadow-lg mb-2">
+                  {user.first_name || 'Sin nombre'} {user.last_name || 'Sin apellido'}
+                </h3>
+                <span 
+                  className={`inline-flex items-center text-xs font-bold rounded-full border ${roleInfo.color} ${roleInfo.color.includes('bg-') ? '' : 'bg-white/10'}`}
+                  style={{ padding: '4px 16px' }}
+                >
+                  <span style={{ marginRight: '8px' }}>{roleInfo.icon}</span>
+                  {roleInfo.label}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Contenido del modal */}
+          <div 
+            className="bg-black/20 overflow-y-auto flex-1"
+            style={{
+              padding: '16px 24px',
+              maxHeight: 'calc(85vh - 120px)',
+              minHeight: '300px'
+            }}
+          >
+            <div 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '16px',
+                rowGap: '16px'
+              }}
+            >
+          {/* Nueva Contraseña */}
+          <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+            <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+              <div className="col-span-1 flex justify-center">
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <span className="text-base">🔒</span>
+                </div>
+              </div>
+              <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Nueva</div>
+              </div>
+              <div className="col-span-8 flex items-center">
+                <div className="relative w-full">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 50px 12px 16px',
+                      borderRadius: '12px',
+                      outline: 'none',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      backgroundColor: 'rgba(30, 41, 59, 0.8)',
+                      backgroundImage: 'none',
+                      backdropFilter: 'blur(10px)',
+                      color: '#ffffff',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      transition: 'all 0.3s ease',
+                      boxSizing: 'border-box',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      appearance: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
+                      e.target.style.backgroundImage = 'none';
+                      e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
+                      e.target.style.backgroundImage = 'none';
+                      e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                    }}
+                    placeholder="Nueva contraseña"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      padding: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 1000,
+                      minWidth: '24px',
+                      minHeight: '24px',
+                      color: '#ffffff',
+                      fontSize: '18px',
+                      fontFamily: 'monospace',
+                      fontWeight: 'bold',
+                      textShadow: '0 0 2px rgba(0,0,0,0.8)'
+                    }}
+                    title={showNewPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    disabled={isLoading}
+                  >
+                    {showNewPassword ? '⚫' : '👁'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Confirmar Contraseña */}
+          <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+            <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+              <div className="col-span-1 flex justify-center">
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <span className="text-base">🔐</span>
+                </div>
+              </div>
+              <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Repetir</div>
+              </div>
+              <div className="col-span-8 flex items-center">
+                <div className="relative w-full">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 50px 12px 16px',
+                      borderRadius: '12px',
+                      outline: 'none',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      backgroundColor: 'rgba(30, 41, 59, 0.8)',
+                      backgroundImage: 'none',
+                      backdropFilter: 'blur(10px)',
+                      color: '#ffffff',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      transition: 'all 0.3s ease',
+                      boxSizing: 'border-box',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      appearance: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
+                      e.target.style.backgroundImage = 'none';
+                      e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
+                      e.target.style.backgroundImage = 'none';
+                      e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                    }}
+                    placeholder="Repetir contraseña"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      padding: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 1000,
+                      minWidth: '24px',
+                      minHeight: '24px',
+                      color: '#ffffff',
+                      fontSize: '18px',
+                      fontFamily: 'monospace',
+                      fontWeight: 'bold',
+                      textShadow: '0 0 2px rgba(0,0,0,0.8)'
+                    }}
+                    title={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    disabled={isLoading}
+                  >
+                    {showConfirmPassword ? '⚫' : '👁'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mensaje de validación prioritario */}
+          {(() => {
+            const validation = getValidationMessage();
+            if (!validation) return null;
+
+            return (
+              <div className={`text-xs px-4 ${
+                validation.type === 'success'
+                  ? 'text-green-400'
+                  : 'text-red-400'
+              }`}>
+                {validation.message}
+              </div>
+            );
+          })()}
+
+          {/* Mostrar error general */}
+          {error && (
+            <div className="text-red-400 text-sm bg-red-500/20 p-4 rounded-lg border border-red-400/30">
+              {error}
+            </div>
+          )}
+
+            </div>
+          </div>
+
+          {/* Footer con botones de acción */}
+          <div 
+            className="bg-black/30 border-t border-white/10" 
+            style={{ 
+              padding: '16px 24px', 
+              display: 'flex',
+              flexDirection: 'column', 
+              gap: '24px',
+              rowGap: '24px'
+            }}
+          >
+            <div 
+              className="grid grid-cols-2" 
+              style={{ 
+                gap: '24px',
+                rowGap: '24px'
+              }}
+            >
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+                className="px-6 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:via-green-600 hover:to-teal-600 disabled:from-gray-600 disabled:via-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-emerald-500/25 transform hover:scale-110 disabled:transform-none border-2 border-emerald-400/40 disabled:border-gray-500/40 text-base"
+                title="Cambiar Contraseña"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Cambiando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl">✅</span>
+                    <span>Cambiar Contraseña</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={onClose}
+                disabled={isLoading}
+                className="px-6 py-4 bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 hover:from-red-600 hover:via-pink-600 hover:to-rose-600 disabled:from-gray-600 disabled:via-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-red-500/25 transform hover:scale-110 disabled:transform-none border-2 border-red-400/40 disabled:border-gray-500/40 text-base"
+                title="Cancelar"
+              >
+                <span className="text-xl">❌</span>
+                <span>Cancelar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default PasswordChangeModal;

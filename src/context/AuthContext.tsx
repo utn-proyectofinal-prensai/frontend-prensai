@@ -3,19 +3,15 @@ import type { ReactNode } from 'react';
 import { apiService } from '../services/api';
 import { AUTH_MESSAGES } from '../constants/messages';
 
-interface User {
-  id: string;
-  username: string;
-  email?: string;
-  role?: string;
-  first_name?: string;
-  last_name?: string;
-}
+import type { AuthUser } from '../types/auth';
+
+interface User extends AuthUser {}
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   error: string | null;
@@ -143,6 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated: !!user,
     isLoading,
+    isAdmin: user?.role === 'admin',
     login,
     logout,
     error,

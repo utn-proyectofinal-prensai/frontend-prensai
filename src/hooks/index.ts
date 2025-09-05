@@ -1,6 +1,10 @@
 // Exportar todos los hooks
 // Hooks personalizados que encapsulan lógica de negocio reutilizable
 
+// Hook para autenticación
+export { useAuth } from './useAuth';
+export { useIsAdmin } from './useAuth';
+
 // Hook para manejo de formularios de login
 export { useLoginForm } from './useLoginForm';
 
@@ -10,3 +14,6 @@ export type { Translations } from './useTranslations';
 
 // Hook para control de animaciones
 export { useAnimationControl } from './useAnimationControl';
+
+// Hook para manejo del dropdown del usuario
+export { useUserDropdown } from './useUserDropdown';
