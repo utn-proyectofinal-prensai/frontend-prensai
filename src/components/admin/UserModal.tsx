@@ -4,7 +4,7 @@ import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 import { validatePassword } from '../../utils/validation';
 
-interface UserSidePanelProps {
+interface UserModalProps {
   usuario: User | null;
   isOpen: boolean;
   onClose: () => void;
@@ -15,7 +15,7 @@ interface UserSidePanelProps {
   isCreateMode?: boolean;
 }
 
-export const UserSidePanel: React.FC<UserSidePanelProps> = ({
+export const UserModal: React.FC<UserModalProps> = ({
   usuario,
   isOpen,
   onClose,
@@ -413,7 +413,6 @@ export const UserSidePanel: React.FC<UserSidePanelProps> = ({
                   </div>
                 </div>
               </div>
-
 
 
 

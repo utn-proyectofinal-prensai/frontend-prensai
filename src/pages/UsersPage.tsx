@@ -7,7 +7,7 @@ import {
   AdminUsersHeader,
   SearchFilters,
   UserFormModal,
-  UserSidePanel,
+  UserModal,
   PasswordChangeModal
 } from '../components/admin';
 import Snackbar from '../components/common/Snackbar';
@@ -463,7 +463,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Modal para detalles del usuario */}
-      <UserSidePanel
+      <UserModal
         usuario={viewingUser}
         isOpen={!!viewingUser || createModeActive}
         onClose={() => {
