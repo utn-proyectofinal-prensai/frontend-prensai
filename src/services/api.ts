@@ -108,6 +108,9 @@ export interface User {
   role: 'admin' | 'user';
   created_at: string;
   updated_at: string;
+  last_sign_in_at?: string;
+  current_sign_in_at?: string;
+  sign_in_count?: number;
 }
 
 export interface CreateUserData {
@@ -335,6 +338,58 @@ export const apiService = {
     return apiRequest<{ user: User }>(`/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    console.log('API: Eliminando usuario con ID:', id);
+    console.log('API: Token disponible:', !!localStorage.getItem('jwt-token'));
+    
+    try {
+      await apiRequest(`/users/${id}`, {
+        method: 'DELETE',
+      });
+      console.log('API: Usuario eliminado exitosamente');
+    } catch (error) {
+      console.error('API: Error en deleteUser:', error);
+      throw error;
+    }
+  },
+
+  // Métodos de gestión de usuarios (solo para admins)
+  async getUsers(): Promise<{ users: User[] }> {
+    return apiRequest<{ users: User[] }>('/users');
+  },
+
+  async getUser(id: string): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>(`/users/${id}`);
+  },
+
+  async createUser(userData: CreateUserData): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>('/users', {
+      method: 'POST',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async updateUser(id: string, userData: UpdateUserData): Promise<{ user: User }> {
+    return apiRequest<{ user: User }>(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  async changeUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
+    // NOTA: Este endpoint no existe actualmente en el backend
+    // Necesita ser implementado como /api/v1/users/:id/change_password
+    return apiRequest<{ message: string }>(`/users/${id}/change_password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        user: { 
+          password: newPassword,
+          password_confirmation: newPassword 
+        } 
+      }),
     });
   },
 

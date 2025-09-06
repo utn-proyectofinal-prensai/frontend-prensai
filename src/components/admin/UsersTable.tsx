@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { UserRow } from './UserRow';
 import type { User } from '../../services/api';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
@@ -8,54 +8,17 @@ interface UsersTableProps {
   usuarios: User[];
   onViewUser: (usuario: User) => void;
   onEditUser: (usuario: User) => void;
-  onDeleteUser: (id: string) => void;
+  onChangePassword: (usuario: User) => void;
+  onDeleteUser: (id: number) => void;
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({
   usuarios,
   onViewUser,
   onEditUser,
+  onChangePassword,
   onDeleteUser
 }) => {
-  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const [selectAll, setSelectAll] = useState(false);
-
-  const handleSelectUser = (userId: string) => {
-    const newSelectedUsers = new Set(selectedUsers);
-    if (newSelectedUsers.has(userId)) {
-      newSelectedUsers.delete(userId);
-    } else {
-      newSelectedUsers.add(userId);
-    }
-    setSelectedUsers(newSelectedUsers);
-    setSelectAll(newSelectedUsers.size === usuarios.length);
-  };
-
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedUsers(new Set());
-      setSelectAll(false);
-    } else {
-      setSelectedUsers(new Set(usuarios.map(u => u.id)));
-      setSelectAll(true);
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (selectedUsers.size === 0) return;
-    
-    if (window.confirm(USER_MESSAGES.CONFIRMATIONS.BULK_DELETE)) {
-      selectedUsers.forEach(id => onDeleteUser(id));
-      setSelectedUsers(new Set());
-      setSelectAll(false);
-    }
-  };
-
-  const handleBulkEdit = () => {
-    if (selectedUsers.size === 0) return;
-    // Implementar edición en masa
-    console.log('Editar usuarios seleccionados:', Array.from(selectedUsers));
-  };
 
   return (
     <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden shadow-xl">
@@ -66,71 +29,25 @@ export const UsersTable: React.FC<UsersTableProps> = ({
         </h3>
       </div>
 
-      {/* Barra de acciones en masa */}
-      {selectedUsers.size > 0 && (
-        <div className="bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-b border-blue-300/30 px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
-            <div className="flex items-center space-x-4">
-              <span className="inline-flex items-center px-6 py-3 bg-blue-500/30 text-blue-200 rounded-full text-sm font-semibold border border-blue-400/30">
-                {selectedUsers.size} {USER_MESSAGES.STATES.USERS_COUNT}
-              </span>
-              <button
-                onClick={() => {
-                  setSelectedUsers(new Set());
-                  setSelectAll(false);
-                }}
-                className="text-blue-300 hover:text-blue-200 text-sm underline"
-              >
-                {USER_MESSAGES.STATES.DESELECT_ALL}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleBulkEdit}
-                className="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <span className="text-lg">✏️</span>
-                <span>{USER_MESSAGES.ACTIONS.EDIT} Seleccionados</span>
-              </button>
-              <button
-                onClick={handleBulkDelete}
-                className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <span className="text-lg">🗑️</span>
-                <span>{USER_MESSAGES.ACTIONS.DELETE} Seleccionados</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      <div className="overflow-x-auto">
+      {/* Vista Desktop - Tabla tradicional */}
+      <div className="hidden lg:block overflow-x-auto">
         <table className="min-w-full">
           <thead className="bg-black/30">
             <tr>
-              <th className="px-6 py-6 text-left">
-                <div className="flex items-center h-full" style={{ padding: '16px 0' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectAll}
-                    onChange={handleSelectAll}
-                    className="w-5 h-5 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer hover:border-blue-400 transition-colors"
-                  />
-                </div>
-              </th>
-              <th className="px-6 py-6 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
+              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
                 {USER_MESSAGES.FORMS.EMAIL}
               </th>
-              <th className="px-6 py-6 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
+              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
                 Nombre Completo
               </th>
-              <th className="px-6 py-6 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
+              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
                 Username
               </th>
-              <th className="px-6 py-6 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
+              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
                 {USER_MESSAGES.FORMS.ROLE}
               </th>
-              <th className="px-6 py-6 text-center text-sm font-bold text-white/90 uppercase tracking-wider">
+              <th className="px-6 py-10 text-center text-sm font-bold text-white/90 uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
@@ -140,16 +57,92 @@ export const UsersTable: React.FC<UsersTableProps> = ({
               <UserRow
                 key={usuario.id}
                 usuario={usuario}
-                isSelected={selectedUsers.has(usuario.id)}
-                onSelect={handleSelectUser}
                 onView={onViewUser}
                 onEdit={onEditUser}
+                onChangePassword={onChangePassword}
                 onDelete={onDeleteUser}
                 getRolInfo={(role: string) => getRoleInfo(role as any)}
               />
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Vista Mobile/Tablet - Tarjetas */}
+      <div className="lg:hidden space-y-4 p-4">
+        {usuarios.map((usuario) => {
+          const roleInfo = getRoleInfo(usuario.role as any);
+          return (
+            <div
+              key={usuario.id}
+              className="bg-gradient-to-r from-black/40 to-black/20 backdrop-blur-sm rounded-xl border border-white/20 px-4 pb-4 pt-8 hover:bg-white/5 transition-all duration-300 cursor-pointer group"
+              onClick={() => onViewUser(usuario)}
+            >
+              {/* Información principal */}
+              <div className="space-y-3">
+                {/* Avatar, Nombre y email */}
+                <div className="flex flex-col items-center text-center">
+                  {/* Avatar */}
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-lg flex items-center justify-center shadow-xl border-2 border-white/20 mb-3">
+                    <span className="text-white text-xl font-bold drop-shadow-lg">
+                      {usuario.first_name?.charAt(0)?.toUpperCase() || usuario.username?.charAt(0)?.toUpperCase() || '?'}
+                      {usuario.last_name?.charAt(0)?.toUpperCase() || ''}
+                    </span>
+                  </div>
+                  {/* Nombre y email */}
+                  <div>
+                    <div className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                      {usuario.first_name || 'Sin nombre'} {usuario.last_name || 'Sin apellido'}
+                    </div>
+                    <div className="text-sm text-white/70 mt-1">{usuario.email}</div>
+                  </div>
+                </div>
+
+                {/* Rol */}
+                <div className="flex justify-center">
+                  <span className={`inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-full border ${roleInfo.color}`}>
+                    <span className="mr-2 flex-shrink-0">{roleInfo.icon}</span>
+                    <span>{roleInfo.label}</span>
+                  </span>
+                </div>
+
+                {/* Acciones */}
+                <div className="flex items-center justify-center space-x-2 pt-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditUser(usuario);
+                    }}
+                    className="text-blue-400 hover:text-blue-300 transition-all duration-300 p-2 hover:bg-blue-500/20 rounded-lg hover:scale-110"
+                    title="Editar usuario"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChangePassword(usuario);
+                    }}
+                    className="text-yellow-400 hover:text-yellow-300 transition-all duration-300 p-2 hover:bg-yellow-500/20 rounded-lg hover:scale-110"
+                    title="Cambiar contraseña"
+                  >
+                    🔑
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteUser(usuario.id);
+                    }}
+                    className="text-red-400 hover:text-red-300 transition-all duration-300 p-2 hover:bg-red-500/20 rounded-lg hover:scale-110"
+                    title="Eliminar usuario"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

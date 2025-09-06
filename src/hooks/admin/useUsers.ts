@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../../services/api';
-import type { User, CreateUserData, UpdateUserData } from '../../services/api';
+import type { User, CreateUserData, UpdateUserData } from '../../types/auth';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 
 interface UseUsersReturn {
@@ -25,8 +25,8 @@ interface UseUsersReturn {
   // Acciones
   loadUsers: () => Promise<void>;
   createUser: (data: CreateUserData) => Promise<void>;
-  updateUser: (id: string, data: UpdateUserData) => Promise<void>;
-  deleteUser: (id: string) => Promise<void>;
+  updateUser: (id: number, data: UpdateUserData) => Promise<void>;
+  deleteUser: (id: number) => Promise<void>;
   
   // Gestión de estado
   setShowUserForm: (show: boolean) => void;
@@ -92,9 +92,9 @@ export function useUsers(): UseUsersReturn {
   }, []);
 
   // Actualizar usuario
-  const updateUser = useCallback(async (id: string, data: UpdateUserData) => {
+  const updateUser = useCallback(async (id: number, data: UpdateUserData) => {
     try {
-      const { user: updatedUser } = await apiService.updateUser(id, data);
+      const { user: updatedUser } = await apiService.updateUser(id.toString(), data);
       setUsuarios(prev => prev.map(u => u.id === id ? updatedUser : u));
       setShowUserForm(false);
       setEditingUser(null);
@@ -105,9 +105,9 @@ export function useUsers(): UseUsersReturn {
   }, []);
 
   // Eliminar usuario
-  const deleteUser = useCallback(async (id: string) => {
+  const deleteUser = useCallback(async (id: number) => {
     try {
-      await apiService.deleteUser(id);
+      await apiService.deleteUser(id.toString());
       setUsuarios(prev => prev.filter(u => u.id !== id));
     } catch (error) {
       console.error('Error eliminando usuario:', error);
