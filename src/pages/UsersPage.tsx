@@ -216,45 +216,9 @@ export default function AdminUsersPage() {
     } catch (err: any) {
       console.error('Error editando usuario:', err);
       
-      // Extraer mensaje de error específico de la API
       let errorMessage = 'Error al editar el usuario';
       
-      if (err.response) {
-        const status = err.response.status;
-        const data = err.response.data;
-        
-        if (status === 422 && data.errors) {
-          // Errores de validación del backend
-          if (Array.isArray(data.errors)) {
-            errorMessage = data.errors.map((error: any) => {
-              if (typeof error === 'object') {
-                return JSON.stringify(error);
-              }
-              return String(error);
-            }).join(', ');
-          } else if (typeof data.errors === 'object') {
-            const fieldErrors = Object.entries(data.errors)
-              .map(([field, messages]: [string, any]) => {
-                if (Array.isArray(messages)) {
-                  return `${field}: ${messages.join(', ')}`;
-                } else if (typeof messages === 'object') {
-                  return `${field}: ${JSON.stringify(messages)}`;
-                }
-                return `${field}: ${String(messages)}`;
-              })
-              .join('; ');
-            errorMessage = fieldErrors;
-          } else {
-            errorMessage = String(data.errors);
-          }
-        } else if (data.error) {
-          errorMessage = typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error);
-        } else if (data.message) {
-          errorMessage = typeof data.message === 'object' ? JSON.stringify(data.message) : String(data.message);
-        } else {
-          errorMessage = data ? JSON.stringify(data) : `Error ${status}: ${err.response.statusText || 'Error del servidor'}`;
-        }
-      } else if (err.message) {
+      if (err.message) {
         if (err.message.includes('fetch')) {
           errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
         } else {
@@ -295,51 +259,10 @@ export default function AdminUsersPage() {
       showSnackbar(`Usuario ${newUser.username} creado exitosamente`, 'success');
     } catch (err: any) {
       console.error('Error creando usuario:', err);
-      console.error('Error response data:', err.response?.data);
       
-      // Extraer mensaje de error específico de la API
       let errorMessage = 'Error al crear el usuario';
       
-      if (err.response) {
-        // Error de respuesta HTTP
-        const status = err.response.status;
-        const data = err.response.data;
-        
-        if (status === 422 && data.errors) {
-          // Errores de validación del backend
-          if (Array.isArray(data.errors)) {
-            errorMessage = data.errors.map((error: any) => {
-              if (typeof error === 'object') {
-                return JSON.stringify(error);
-              }
-              return String(error);
-            }).join(', ');
-          } else if (typeof data.errors === 'object') {
-            // Errores por campo
-            const fieldErrors = Object.entries(data.errors)
-              .map(([field, messages]: [string, any]) => {
-                if (Array.isArray(messages)) {
-                  return `${field}: ${messages.join(', ')}`;
-                } else if (typeof messages === 'object') {
-                  return `${field}: ${JSON.stringify(messages)}`;
-                }
-                return `${field}: ${String(messages)}`;
-              })
-              .join('; ');
-            errorMessage = fieldErrors;
-          } else {
-            errorMessage = String(data.errors);
-          }
-        } else if (data.error) {
-          errorMessage = typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error);
-        } else if (data.message) {
-          errorMessage = typeof data.message === 'object' ? JSON.stringify(data.message) : String(data.message);
-        } else {
-          // Si no hay estructura conocida, mostrar todo el objeto data
-          errorMessage = data ? JSON.stringify(data) : `Error ${status}: ${err.response.statusText || 'Error del servidor'}`;
-        }
-      } else if (err.message) {
-        // Error de red o otros errores
+      if (err.message) {
         if (err.message.includes('fetch')) {
           errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
         } else {
@@ -371,37 +294,17 @@ export default function AdminUsersPage() {
       await apiService.changeUserPassword(passwordChangeUser.id.toString(), newPassword);
       showSnackbar(`Contraseña de ${passwordChangeUser.username} cambiada exitosamente`, 'success');
     } catch (error: any) {
-      console.error('Error response data:', error.response?.data);
+      console.error('Error cambiando contraseña:', error);
       
+
       let errorMessage = 'Error al cambiar la contraseña';
       
-      try {
-        const errorData = error.response?.data;
-        if (errorData) {
-          if (Array.isArray(errorData)) {
-            errorMessage = errorData.map((err: any) => typeof err === 'string' ? err : JSON.stringify(err)).join(', ');
-          } else if (typeof errorData === 'object') {
-            if (errorData.errors) {
-              if (Array.isArray(errorData.errors)) {
-                errorMessage = errorData.errors.map((err: any) => typeof err === 'string' ? err : JSON.stringify(err)).join(', ');
-              } else if (typeof errorData.errors === 'object') {
-                errorMessage = JSON.stringify(errorData.errors);
-              } else {
-                errorMessage = String(errorData.errors);
-              }
-            } else if (errorData.error) {
-              errorMessage = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error);
-            } else if (errorData.message) {
-              errorMessage = typeof errorData.message === 'string' ? errorData.message : JSON.stringify(errorData.message);
-            } else {
-              errorMessage = JSON.stringify(errorData);
-            }
-          } else {
-            errorMessage = String(errorData);
-          }
+      if (error.message) {
+        if (error.message.includes('fetch')) {
+          errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+        } else {
+          errorMessage = error.message;
         }
-      } catch (parseError) {
-        console.error('Error parsing error response:', parseError);
       }
       
       showSnackbar(errorMessage, 'error');

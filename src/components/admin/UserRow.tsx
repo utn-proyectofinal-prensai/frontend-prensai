@@ -1,6 +1,5 @@
 import React from 'react';
 import type { User } from '../../types/auth';
-
 interface UserRowProps {
   usuario: User;
   onView: (usuario: User) => void;
