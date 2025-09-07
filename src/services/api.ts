@@ -333,6 +333,36 @@ export const apiService = {
     return apiRequest<{ user: UserInfo }>('/user');
   },
 
+  // Actualizar perfil personal del usuario autenticado
+  async updateCurrentUser(userData: {
+    username?: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  }): Promise<{ user: UserInfo }> {
+    return apiRequest<{ user: UserInfo }>('/user', {
+      method: 'PATCH',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  // Cambiar contraseña del usuario autenticado
+  async changeCurrentUserPassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    // NOTA: Este endpoint no existe actualmente en el backend
+    // Necesita ser implementado como /api/v1/user/change_password o similar
+    // El endpoint /api/v1/users/password es solo para recuperación de contraseña (password reset)
+    return apiRequest<{ message: string }>('/user/change_password', {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        user: { 
+          current_password: currentPassword,
+          password: newPassword,
+          password_confirmation: newPassword 
+        } 
+      }),
+    });
+  },
+
   // Métodos de gestión de usuarios (solo para admins)
   async getUsers(): Promise<{ users: User[] }> {
     return apiRequest<{ users: User[] }>('/users');
@@ -371,9 +401,11 @@ export const apiService = {
     }
   },
 
+  // Cambiar contraseña de un usuario específico (solo para admins)
   async changeUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
     // NOTA: Este endpoint no existe actualmente en el backend
     // Necesita ser implementado como /api/v1/users/:id/change_password
+    // Diferente del endpoint de recuperación de contraseña
     return apiRequest<{ message: string }>(`/users/${id}/change_password`, {
       method: 'PATCH',
       body: JSON.stringify({ 

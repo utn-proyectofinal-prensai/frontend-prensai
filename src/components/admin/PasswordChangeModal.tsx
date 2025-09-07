@@ -6,18 +6,22 @@ import type { User } from '../../types/auth';
 interface PasswordChangeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (newPassword: string) => Promise<void>;
+  onConfirm: (newPassword: string, currentPassword?: string) => Promise<void>;
   user: User | null;
+  requireCurrentPassword?: boolean; // Nueva prop para indicar si se requiere contraseña actual
 }
 
 const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  user
+  user,
+  requireCurrentPassword = false
 }) => {
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
@@ -28,8 +32,10 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
   // Resetear el modal cuando se abre/cierra
   useEffect(() => {
     if (isOpen) {
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setShowCurrentPassword(false);
       setShowNewPassword(false);
       setShowConfirmPassword(false);
       setPasswordValidationMessage('');
@@ -96,6 +102,12 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
   const handleSubmit = async () => {
     setError('');
 
+    // Validar contraseña actual si es requerida
+    if (requireCurrentPassword && !currentPassword.trim()) {
+      setError('La contraseña actual es requerida');
+      return;
+    }
+
     // Validar contraseña nueva
     const passwordValidationError = validatePassword(newPassword);
     if (passwordValidationError) {
@@ -111,7 +123,7 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
 
     setIsLoading(true);
     try {
-      await onConfirm(newPassword);
+      await onConfirm(newPassword, requireCurrentPassword ? currentPassword : undefined);
       onClose();
     } catch (error) {
       setError('Error al cambiar la contraseña');
@@ -205,8 +217,93 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
                 flexDirection: 'column', 
                 gap: '16px',
                 rowGap: '16px'
-              }}
-            >
+            }}
+          >
+          {/* Contraseña Actual - Solo si es requerida */}
+          {requireCurrentPassword && (
+            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                <div className="col-span-1 flex justify-center">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <span className="text-base">🔐</span>
+                  </div>
+                </div>
+                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Actual</div>
+                </div>
+                <div className="col-span-8 flex items-center">
+                  <div className="relative w-full">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 50px 12px 16px',
+                        borderRadius: '12px',
+                        outline: 'none',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        backgroundColor: 'rgba(30, 41, 59, 0.8)',
+                        backgroundImage: 'none',
+                        backdropFilter: 'blur(10px)',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        transition: 'all 0.3s ease',
+                        boxSizing: 'border-box',
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'none',
+                        appearance: 'none'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
+                        e.target.style.backgroundImage = 'none';
+                        e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
+                        e.target.style.backgroundImage = 'none';
+                        e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                      }}
+                      placeholder="Contraseña actual"
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        padding: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                        minWidth: '24px',
+                        minHeight: '24px',
+                        color: '#ffffff',
+                        fontSize: '18px',
+                        fontFamily: 'monospace',
+                        fontWeight: 'bold',
+                        textShadow: '0 0 2px rgba(0,0,0,0.8)'
+                      }}
+                      title={showCurrentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      disabled={isLoading}
+                    >
+                      {showCurrentPassword ? '⚫' : '👁'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Nueva Contraseña */}
           <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
             <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
@@ -419,7 +516,13 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
             >
               <button
                 onClick={handleSubmit}
-                disabled={isLoading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+                disabled={
+                  isLoading || 
+                  !newPassword || 
+                  !confirmPassword || 
+                  newPassword !== confirmPassword ||
+                  (requireCurrentPassword && !currentPassword)
+                }
                 className="px-6 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:via-green-600 hover:to-teal-600 disabled:from-gray-600 disabled:via-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-emerald-500/25 transform hover:scale-110 disabled:transform-none border-2 border-emerald-400/40 disabled:border-gray-500/40 text-base"
                 title="Cambiar Contraseña"
               >
