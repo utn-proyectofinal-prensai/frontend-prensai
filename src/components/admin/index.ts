@@ -6,3 +6,5 @@ export { UserRow } from './UserRow';
 export { UsersTable } from './UsersTable';
 export { UsersInsights } from './UsersInsights';
 export { default as PasswordChangeModal } from './PasswordChangeModal';
+export { TopicFormModal } from './TopicFormModal';
+export { MentionFormModal } from './MentionFormModal';

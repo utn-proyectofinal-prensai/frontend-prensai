@@ -17,3 +17,7 @@ export { default as UserDropdown } from './UserDropdown';
 // Componentes de layout
 export { default as PageHeader } from './PageHeader';
 export { default as PageBackground } from './PageBackground';
+
+// Cards reutilizables
+export { TopicCard } from './TopicCard';
+export { MentionCard } from './MentionCard';

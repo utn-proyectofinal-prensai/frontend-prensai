@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { apiService, type Topic, type Mention } from '../services/api';
-import Snackbar from '../components/common/Snackbar';
+import { Snackbar, TopicCard, MentionCard } from '../components/common';
+import { TopicFormModal, MentionFormModal } from '../components/admin';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'eventos' | 'menciones'>('eventos');
@@ -80,12 +81,11 @@ export default function AdminPage() {
   // Nota: Eliminada la selección de colores - la nueva API no incluye este campo
 
   // Funciones para Temas
-  const handleEventoSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
+  const handleEventoSubmit = async (formData: FormData) => {
     const nombre = formData.get('nombre') as string;
     const descripcion = (formData.get('descripcion') as string) || '';
     const enabled = formData.get('enabled') === 'true';
+    // Nota: crisis no se puede modificar por el momento desde la API
     
     try {
       if (editingEvento) {
@@ -137,9 +137,7 @@ export default function AdminPage() {
   };
 
   // Funciones para Menciones
-  const handleMencionSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
+  const handleMencionSubmit = async (formData: FormData) => {
     const nombre = formData.get('nombre') as string;
     const enabled = formData.get('enabled') === 'true';
     
@@ -251,51 +249,19 @@ export default function AdminPage() {
                 </button>
               </div>
             ) : (
-              /* Lista de eventos/temas */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              /* Lista de eventos/temas con cards mejoradas */
+              <div className="cards-grid">
                 {eventos.map((evento) => (
-                <div key={evento.id} className="bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="text-lg font-semibold text-white">{evento.name}</h3>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEventoEdit(evento)}
-                        className="text-blue-400 hover:text-blue-300 transition-colors"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleEventoDelete(evento.id)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-white/70 text-sm mb-3">{evento.description}</p>
-                  
-                  {/* Estados */}
-                  <div className="mt-4 flex justify-between items-center">
-                    <div className="flex space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        evento.enabled 
-                          ? 'bg-green-500/20 text-green-400 border border-green-400/30' 
-                          : 'bg-red-500/20 text-red-400 border border-red-400/30'
-                      }`}>
-                        {evento.enabled ? 'Activo' : 'Inactivo'}
-                      </span>
-                      {evento.crisis && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-400/30">
-                          ⚠️ Crisis
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  <TopicCard
+                    key={evento.id}
+                    topic={evento}
+                    variant="management"
+                    showActions={true}
+                    onEdit={handleEventoEdit}
+                    onDelete={handleEventoDelete}
+                  />
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -332,40 +298,16 @@ export default function AdminPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              /* Lista de menciones con cards mejoradas */
+              <div className="cards-grid">
                 {menciones.map((mencion) => (
-                  <div key={mencion.id} className="bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-semibold text-white">{mencion.name}</h3>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleMencionEdit(mencion)}
-                          className="text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => handleMencionDelete(mencion.id)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Estado activo */}
-                    <div className="mt-4 flex justify-end">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        mencion.enabled 
-                          ? 'bg-green-500/20 text-green-400 border border-green-400/30' 
-                          : 'bg-red-500/20 text-red-400 border border-red-400/30'
-                      }`}>
-                        {mencion.enabled ? 'Activa' : 'Inactiva'}
-                      </span>
-                    </div>
-                  </div>
+                  <MentionCard
+                    key={mencion.id}
+                    mention={mencion}
+                    showActions={true}
+                    onEdit={handleMencionEdit}
+                    onDelete={handleMencionDelete}
+                  />
                 ))}
               </div>
             )}
@@ -374,164 +316,26 @@ export default function AdminPage() {
       </div>
 
       {/* Modal para Tema */}
-      {showEventoForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-black/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 w-full max-w-md">
-            <h3 className="text-xl font-bold text-white mb-6">
-              {editingEvento ? 'Editar Tema' : 'Agregar Tema'}
-            </h3>
-            <form onSubmit={handleEventoSubmit} className="space-y-4">
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-2">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  name="nombre"
-                  defaultValue={editingEvento?.name}
-                  required
-                  className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                  placeholder="Ej: Elecciones 2024"
-                />
-                <p className="text-white/60 text-xs mt-1">
-                  El sistema intentará asociar las noticias a alguno de los temas cargados. <strong>SE RECOMIENDA REVISIÓN POSTERIOR.</strong>
-                </p>
-              </div>
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-2">
-                  Descripción
-                </label>
-                <textarea
-                  name="descripcion"
-                  defaultValue={editingEvento?.description}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                  placeholder="Descripción del tema"
-                />
-              </div>
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-2">
-                  Estado
-                </label>
-                <div className="space-y-3">
-                  <label className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="enabled"
-                      value="true"
-                      defaultChecked={editingEvento?.enabled !== false}
-                      className="w-4 h-4 text-blue-600 bg-black/30 border-white/20 focus:ring-blue-500"
-                    />
-                    <span className="text-white">Activo</span>
-                  </label>
-                  <label className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="enabled"
-                      value="false"
-                      defaultChecked={editingEvento?.enabled === false}
-                      className="w-4 h-4 text-blue-600 bg-black/30 border-white/20 focus:ring-blue-500"
-                    />
-                    <span className="text-white">Inactivo</span>
-                  </label>
-                </div>
-              </div>
-              <div className="flex space-x-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEventoForm(false);
-                    setEditingEvento(null);
-                  }}
-                  className="flex-1 px-4 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  {editingEvento ? 'Actualizar' : 'Agregar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <TopicFormModal
+        isOpen={showEventoForm}
+        editingTopic={editingEvento}
+        onClose={() => {
+          setShowEventoForm(false);
+          setEditingEvento(null);
+        }}
+        onSubmit={handleEventoSubmit}
+      />
 
       {/* Modal para Mención */}
-      {showMencionForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-black/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 w-full max-w-md">
-            <h3 className="text-xl font-bold text-white mb-6">
-              {editingMencion ? 'Editar Mención' : 'Agregar Mención'}
-            </h3>
-            <form onSubmit={handleMencionSubmit} className="space-y-4">
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-2">
-                  Nombre a buscar
-                </label>
-                <input
-                  type="text"
-                  name="nombre"
-                  defaultValue={editingMencion?.name}
-                  required
-                  className="w-full px-4 py-3 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-green-500"
-                  placeholder="Ej: Juan Pérez"
-                />
-                <p className="text-white/60 text-xs mt-1">
-                  Este nombre se buscará <strong>exactamente</strong> en todas las noticias procesadas, tal como lo escribas aquí
-                </p>
-              </div>
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-2">
-                  Estado
-                </label>
-                <div className="space-y-3">
-                  <label className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="enabled"
-                      value="true"
-                      defaultChecked={editingMencion?.enabled !== false}
-                      className="w-4 h-4 text-green-600 bg-black/30 border-white/20 focus:ring-green-500"
-                    />
-                    <span className="text-white">Activa</span>
-                  </label>
-                  <label className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="enabled"
-                      value="false"
-                      defaultChecked={editingMencion?.enabled === false}
-                      className="w-4 h-4 text-green-600 bg-black/30 border-white/20 focus:ring-green-500"
-                    />
-                    <span className="text-white">Inactiva</span>
-                  </label>
-                </div>
-              </div>
-              <div className="flex space-x-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMencionForm(false);
-                    setEditingMencion(null);
-                  }}
-                  className="flex-1 px-4 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  {editingMencion ? 'Actualizar' : 'Agregar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <MentionFormModal
+        isOpen={showMencionForm}
+        editingMention={editingMencion}
+        onClose={() => {
+          setShowMencionForm(false);
+          setEditingMencion(null);
+        }}
+        onSubmit={handleMencionSubmit}
+      />
 
       {/* Snackbar de errores */}
       <Snackbar
