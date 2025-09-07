@@ -56,9 +56,9 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: (
-          <AdminRoute>
+          <ProtectedRoute>
             <SettingsPage />
-          </AdminRoute>
+          </ProtectedRoute>
         ),
       },
       {

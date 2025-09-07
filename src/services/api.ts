@@ -52,20 +52,20 @@ export interface ActiveMention {
 
 export interface Mention {
   id: number;
-  position: number | null; // Changed to allow null
   name: string;
-  isActive: boolean;
-  createdAt: string;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface Event {
+export interface Topic {
   id: number;
   name: string;
   description: string;
-  color: string;
-  is_active: boolean;
-  tags: string[];
-  createdAt: string;
+  enabled: boolean;
+  crisis: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SoporteMetric {
@@ -96,6 +96,8 @@ export interface UserInfo {
   username: string;
   email: string;
   role: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface User {
@@ -165,26 +167,21 @@ async function apiRequest<T>(
           window.location.href = '/login';
           throw new Error(AUTH_MESSAGES.VALIDATION.SESSION_EXPIRED);
         }
-        
-        // Intentar obtener el mensaje de error del cuerpo de la respuesta
-        let errorData = null;
+
+        // Intentar extraer mensaje de error desde la API
+        let apiMessage = '';
         try {
           const contentType = response.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
-            errorData = await response.json();
+            const data = await response.json();
+            const raw = (data?.errors?.[0]?.message as string | undefined) ?? '';
+            apiMessage = raw.trim();
           }
-        } catch (parseError) {
-          console.error('Error parsing error response:', parseError);
+        } catch (parseErr) {
+          console.warn('No se pudo parsear el error de la API:', parseErr);
         }
-        
-        // Crear error con información adicional
-        const error = new Error(`${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`) as any;
-        error.response = {
-          status: response.status,
-          statusText: response.statusText,
-          data: errorData
-        };
-        throw error;
+
+        throw new Error(apiMessage || `${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
       }
       
       // Para respuestas 204 No Content, no intentar parsear JSON
@@ -240,7 +237,20 @@ export const apiService = {
 
   // Obtener estadísticas del dashboard
   async getDashboardStats(): Promise<DashboardStats> {
-    return apiRequest<DashboardStats>('/news/stats');
+    try {
+      return await apiRequest<DashboardStats>('/news/stats');
+    } catch (error) {
+      console.warn('Endpoint /news/stats no disponible, devolviendo datos por defecto');
+      // Devolver datos por defecto si el endpoint no existe
+      return {
+        totalNoticias: 0,
+        noticiasHoy: 0,
+        noticiasEstaSemana: 0,
+        noticiasEsteMes: 0,
+        noticiasPorTema: [],
+        noticiasPorMedio: []
+      };
+    }
   },
 
   // Importar noticias desde Excel
@@ -313,14 +323,44 @@ export const apiService = {
         return { valid: true };
       }
       return { valid: false };
-    } catch (error) {
+    } catch {
       return { valid: false };
     }
   },
 
   // Obtener usuario actual usando el token JWT
-  async getCurrentUser(): Promise<any> {
-    return apiRequest<{ user: any }>('/user');
+  async getCurrentUser(): Promise<{ user: UserInfo }> {
+    return apiRequest<{ user: UserInfo }>('/user');
+  },
+
+  // Actualizar perfil personal del usuario autenticado
+  async updateCurrentUser(userData: {
+    username?: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  }): Promise<{ user: UserInfo }> {
+    return apiRequest<{ user: UserInfo }>('/user', {
+      method: 'PATCH',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  // Cambiar contraseña del usuario autenticado
+  async changeCurrentUserPassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    // NOTA: Este endpoint no existe actualmente en el backend
+    // Necesita ser implementado como /api/v1/user/change_password o similar
+    // El endpoint /api/v1/users/password es solo para recuperación de contraseña (password reset)
+    return apiRequest<{ message: string }>('/user/change_password', {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        user: { 
+          current_password: currentPassword,
+          password: newPassword,
+          password_confirmation: newPassword 
+        } 
+      }),
+    });
   },
 
   // Métodos de gestión de usuarios (solo para admins)
@@ -346,20 +386,6 @@ export const apiService = {
     });
   },
 
-  async changeUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
-    // NOTA: Este endpoint no existe actualmente en el backend
-    // Necesita ser implementado como /api/v1/users/:id/change_password
-    return apiRequest<{ message: string }>(`/users/${id}/change_password`, {
-      method: 'PATCH',
-      body: JSON.stringify({ 
-        user: { 
-          password: newPassword,
-          password_confirmation: newPassword 
-        } 
-      }),
-    });
-  },
-
   async deleteUser(id: string): Promise<void> {
     console.log('API: Eliminando usuario con ID:', id);
     console.log('API: Token disponible:', !!localStorage.getItem('jwt-token'));
@@ -373,6 +399,22 @@ export const apiService = {
       console.error('API: Error en deleteUser:', error);
       throw error;
     }
+  },
+
+  // Cambiar contraseña de un usuario específico (solo para admins)
+  async changeUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
+    // NOTA: Este endpoint no existe actualmente en el backend
+    // Necesita ser implementado como /api/v1/users/:id/change_password
+    // Diferente del endpoint de recuperación de contraseña
+    return apiRequest<{ message: string }>(`/users/${id}/change_password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        user: { 
+          password: newPassword,
+          password_confirmation: newPassword 
+        } 
+      }),
+    });
   },
 
   async logout(): Promise<void> {
@@ -407,83 +449,59 @@ export const apiService = {
   },
 
   async getAllMentions(): Promise<{ mentions: Mention[] }> {
-    return apiRequest<{ mentions: Mention[] }>('/mentions/all');
+    return apiRequest<{ mentions: Mention[] }>('/mentions');
   },
 
   // CRUD de menciones individuales
-  async createMention(name: string): Promise<{
-    message: string;
-    mention: Mention;
-  }> {
-    return apiRequest<{
-      message: string;
-      mention: Mention;
-    }>('/mentions', {
+  async createMention(data: { name: string; enabled: boolean }): Promise<Mention> {
+    return apiRequest<Mention>('/mentions', {
       method: 'POST',
-      body: JSON.stringify({ mention: { name } }),
+      body: JSON.stringify(data),
     });
   },
 
-  async updateMention(id: string, name: string): Promise<{
-    message: string;
-    mention: Mention;
-  }> {
-    return apiRequest<{
-      message: string;
-      mention: Mention;
-    }>(`/mentions/${id}`, {
+  async updateMention(id: string, data: { name: string; enabled: boolean }): Promise<Mention> {
+    return apiRequest<Mention>(`/mentions/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ mention: { name } }),
+      body: JSON.stringify(data),
     });
   },
 
-  async deleteMention(id: string): Promise<{
-    message: string;
-  }> {
-    return apiRequest<{
-      message: string;
-    }>(`/mentions/${id}`, {
+  async deleteMention(id: string): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>(`/mentions/${id}`, {
       method: 'DELETE',
     });
   },
 
-  // Eventos/Temas
-  async getAllEvents(): Promise<{ events: Event[] }> {
-    return apiRequest<{ events: Event[] }>('/events');
+  // Eventos/Temas (Topics)
+  async getAllTopics(): Promise<{ topics: Topic[] }> {
+    return apiRequest<{ topics: Topic[] }>('/topics');
   },
 
-  async getActiveEvents(): Promise<{ activeEvents: Event[] }> {
-    return apiRequest<{ activeEvents: Event[] }>('/events/active');
-  },
-
-  async createEvent(data: {
+  async createTopic(data: {
     name: string;
-    description?: string;
-    color?: string;
-    tags?: string[];
-    is_active?: boolean;
-  }): Promise<{ message: string; event: Event }> {
-    return apiRequest<{ message: string; event: Event }>('/events', {
+    description: string;
+    enabled: boolean;
+  }): Promise<Topic> {
+    return apiRequest<Topic>('/topics', {
       method: 'POST',
-      body: JSON.stringify({ event: data }),
+      body: JSON.stringify(data),
     });
   },
 
-  async updateEvent(id: string, data: {
+  async updateTopic(id: string, data: {
     name: string;
-    description?: string;
-    color?: string;
-    is_active?: boolean;
-    tags?: string[];
-  }): Promise<{ message: string; event: Event }> {
-    return apiRequest<{ message: string; event: Event }>(`/events/${id}`, {
+    description: string;
+    enabled: boolean;
+  }): Promise<Topic> {
+    return apiRequest<Topic>(`/topics/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ event: data }),
+      body: JSON.stringify(data),
     });
   },
 
-  async deleteEvent(id: string): Promise<{ message: string }> {
-    return apiRequest<{ message: string }>(`/events/${id}`, {
+  async deleteTopic(id: string): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>(`/topics/${id}`, {
       method: 'DELETE',
     });
   },

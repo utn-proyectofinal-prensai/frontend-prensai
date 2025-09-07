@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import type { User } from '../services/api';
+import type { User } from '../types/auth';
 import { AUTH_MESSAGES } from '../constants/messages';
+import { getRoleInfo } from '../constants/admin/userRoles';
+import { useAuth } from '../hooks/useAuth';
 import Snackbar from '../components/common/Snackbar';
+import PasswordChangeModal from '../components/admin/PasswordChangeModal';
 
 const ProfilePage: React.FC = () => {
+  const { updateUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    first_name: '',
+    last_name: '',
+    username: ''
+  });
   const [snackbar, setSnackbar] = useState<{
     message: string;
     type: 'success' | 'error' | 'info';
@@ -23,7 +34,26 @@ const ProfilePage: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await apiService.getCurrentUser();
-      setUser(response.user);
+      // Convertir UserInfo a User para compatibilidad
+      const userInfo = response.user;
+      const userWithAllProps: User = {
+        id: parseInt(userInfo.id),
+        username: userInfo.username,
+        email: userInfo.email,
+        name: `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() || userInfo.username,
+        first_name: userInfo.first_name || '',
+        last_name: userInfo.last_name || '',
+        role: userInfo.role as 'admin' | 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setUser(userWithAllProps);
+      // Inicializar el formulario de edición
+      setEditForm({
+        first_name: userWithAllProps.first_name,
+        last_name: userWithAllProps.last_name,
+        username: userWithAllProps.username
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : AUTH_MESSAGES.VALIDATION.USER_FETCH_ERROR;
       setError(errorMessage);
@@ -47,26 +77,123 @@ const ProfilePage: React.FC = () => {
     });
   };
 
-  const getRoleDisplayName = (role: string) => {
-    const roleNames: Record<string, string> = {
-      'admin': 'Administrador',
-      'user': 'Usuario',
-      'editor': 'Editor'
-    };
-    return roleNames[role] || role;
-  };
-
-  const getRoleColor = (role: string) => {
-    const roleColors: Record<string, string> = {
-      'admin': 'text-red-400',
-      'user': 'text-blue-400',
-      'editor': 'text-purple-400'
-    };
-    return roleColors[role] || 'text-white';
-  };
 
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, show: false }));
+  };
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    // Restaurar valores originales
+    if (user) {
+      setEditForm({
+        first_name: user.first_name,
+        last_name: user.last_name,
+        username: user.username
+      });
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Llamada real a la API para actualizar el perfil
+      const response = await apiService.updateCurrentUser({
+        username: editForm.username,
+        first_name: editForm.first_name,
+        last_name: editForm.last_name,
+      });
+
+      // Actualizar el estado local con los datos del servidor
+      const updatedUserInfo = response.user;
+      const updatedUser: User = {
+        ...user,
+        username: updatedUserInfo.username,
+        first_name: updatedUserInfo.first_name || '',
+        last_name: updatedUserInfo.last_name || '',
+        name: `${updatedUserInfo.first_name || ''} ${updatedUserInfo.last_name || ''}`.trim() || updatedUserInfo.username,
+      };
+
+      setUser(updatedUser);
+      
+      // Actualizar también el contexto global para que se refleje en el dropdown
+      updateUser({
+        username: updatedUserInfo.username,
+        first_name: updatedUserInfo.first_name || '',
+        last_name: updatedUserInfo.last_name || '',
+      });
+      
+      setIsEditing(false);
+      
+      setSnackbar({
+        message: 'Perfil actualizado correctamente',
+        type: 'success',
+        show: true
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el perfil';
+      setSnackbar({
+        message: errorMessage,
+        type: 'error',
+        show: true
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof typeof editForm, value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handlePasswordChangeClick = () => {
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordChange = async (newPassword: string, currentPassword?: string) => {
+    try {
+      // Para perfil personal, se requiere la contraseña actual
+      if (!currentPassword) {
+        throw new Error('La contraseña actual es requerida');
+      }
+      
+      // NOTA TEMPORAL: El endpoint de cambio de contraseña no existe aún en el backend
+      // Por ahora mostraremos un mensaje informativo
+      setSnackbar({
+        message: 'Funcionalidad de cambio de contraseña pendiente de implementación en el backend. Endpoint /api/v1/user/change_password requerido.',
+        type: 'error',
+        show: true
+      });
+      
+      setShowPasswordModal(false);
+      
+      // Código para cuando se implemente el endpoint:
+      // await apiService.changeCurrentUserPassword(currentPassword, newPassword);
+      // setSnackbar({
+      //   message: 'Contraseña cambiada correctamente',
+      //   type: 'success',
+      //   show: true
+      // });
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al cambiar la contraseña';
+      setSnackbar({
+        message: errorMessage,
+        type: 'error',
+        show: true
+      });
+      throw error; // Re-lanzar para que el modal maneje el error
+    }
   };
 
   if (loading) {
@@ -112,105 +239,284 @@ const ProfilePage: React.FC = () => {
     );
   }
 
+  const roleInfo = getRoleInfo(user.role);
+
   return (
-    <>
-        {/* Header del perfil */}
-        <div className="profile-header-section mb-16">
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-            <div className="flex items-center space-x-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-full flex items-center justify-center shadow-xl border-2 border-white/20">
-                <span className="text-white text-3xl font-bold drop-shadow-lg">
-                  {user.first_name.charAt(0).toUpperCase()}{user.last_name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="flex-1">
-                                 <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">{user.name}</h2>
-                <p className="text-white/80 text-lg mb-3">@{user.username}</p>
-                <span className={`inline-flex items-center px-4 py-2 text-sm font-bold rounded-full border border-white/20 bg-white/10 backdrop-blur-sm ${getRoleColor(user.role)}`}>
-                  {getRoleDisplayName(user.role)}
-                </span>
-              </div>
+    <div className="px-6 py-6 h-full">
+      {/* Contenedor principal del perfil */}
+      <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl">
+        
+        {/* Header del usuario - Avatar y información básica */}
+        <div className="flex items-center justify-center" style={{ padding: '24px 32px' }}>
+          <div className="flex items-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/20">
+              <span className="text-white text-2xl font-bold drop-shadow-lg">
+                {user.first_name?.charAt(0) || user.username?.charAt(0) || '?'}
+              </span>
+            </div>
+            
+            <div className="flex flex-col" style={{ marginLeft: '32px' }}>
+              <h2 className="text-2xl font-bold text-white/90 drop-shadow-lg mb-2">
+                {isEditing ? 
+                  `${editForm.first_name || 'Sin nombre'} ${editForm.last_name || 'Sin apellido'}` :
+                  `${user.first_name || 'Sin nombre'} ${user.last_name || 'Sin apellido'}`
+                }
+              </h2>
+              <span 
+                className={`inline-flex items-center text-xs font-bold rounded-full border ${roleInfo.color} ${roleInfo.color.includes('bg-') ? '' : 'bg-white/10'}`}
+                style={{ padding: '4px 16px' }}
+              >
+                <span style={{ marginRight: '8px' }}>{roleInfo.icon}</span>
+                {roleInfo.label}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Información del perfil */}
-        <div className="profile-details-section">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Información Personal */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:bg-black/40 transition-all duration-300">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-                <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mr-4 border border-white/20">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+        {/* Contenido del perfil */}
+        <div 
+          className="overflow-y-auto" 
+          style={{ 
+            padding: '32px', 
+            paddingTop: '16px', 
+            paddingBottom: '32px', 
+            paddingLeft: '32px', 
+            paddingRight: '32px' 
+          }}
+        >
+          <div 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '24px',
+              rowGap: '24px'
+            }}
+          >
+
+            {/* Nombre completo */}
+            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                <div className="col-span-1 flex justify-center">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <span className="text-base">👤</span>
+                  </div>
                 </div>
-                Información Personal
-              </h3>
-              <div className="space-y-4">
-                                 <div className="flex justify-between items-center py-3 border-b border-white/10">
-                   <span className="text-white/70 font-medium">Nombre completo:</span>
-                   <span className="text-white font-semibold">{user.name}</span>
-                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-white/10">
-                  <span className="text-white/70 font-medium">Primer nombre:</span>
-                  <span className="text-white font-semibold">{user.first_name}</span>
+                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Nombre completo</div>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-white/10">
-                  <span className="text-white/70 font-medium">Apellido:</span>
-                  <span className="text-white font-semibold">{user.last_name}</span>
-                </div>
-                <div className="flex justify-between items-center py-3 border-b border-white/10">
-                  <span className="text-white/70 font-medium">Nombre de usuario:</span>
-                  <span className="text-white font-semibold">{user.username}</span>
-                </div>
-                <div className="flex justify-between items-center py-3 border-b border-white/10">
-                  <span className="text-white/70 font-medium">Email:</span>
-                  <span className="text-white font-semibold">{user.email}</span>
-                </div>
-                <div className="flex justify-between items-center py-3">
-                  <span className="text-white/70 font-medium">Rol:</span>
-                  <span className={`font-semibold ${getRoleColor(user.role)}`}>
-                    {getRoleDisplayName(user.role)}
-                  </span>
+                <div className="col-span-8 flex items-center">
+                  {isEditing ? (
+                    <div className="flex space-x-2 w-full">
+                      <input
+                        type="text"
+                        value={editForm.first_name}
+                        onChange={(e) => handleInputChange('first_name', e.target.value)}
+                        placeholder="Nombre"
+                        className="flex-1 px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
+                      />
+                      <input
+                        type="text"
+                        value={editForm.last_name}
+                        onChange={(e) => handleInputChange('last_name', e.target.value)}
+                        placeholder="Apellido"
+                        className="flex-1 px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-white/90 font-semibold text-sm">{user.first_name} {user.last_name}</div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Información de la Cuenta */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 hover:bg-black/40 transition-all duration-300">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-                <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center mr-4 border border-white/20">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
+            {/* Username */}
+            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                <div className="col-span-1 flex justify-center">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <span className="text-base">@</span>
+                  </div>
                 </div>
-                Información de la Cuenta
-              </h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-white/10">
-                  <span className="text-white/70 font-medium">ID de usuario:</span>
-                  <span className="text-white font-semibold">{user.id}</span>
+                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Usuario</div>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-white/10">
-                  <span className="text-white/70 font-medium">Fecha de creación:</span>
-                  <span className="text-white font-semibold">{formatDate(user.created_at)}</span>
-                </div>
-                <div className="flex justify-between items-center py-3">
-                  <span className="text-white/70 font-medium">Última actualización:</span>
-                  <span className="text-white font-semibold">{formatDate(user.updated_at)}</span>
+                <div className="col-span-8 flex items-center">
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm.username}
+                      onChange={(e) => handleInputChange('username', e.target.value)}
+                      placeholder="Nombre de usuario"
+                      className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
+                    />
+                  ) : (
+                    <div className="text-white/90 font-semibold text-sm">{user.username}</div>
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* Email */}
+            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                <div className="col-span-1 flex justify-center">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <span className="text-base">📧</span>
+                  </div>
+                </div>
+                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Email</div>
+                </div>
+                <div className="col-span-8 flex items-center">
+                  <div className="text-white/90 font-semibold text-sm">{user.email}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rol */}
+            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                <div className="col-span-1 flex justify-center">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <span className="text-base">👑</span>
+                  </div>
+                </div>
+                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Rol</div>
+                </div>
+                <div className="col-span-8 flex items-center">
+                  <div className="text-white/90 font-semibold text-sm capitalize">
+                    {user.role === 'admin' ? 'Administrador' : 'Usuario'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fecha de creación */}
+            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                <div className="col-span-1 flex justify-center">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <span className="text-base">📅</span>
+                  </div>
+                </div>
+                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Creado</div>
+                </div>
+                <div className="col-span-8 flex items-center">
+                  <div className="text-white/90 font-semibold text-sm">{formatDate(user.created_at)}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fecha de modificación */}
+            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
+              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
+                <div className="col-span-1 flex justify-center">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <span className="text-base">✏️</span>
+                  </div>
+                </div>
+                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
+                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Modificado</div>
+                </div>
+                <div className="col-span-8 flex items-center">
+                  <div className="text-white/90 font-semibold text-sm">{formatDate(user.updated_at)}</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
+
+        {/* Footer con botones de acción */}
+        <div 
+          className="bg-black/30 border-t border-white/10" 
+          style={{ 
+            padding: '32px',
+            paddingTop: '24px', 
+            paddingBottom: '24px', 
+            paddingLeft: '32px', 
+            paddingRight: '32px',
+            flexShrink: 0
+          }}
+        >
+          <div 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '16px',
+              rowGap: '16px'
+            }}
+          >
+            <div 
+              className="grid grid-cols-1 md:grid-cols-2" 
+              style={{ 
+                gap: '24px',
+                columnGap: '24px'
+              }}
+            >
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={loading}
+                    className="px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-500 disabled:to-gray-600 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-green-400/30 text-sm disabled:cursor-not-allowed disabled:transform-none"
+                    title="Guardar Cambios"
+                  >
+                    <span className="text-lg">💾</span>
+                    <span>{loading ? 'Guardando...' : 'Guardar'}</span>
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={loading}
+                    className="px-4 py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-400/30 text-sm disabled:cursor-not-allowed disabled:transform-none"
+                    title="Cancelar Edición"
+                  >
+                    <span className="text-lg">❌</span>
+                    <span>Cancelar</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleEditClick}
+                    className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/30 text-sm"
+                    title="Editar Perfil"
+                  >
+                    <span className="text-lg">✏️</span>
+                    <span>Editar Perfil</span>
+                  </button>
+                  <button
+                    onClick={handlePasswordChangeClick}
+                    className="px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-purple-400/30 text-sm"
+                    title="Cambiar Contraseña"
+                  >
+                    <span className="text-lg">🔒</span>
+                    <span>Cambiar Contraseña</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <Snackbar
         message={snackbar.message}
         isOpen={snackbar.show}
+        type={snackbar.type}
         onClose={handleCloseSnackbar}
       />
-    </>
+
+      <PasswordChangeModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onConfirm={handlePasswordChange}
+        user={user}
+        requireCurrentPassword={true}
+      />
+    </div>
   );
 };
 

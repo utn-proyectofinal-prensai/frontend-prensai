@@ -30,17 +30,37 @@ export default function DashboardPage() {
         setLoading(true);
         
         // Cargar estadísticas y últimas noticias en paralelo
-        const [statsData, newsData] = await Promise.all([
+        // Si las estadísticas fallan, continuamos con las noticias
+        const [statsData, newsData] = await Promise.allSettled([
           apiService.getDashboardStats(),
           apiService.getNews({ limit: 4 }) // Últimas 4 noticias
         ]);
         
-        setStats(statsData);
-        setUltimasNoticias(newsData);
+        // Manejar resultado de estadísticas
+        if (statsData.status === 'fulfilled') {
+          setStats(statsData.value);
+        } else {
+          console.warn('Error cargando estadísticas del dashboard:', statsData.reason);
+          // Mantener valores por defecto definidos en el estado inicial
+        }
+        
+        // Manejar resultado de noticias
+        if (newsData.status === 'fulfilled') {
+          // Asegurar que siempre sea un array
+          const noticias = Array.isArray(newsData.value) ? newsData.value : [];
+          setUltimasNoticias(noticias);
+        } else {
+          console.error('Error cargando noticias:', newsData.reason);
+          setUltimasNoticias([]); // Asegurar que sea un array vacío
+          setError(DASHBOARD_MESSAGES.ERRORS.LOAD_DATA_ERROR);
+          return; // Solo mostrar error si fallan las noticias
+        }
+        
         setError(null);
       } catch (err) {
-        console.error('Error cargando datos del dashboard:', err);
+        console.error('Error general cargando datos del dashboard:', err);
         setError(DASHBOARD_MESSAGES.ERRORS.LOAD_DATA_ERROR);
+        setUltimasNoticias([]); // Asegurar que sea un array vacío en caso de error general
       } finally {
         setLoading(false);
       }
@@ -82,8 +102,8 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-white/80 mb-3">Noticias Hoy</p>
-                  <p className="text-3xl font-bold text-white mb-2">{stats.noticiasHoy}</p>
-                  <p className="text-xs text-green-300 font-bold">+12% vs ayer</p>
+                  <p className="text-3xl font-bold text-white mb-2">{stats.noticiasHoy || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
+                  <p className="text-xs text-green-300 font-bold">{stats.noticiasHoy ? '+12% vs ayer' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
                 </div>
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,8 +117,8 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-white/80 mb-3">Esta Semana</p>
-                  <p className="text-3xl font-bold text-white mb-2">{stats.noticiasEstaSemana}</p>
-                  <p className="text-xs text-blue-300 font-bold">+8% vs semana pasada</p>
+                  <p className="text-3xl font-bold text-white mb-2">{stats.noticiasEstaSemana || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
+                  <p className="text-xs text-blue-300 font-bold">{stats.noticiasEstaSemana ? '+8% vs semana pasada' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
                 </div>
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,8 +132,8 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-white/80 mb-3">Total Noticias</p>
-                  <p className="text-3xl font-bold text-white mb-2">{stats.totalNoticias}</p>
-                  <p className="text-xs text-purple-300 font-bold">+15% este mes</p>
+                  <p className="text-3xl font-bold text-white mb-2">{stats.totalNoticias || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
+                  <p className="text-xs text-purple-300 font-bold">{stats.totalNoticias ? '+15% este mes' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
                 </div>
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,8 +147,8 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-white/80 mb-3">Temas Analizados</p>
-                  <p className="text-3xl font-bold text-white mb-2">{stats.noticiasPorTema.length}</p>
-                  <p className="text-xs text-orange-300 font-bold">+3 nuevos</p>
+                  <p className="text-3xl font-bold text-white mb-2">{stats.noticiasPorTema.length || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
+                  <p className="text-xs text-orange-300 font-bold">{stats.noticiasPorTema.length ? '+3 nuevos' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
                 </div>
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/20">
                   <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +232,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Administración</h3>
-                    <p className="text-orange-300 text-base leading-relaxed font-medium drop-shadow-sm">Gestiona eventos, temas y menciones</p>
+                    <p className="text-orange-300 text-base leading-relaxed font-medium drop-shadow-sm">Gestiona temas y menciones de personas</p>
                   </div>
                 </div>
               </button>
@@ -269,7 +289,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
-                  {ultimasNoticias.map((noticia) => (
+                  {ultimasNoticias && ultimasNoticias.length > 0 ? ultimasNoticias.map((noticia) => (
                     <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
                       <td className="px-4 py-3 text-center">
                         <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.titulo}</div>
@@ -367,7 +387,15 @@ export default function DashboardPage() {
                         <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion5 || '-'}</div>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan={27} className="px-6 py-12 text-center">
+                        <div className="text-white/60 text-lg">
+                          {loading ? 'Cargando noticias...' : 'No hay noticias disponibles'}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

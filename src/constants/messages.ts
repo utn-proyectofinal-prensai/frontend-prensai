@@ -31,13 +31,16 @@ export const AUTH_MESSAGES = {
 export const DASHBOARD_MESSAGES = {
   ERRORS: {
     LOAD_DATA_ERROR: 'Error al cargar los datos del dashboard',
-    GENERAL_ERROR: 'Error al cargar los datos'
+    GENERAL_ERROR: 'Error al cargar los datos',
+    STATS_UNAVAILABLE: 'Las estadísticas no están disponibles en este momento'
   },
   SUCCESS: {
     DATA_LOADED: 'Datos cargados correctamente'
   },
   COMMON: {
-    LOADING: 'Cargando dashboard...'
+    LOADING: 'Cargando dashboard...',
+    NO_DATA: 'Sin datos disponibles',
+    DATA_PLACEHOLDER: '-'
   }
 } as const;
 
