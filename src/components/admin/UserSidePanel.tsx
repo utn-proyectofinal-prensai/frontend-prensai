@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { User } from '../../services/api';
+import type { User } from '../../types/auth';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 

@@ -3,14 +3,9 @@ import type { ReactNode } from 'react';
 import { apiService } from '../services/api';
 import { AUTH_MESSAGES } from '../constants/messages';
 
-interface User {
-  id: string;
-  username: string;
-  email?: string;
-  role?: string;
-  first_name?: string;
-  last_name?: string;
-}
+import type { AuthUser } from '../types/auth';
+
+interface User extends AuthUser {}
 
 interface AuthContextType {
   user: User | null;

@@ -149,11 +149,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </div>
       )}
 
-      {/* Opciones adicionales */}
+      {/* Información de contacto para contraseña olvidada */}
       <div className="text-center animate-fade-in py-6 px-4 forgot-password-link" style={{animationDelay: `${AUTH_CONFIG.ANIMATION_DELAYS.FORM}s`}}>
-        <a href="#" className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors hover:scale-105 transform block">
+        <div className="text-sm text-gray-600 font-medium">
           ¿Olvidaste tu contraseña?
-        </a>
+        </div>
+        <div className="text-xs text-gray-500 mt-1">
+          Contactá a un administrador
+        </div>
       </div>
 
       {/* Botón principal */}

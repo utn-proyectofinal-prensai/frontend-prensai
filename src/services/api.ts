@@ -162,6 +162,9 @@ export interface User {
   role: 'admin' | 'user';
   created_at: string;
   updated_at: string;
+  last_sign_in_at?: string;
+  current_sign_in_at?: string;
+  sign_in_count?: number;
 }
 
 export interface CreateUserData {
@@ -478,6 +481,20 @@ async getDashboardStats(): Promise<DashboardStats> {
       console.error('API: Error en deleteUser:', error);
       throw error;
     }
+  },
+
+  async changeUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
+    // NOTA: Este endpoint no existe actualmente en el backend
+    // Necesita ser implementado como /api/v1/users/:id/change_password
+    return apiRequest<{ message: string }>(`/users/${id}/change_password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        user: { 
+          password: newPassword,
+          password_confirmation: newPassword 
+        } 
+      }),
+    });
   },
 
   async logout(): Promise<void> {
