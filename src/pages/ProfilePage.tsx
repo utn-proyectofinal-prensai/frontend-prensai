@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import type { User } from '../services/api';
+import type { User } from '../types/auth';
 import { AUTH_MESSAGES } from '../constants/messages';
 import Snackbar from '../components/common/Snackbar';
 
@@ -23,7 +23,20 @@ const ProfilePage: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await apiService.getCurrentUser();
-      setUser(response.user);
+      // Convertir UserInfo a User para compatibilidad
+      const userInfo = response.user;
+      const userWithAllProps: User = {
+        id: parseInt(userInfo.id),
+        username: userInfo.username,
+        email: userInfo.email,
+        name: `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() || userInfo.username,
+        first_name: userInfo.first_name || '',
+        last_name: userInfo.last_name || '',
+        role: userInfo.role as 'admin' | 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setUser(userWithAllProps);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : AUTH_MESSAGES.VALIDATION.USER_FETCH_ERROR;
       setError(errorMessage);

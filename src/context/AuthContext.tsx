@@ -51,8 +51,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   id: userData.user.id.toString(),
                   username: userData.user.username || userData.user.email,
                   email: userData.user.email,
-                  first_name: userData.user.first_name,
-                  last_name: userData.user.last_name,
+                  first_name: userData.user.first_name || '',
+                  last_name: userData.user.last_name || '',
                   role: userData.user.role || 'user'
                 };
                 setUser(userInfo);
@@ -97,8 +97,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: userData.user.id.toString(),
           username: userData.user.username || userData.user.email,
           email: userData.user.email,
-          first_name: userData.user.first_name,
-          last_name: userData.user.last_name,
+          first_name: userData.user.first_name || '',
+          last_name: userData.user.last_name || '',
           role: userData.user.role || 'user'
         };
         

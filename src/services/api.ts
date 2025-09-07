@@ -96,6 +96,8 @@ export interface UserInfo {
   username: string;
   email: string;
   role: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface User {
@@ -235,7 +237,20 @@ export const apiService = {
 
   // Obtener estadísticas del dashboard
   async getDashboardStats(): Promise<DashboardStats> {
-    return apiRequest<DashboardStats>('/news/stats');
+    try {
+      return await apiRequest<DashboardStats>('/news/stats');
+    } catch (error) {
+      console.warn('Endpoint /news/stats no disponible, devolviendo datos por defecto');
+      // Devolver datos por defecto si el endpoint no existe
+      return {
+        totalNoticias: 0,
+        noticiasHoy: 0,
+        noticiasEstaSemana: 0,
+        noticiasEsteMes: 0,
+        noticiasPorTema: [],
+        noticiasPorMedio: []
+      };
+    }
   },
 
   // Importar noticias desde Excel

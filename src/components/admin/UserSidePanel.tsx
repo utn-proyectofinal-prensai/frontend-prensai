@@ -60,7 +60,7 @@ export const UserSidePanel: React.FC<UserSidePanelProps> = ({
   const handleDelete = () => {
     if (window.confirm(USER_MESSAGES.CONFIRMATIONS.DELETE_USER)) {
       onClose();
-      onDelete(usuario.id);
+      onDelete(usuario.id.toString());
     }
   };
 
