@@ -150,6 +150,8 @@ export interface UserInfo {
   username: string;
   email: string;
   role: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface User {
@@ -331,6 +333,22 @@ export const apiService = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  // Obtener estadísticas del dashboard
+  async getDashboardStats(): Promise<DashboardStats> {
+    try {
+      return await apiRequest<DashboardStats>('/news/stats');
+    } catch (error) {
+      console.warn('Endpoint /news/stats no disponible, devolviendo datos por defecto');
+      // Devolver datos por defecto si el endpoint no existe
+      return {
+        totalNoticias: 0,
+        noticiasHoy: 0,
+        noticiasEstaSemana: 0,
+        noticiasEsteMes: 0,
+        noticiasPorTema: [],
+        noticiasPorMedio: []
+      };
+    }
   },
 
 // Obtener estadísticas del dashboard (MOCK TEMPORAL)
@@ -445,6 +463,36 @@ async getDashboardStats(): Promise<DashboardStats> {
     return apiRequest<{ user: UserInfo }>('/user');
   },
 
+  // Actualizar perfil personal del usuario autenticado
+  async updateCurrentUser(userData: {
+    username?: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  }): Promise<{ user: UserInfo }> {
+    return apiRequest<{ user: UserInfo }>('/user', {
+      method: 'PATCH',
+      body: JSON.stringify({ user: userData }),
+    });
+  },
+
+  // Cambiar contraseña del usuario autenticado
+  async changeCurrentUserPassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    // NOTA: Este endpoint no existe actualmente en el backend
+    // Necesita ser implementado como /api/v1/user/change_password o similar
+    // El endpoint /api/v1/users/password es solo para recuperación de contraseña (password reset)
+    return apiRequest<{ message: string }>('/user/change_password', {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        user: { 
+          current_password: currentPassword,
+          password: newPassword,
+          password_confirmation: newPassword 
+        } 
+      }),
+    });
+  },
+
   // Métodos de gestión de usuarios (solo para admins)
   async getUsers(): Promise<{ users: User[] }> {
     return apiRequest<{ users: User[] }>('/users');
@@ -483,9 +531,11 @@ async getDashboardStats(): Promise<DashboardStats> {
     }
   },
 
+  // Cambiar contraseña de un usuario específico (solo para admins)
   async changeUserPassword(id: string, newPassword: string): Promise<{ message: string }> {
     // NOTA: Este endpoint no existe actualmente en el backend
     // Necesita ser implementado como /api/v1/users/:id/change_password
+    // Diferente del endpoint de recuperación de contraseña
     return apiRequest<{ message: string }>(`/users/${id}/change_password`, {
       method: 'PATCH',
       body: JSON.stringify({ 
@@ -528,9 +578,8 @@ async getDashboardStats(): Promise<DashboardStats> {
     });
   },
 
-   async getMentions(queryParams?: Record<string, string | number | boolean>): Promise<{ mentions: Mention[] }> {
-    const queryString = buildQueryString(queryParams);
-    return apiRequest<{ mentions: Mention[] }>(`/mentions${queryString}`);
+  async getAllMentions(): Promise<{ mentions: Mention[] }> {
+    return apiRequest<{ mentions: Mention[] }>('/mentions');
   },
 
   // CRUD de menciones individuales
@@ -555,9 +604,8 @@ async getDashboardStats(): Promise<DashboardStats> {
   },
 
   // Eventos/Temas (Topics)
-  async getTopics(queryParams?: Record<string, string | number | boolean>): Promise<{ topics: Topic[] }> {
-    const queryString = buildQueryString(queryParams);
-    return apiRequest<{ topics: Topic[] }>(`/topics${queryString}`);
+  async getAllTopics(): Promise<{ topics: Topic[] }> {
+    return apiRequest<{ topics: Topic[] }>('/topics');
   },
 
   async createTopic(data: {

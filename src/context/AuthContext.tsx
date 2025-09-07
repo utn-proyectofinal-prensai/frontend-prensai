@@ -14,6 +14,7 @@ interface AuthContextType {
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  updateUser: (updatedUser: Partial<User>) => void;
   error: string | null;
   clearError: () => void;
 }
@@ -51,8 +52,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   id: userData.user.id.toString(),
                   username: userData.user.username || userData.user.email,
                   email: userData.user.email,
-                  first_name: userData.user.first_name,
-                  last_name: userData.user.last_name,
+                  first_name: userData.user.first_name || '',
+                  last_name: userData.user.last_name || '',
                   role: userData.user.role || 'user'
                 };
                 setUser(userInfo);
@@ -97,8 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: userData.user.id.toString(),
           username: userData.user.username || userData.user.email,
           email: userData.user.email,
-          first_name: userData.user.first_name,
-          last_name: userData.user.last_name,
+          first_name: userData.user.first_name || '',
+          last_name: userData.user.last_name || '',
           role: userData.user.role || 'user'
         };
         
@@ -129,6 +130,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedUser: Partial<User>) => {
+    if (user) {
+      const newUser = { ...user, ...updatedUser };
+      setUser(newUser);
+      localStorage.setItem('user', JSON.stringify(newUser));
+    }
+  };
+
   const clearError = () => {
     setTimeout(() => {
       setError(null);
@@ -142,6 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAdmin: user?.role === 'admin',
     login,
     logout,
+    updateUser,
     error,
     clearError
   };

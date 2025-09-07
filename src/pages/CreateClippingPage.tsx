@@ -6,6 +6,7 @@ import { useNews } from '../hooks/useNews';
 import type { ClippingMetrics, NewsItem } from '../services/api';
 import * as XLSX from 'xlsx';
 import MetricsCharts from '../components/MetricsCharts';
+import { TopicCard } from '../components/common';
 
 interface EventoTema {
   id: string;
@@ -315,53 +316,22 @@ export default function CreateClippingPage() {
                 <span className="ml-3 text-white/80">Cargando temas...</span>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="cards-grid">
                 {eventosTemas.filter(evento => evento.activo).map((evento) => (
-                <button
-                  key={evento.id}
-                  onClick={() => handleEventoTemaChange(evento.id)}
-                  style={{
-                    backgroundColor: eventoTemaSeleccionado === evento.id 
-                      ? 'rgba(255, 255, 255, 0.1)' 
-                      : 'rgba(0, 0, 0, 0.3)',
-                    backdropFilter: 'blur(8px)',
-                    border: eventoTemaSeleccionado === evento.id 
-                      ? '2px solid rgba(255, 255, 255, 0.5)' 
-                      : '2px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    padding: '16px',
-                    transition: 'all 0.3s ease',
-                    boxShadow: eventoTemaSeleccionado === evento.id 
-                      ? '0 8px 16px rgba(0, 0, 0, 0.3)' 
-                      : '0 4px 8px rgba(0, 0, 0, 0.2)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (eventoTemaSeleccionado !== evento.id) {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (eventoTemaSeleccionado !== evento.id) {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
-                    }
-                  }}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: evento.color }}
-                    ></div>
-                    <div className="text-left">
-                      <h4 style={{ color: 'white', fontWeight: '600', fontSize: '16px' }}>
-                        {evento.nombre}
-                      </h4>
-                      <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', marginTop: '4px' }}>
-                        {evento.descripcion}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
+                  <TopicCard
+                    key={evento.id}
+                    topic={{
+                      id: parseInt(evento.id),
+                      name: evento.nombre,
+                      description: evento.descripcion,
+                      enabled: evento.activo,
+                      crisis: false
+                    }}
+                    variant="selection"
+                    isSelected={eventoTemaSeleccionado === evento.id}
+                    onSelect={(topic) => handleEventoTemaChange(topic.id.toString())}
+                  />
+                ))}
               </div>
             )}
           </div>
