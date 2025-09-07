@@ -28,7 +28,7 @@ export default function CreateClippingPage() {
   const [isLoadingTemas, setIsLoadingTemas] = useState(true);
 
   // Hook para obtener las noticias
-  const { news: allNews, loading: newsLoading } = useNews({ limit: 1000 });
+  const { news: allNews } = useNews({ limit: 1000 });
 
   // Cargar temas reales de la base de datos
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function CreateClippingPage() {
   const [isLoadingNoticias, setIsLoadingNoticias] = useState(false);
 
   const [eventoTemaSeleccionado, setEventoTemaSeleccionado] = useState<string>('');
-  const [noticiasSeleccionadas, setNoticiasSeleccionadas] = useState<Set<string>>(new Set());
+  const [noticiasSeleccionadas, setNoticiasSeleccionadas] = useState<Set<number>>(new Set());
   const [noticiasFiltradas, setNoticiasFiltradas] = useState<Noticia[]>([]);
   const [metricas, setMetricas] = useState<ClippingMetrics | null>(null);
   const [isLoadingMetricas, setIsLoadingMetricas] = useState(false);
@@ -102,7 +102,7 @@ export default function CreateClippingPage() {
     setEventoTemaSeleccionado(eventoId);
   };
 
-  const handleNoticiaToggle = (noticiaId: string) => {
+  const handleNoticiaToggle = (noticiaId: number) => {
     const nuevasSeleccionadas = new Set(noticiasSeleccionadas);
     if (nuevasSeleccionadas.has(noticiaId)) {
       nuevasSeleccionadas.delete(noticiaId);
@@ -194,7 +194,7 @@ export default function CreateClippingPage() {
 
     try {
       setIsLoadingMetricas(true);
-      const newsIds = Array.from(noticiasSeleccionadas);
+      const newsIds = Array.from(noticiasSeleccionadas).map(id => id.toString());
       const response = await apiService.calculateClippingMetrics(newsIds);
       setMetricas(response.metricas);
       console.log('Métricas calculadas:', response.metricas);
@@ -325,7 +325,9 @@ export default function CreateClippingPage() {
                       name: evento.nombre,
                       description: evento.descripcion,
                       enabled: evento.activo,
-                      crisis: false
+                      crisis: false,
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString()
                     }}
                     variant="selection"
                     isSelected={eventoTemaSeleccionado === evento.id}

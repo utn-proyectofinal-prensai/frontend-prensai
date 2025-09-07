@@ -15,7 +15,7 @@ export function useTopics(options?: { enabled?: boolean }): UseTopicsReturn {
     options?.enabled !== undefined ? { enabled: options.enabled } : undefined
   ), [options?.enabled]);
 
-  const { data, loading, error, refetch } = useApiData(apiService.getTopics, query);
+  const { data, loading, error, refetch } = useApiData(apiService.getAllTopics, query);
 
   return {
     topics: data?.topics || [],

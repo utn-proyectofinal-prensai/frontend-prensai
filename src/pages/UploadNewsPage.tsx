@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useNews, useEnabledTopics, useEnabledMentions } from '../hooks';
 import { apiService, type BatchProcessRequest, parseApiError } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
@@ -18,7 +17,6 @@ interface ExcelPreview {
 }
 
 export default function UploadNewsPage() {
-  const navigate = useNavigate();
   const { batchProcess, processing } = useNews();
   
   // Estados para URLs

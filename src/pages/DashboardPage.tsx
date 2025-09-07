@@ -6,7 +6,7 @@ import type { DashboardStats, NewsItem } from '../services/api';
 import { DASHBOARD_MESSAGES } from '../constants/messages';
 
 export default function DashboardPage() {
-  const { isAdmin } = useAuth();
+  const { } = useAuth();
   const navigate = useNavigate();
   
   // Estados para los datos

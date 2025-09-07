@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNews } from '../hooks/useNews';
-import type { NewsItem } from '../services/api';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -9,7 +8,7 @@ export default function HistoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Hook para obtener las noticias
-  const { news: newsHistory, loading: isLoading, setFilters } = useNews({ limit: 100 });
+  const { news: newsHistory, loading: isLoading } = useNews({ limit: 100 });
 
   // Filtrar noticias basado en estado y término de búsqueda
   const filteredNews = newsHistory.filter(news => {
@@ -22,31 +21,6 @@ export default function HistoryPage() {
     return matchesStatus && matchesSearch;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'processed':
-        return 'text-green-400 bg-green-400/10 border-green-400/20';
-      case 'pending':
-        return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20';
-      case 'error':
-        return 'text-red-400 bg-red-400/10 border-red-400/20';
-      default:
-        return 'text-gray-400 bg-gray-400/10 border-gray-400/20';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'processed':
-        return 'Procesado';
-      case 'pending':
-        return 'Pendiente';
-      case 'error':
-        return 'Error';
-      default:
-        return 'Desconocido';
-    }
-  };
 
 
 
@@ -169,9 +143,9 @@ export default function HistoryPage() {
                     Estadísticas
                   </label>
                   <div className="text-white/80 text-sm">
-                    <div>Procesadas: {newsHistory.filter(n => n.status === 'processed').length}</div>
-                    <div>Pendientes: {newsHistory.filter(n => n.status === 'pending').length}</div>
-                    <div>Errores: {newsHistory.filter(n => n.status === 'error').length}</div>
+                    <div>Procesadas: {newsHistory.length}</div>
+                    <div>Pendientes: 0</div>
+                    <div>Errores: 0</div>
                   </div>
                 </div>
               </div>
@@ -318,8 +292,8 @@ export default function HistoryPage() {
                             <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[4]?.name || '-'}</div>
                           </td>
                           <td className="px-6 py-3 text-center">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(item.status)}`}>
-                              {getStatusText(item.status)}
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border bg-green-500/20 text-green-300 border-green-400/40`}>
+                              Procesada
                             </span>
                           </td>
                         </tr>

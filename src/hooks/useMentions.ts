@@ -15,7 +15,7 @@ export function useMentions(options?: { enabled?: boolean }): UseMentionsReturn 
     options?.enabled !== undefined ? { enabled: options.enabled } : undefined
   ), [options?.enabled]);
 
-  const { data, loading, error, refetch } = useApiData(apiService.getMentions, query);
+  const { data, loading, error, refetch } = useApiData(apiService.getAllMentions, query);
 
   return {
     mentions: data?.mentions || [],

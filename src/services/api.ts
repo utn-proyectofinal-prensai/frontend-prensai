@@ -3,20 +3,6 @@ import { AUTH_MESSAGES, API_MESSAGES } from '../constants/messages';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
 
-// Helper function para construir query parameters
-const buildQueryString = (params?: Record<string, string | number | boolean>): string => {
-  if (!params) return '';
-  
-  const urlParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      urlParams.append(key, value.toString());
-    }
-  });
-  
-  const queryString = urlParams.toString();
-  return queryString ? `?${queryString}` : '';
-};
 
 // Tipos de datos según la nueva API
 export interface NewsItem {
@@ -333,6 +319,8 @@ export const apiService = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
   // Obtener estadísticas del dashboard
   async getDashboardStats(): Promise<DashboardStats> {
     try {
@@ -350,38 +338,6 @@ export const apiService = {
       };
     }
   },
-
-// Obtener estadísticas del dashboard (MOCK TEMPORAL)
-async getDashboardStats(): Promise<DashboardStats> {
-  // TODO: Reemplazar con llamada real cuando el backend implemente el endpoint
-  // return apiRequest<DashboardStats>('/news/stats');
-  
-  // Datos mockeados para desarrollo
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        totalNoticias: 1247,
-        noticiasHoy: 23,
-        noticiasEstaSemana: 156,
-        noticiasEsteMes: 634,
-        noticiasPorTema: [
-          { tema: 'Política', count: 342 },
-          { tema: 'Economía', count: 298 },
-          { tema: 'Deportes', count: 187 },
-          { tema: 'Tecnología', count: 156 },
-          { tema: 'Cultura', count: 134 }
-        ],
-        noticiasPorMedio: [
-          { medio: 'Clarín', count: 234 },
-          { medio: 'La Nación', count: 198 },
-          { medio: 'Página 12', count: 167 },
-          { medio: 'Infobae', count: 145 },
-          { medio: 'Ámbito', count: 123 }
-        ]
-      });
-    }, 500); // Simular delay de red
-  });
-},
 
   // Importar noticias desde Excel
   async importNews(file: File): Promise<{
