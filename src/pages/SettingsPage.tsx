@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiService, type Topic, type Mention } from '../services/api';
-import { Snackbar, TopicCard, MentionCard } from '../components/common';
-import { TopicFormModal, MentionFormModal } from '../components/admin';
+import { Snackbar, TopicCard, MentionCard, ConfirmationModal } from '../components/common';
+import { TopicModal, MentionModal } from '../components/admin';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'eventos' | 'menciones'>('eventos');
@@ -16,10 +16,11 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Snackbar para errores
-  const [snackbar, setSnackbar] = useState<{ message: string; show: boolean }>({
+  // Snackbar para mensajes
+  const [snackbar, setSnackbar] = useState<{ message: string; show: boolean; type: 'success' | 'error' | 'info' }>({
     message: '',
-    show: false
+    show: false,
+    type: 'error'
   });
 
   // Nota: Eliminada funcionalidad de drag and drop - ahora se usa el campo enabled directamente
@@ -39,7 +40,7 @@ export default function AdminPage() {
         const apiMsg = err instanceof Error ? err.message : '';
         const message = apiMsg?.trim() ? apiMsg : 'Error al cargar las menciones';
         setError(message);
-        setSnackbar({ message, show: true });
+        setSnackbar({ message, show: true, type: 'error' });
       } finally {
         setLoading(false);
       }
@@ -63,7 +64,7 @@ export default function AdminPage() {
         const apiMsg = err instanceof Error ? err.message : '';
         const message = apiMsg?.trim() ? apiMsg : 'Error al cargar los temas';
         setEventosError(message);
-        setSnackbar({ message, show: true });
+        setSnackbar({ message, show: true, type: 'error' });
       } finally {
         setEventosLoading(false);
       }
@@ -73,119 +74,203 @@ export default function AdminPage() {
   }, []);
 
   // Estados para formularios
-  const [showEventoForm, setShowEventoForm] = useState(false);
-  const [showMencionForm, setShowMencionForm] = useState(false);
-  const [editingEvento, setEditingEvento] = useState<Topic | null>(null);
-  const [editingMencion, setEditingMencion] = useState<Mention | null>(null);
+  const [showTopicModal, setShowTopicModal] = useState(false);
+  const [showMentionModal, setShowMentionModal] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [selectedMention, setSelectedMention] = useState<Mention | null>(null);
+  const [isCreatingTopic, setIsCreatingTopic] = useState(false);
+  const [isCreatingMention, setIsCreatingMention] = useState(false);
+
+  // Estados para modal de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmModalConfig, setConfirmModalConfig] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: 'topic' | 'mention';
+    itemName: string;
+  } | null>(null);
 
   // Nota: Eliminada la selección de colores - la nueva API no incluye este campo
 
-  // Funciones para Temas
-  const handleEventoSubmit = async (formData: FormData) => {
-    const nombre = formData.get('nombre') as string;
-    const descripcion = (formData.get('descripcion') as string) || '';
-    const enabled = formData.get('enabled') === 'true';
-    // Nota: crisis no se puede modificar por el momento desde la API
-    
-    try {
-      if (editingEvento) {
-        // Editando tema existente
-        await apiService.updateTopic(editingEvento.id.toString(), {
-          name: nombre,
-          description: descripcion,
-          enabled
-        });
-      } else {
-        // Creando nuevo tema
-        await apiService.createTopic({
-          name: nombre,
-          description: descripcion,
-          enabled
-        });
-      }
-      
-      // Recargar temas desde la API para asegurar sincronización
-      const { topics } = await apiService.getAllTopics();
-      setEventos(topics);
-      
-      setShowEventoForm(false);
-      setEditingEvento(null);
-    } catch (error) {
-      console.error('❌ Error guardando tema:', error);
-      const apiMsg = error instanceof Error ? error.message : '';
-      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al guardar el tema. Intenta nuevamente.', show: true });
+  // Funciones para modal de confirmación
+  const showDeleteConfirmation = (type: 'topic' | 'mention', id: number, name: string) => {
+    const isTopicType = type === 'topic';
+    setConfirmModalConfig({
+      title: `Eliminar ${isTopicType ? 'Tema' : 'Mención'}`,
+      message: `¿Estás seguro de que quieres eliminar ${isTopicType ? 'el tema' : 'la mención'} "${name}"?\n\nEsta acción no se puede deshacer.`,
+      onConfirm: () => {
+        if (isTopicType) {
+          handleEventoDeleteConfirmed(id);
+        } else {
+          handleMencionDeleteConfirmed(id);
+        }
+      },
+      type,
+      itemName: name
+    });
+    setShowConfirmModal(true);
+  };
+
+  const handleEventoDelete = (id: number) => {
+    const topic = eventos.find(t => t.id === id);
+    if (topic) {
+      showDeleteConfirmation('topic', id, topic.name);
     }
   };
 
-  const handleEventoDelete = async (id: number) => {
+  const handleEventoDeleteConfirmed = async (id: number) => {
     try {
       await apiService.deleteTopic(id.toString());
       
       // Recargar temas desde la API
       const { topics } = await apiService.getAllTopics();
       setEventos(topics);
+      
+      setSnackbar({ message: 'Tema eliminado correctamente', show: true, type: 'success' });
+      setShowConfirmModal(false);
+      setConfirmModalConfig(null);
     } catch (error) {
       console.error('❌ Error eliminando tema:', error);
       const apiMsg = error instanceof Error ? error.message : '';
-      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al eliminar el tema. Intenta nuevamente.', show: true });
+      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al eliminar el tema. Intenta nuevamente.', show: true, type: 'error' });
+      setShowConfirmModal(false);
+      setConfirmModalConfig(null);
     }
   };
 
-  const handleEventoEdit = (evento: Topic) => {
-    setEditingEvento(evento);
-    setShowEventoForm(true);
+  const handleTopicView = (topic: Topic) => {
+    setSelectedTopic(topic);
+    setIsCreatingTopic(false);
+    setShowTopicModal(true);
   };
 
-  // Funciones para Menciones
-  const handleMencionSubmit = async (formData: FormData) => {
-    const nombre = formData.get('nombre') as string;
-    const enabled = formData.get('enabled') === 'true';
-    
+  const handleTopicEditClick = (topic: Topic) => {
+    setSelectedTopic(topic);
+    setIsCreatingTopic(false);
+    setShowTopicModal(true);
+  };
+
+  const handleTopicEdit = async (topic: Topic) => {
     try {
-      if (editingMencion) {
-        // Editando mención existente
-        await apiService.updateMention(editingMencion.id.toString(), { name: nombre, enabled });
-      } else {
-        // Creando nueva mención
-        await apiService.createMention({ name: nombre, enabled });
-      }
-      
-      // Recargar menciones desde la API para asegurar sincronización
-      const { mentions } = await apiService.getAllMentions();
-      setMenciones(mentions);
-      
-      setShowMencionForm(false);
-      setEditingMencion(null);
-    } catch (error) {
-      console.error('❌ Error guardando mención:', error);
-      const apiMsg = error instanceof Error ? error.message : '';
-      setSnackbar({
-        message: apiMsg?.trim() ? apiMsg : 'Error al guardar la mención. Intenta nuevamente.',
-        show: true
+      await apiService.updateTopic(topic.id.toString(), {
+        name: topic.name,
+        description: topic.description,
+        enabled: topic.enabled
       });
+      
+      // Recargar temas desde la API para asegurar sincronización
+      const { topics } = await apiService.getAllTopics();
+      setEventos(topics);
+      
+      setSnackbar({ message: 'Tema actualizado correctamente', show: true, type: 'success' });
+    } catch (error) {
+      console.error('Error al actualizar tema:', error);
+      const apiMsg = error instanceof Error ? error.message : '';
+      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al actualizar el tema', show: true, type: 'error' });
     }
   };
 
-  const handleMencionDelete = async (id: number) => {
+  const handleTopicCreate = async (topicData: any) => {
+    try {
+      await apiService.createTopic({
+        name: topicData.name,
+        description: topicData.description,
+        enabled: topicData.enabled
+      });
+      
+      // Recargar temas desde la API para asegurar sincronización
+      const { topics } = await apiService.getAllTopics();
+      setEventos(topics);
+      
+      setSnackbar({ message: 'Tema creado correctamente', show: true, type: 'success' });
+    } catch (error) {
+      console.error('Error al crear tema:', error);
+      const apiMsg = error instanceof Error ? error.message : '';
+      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al crear el tema', show: true, type: 'error' });
+    }
+  };
+
+
+  const handleMencionDelete = (id: number) => {
+    const mention = menciones.find(m => m.id === id);
+    if (mention) {
+      showDeleteConfirmation('mention', id, mention.name);
+    }
+  };
+
+  const handleMencionDeleteConfirmed = async (id: number) => {
     try {
       await apiService.deleteMention(id.toString());
       
       // Recargar menciones desde la API
       const { mentions } = await apiService.getAllMentions();
       setMenciones(mentions);
+      
+      setSnackbar({ message: 'Mención eliminada correctamente', show: true, type: 'success' });
+      setShowConfirmModal(false);
+      setConfirmModalConfig(null);
     } catch (error) {
       console.error('❌ Error eliminando mención:', error);
       const apiMsg = error instanceof Error ? error.message : '';
       setSnackbar({
         message: apiMsg?.trim() ? apiMsg : 'Error al eliminar la mención. Intenta nuevamente.',
-        show: true
+        show: true,
+        type: 'error'
       });
+      setShowConfirmModal(false);
+      setConfirmModalConfig(null);
     }
   };
 
-  const handleMencionEdit = (mencion: Mention) => {
-    setEditingMencion(mencion);
-    setShowMencionForm(true);
+  const handleMentionView = (mention: Mention) => {
+    setSelectedMention(mention);
+    setIsCreatingMention(false);
+    setShowMentionModal(true);
+  };
+
+  const handleMentionEditClick = (mention: Mention) => {
+    setSelectedMention(mention);
+    setIsCreatingMention(false);
+    setShowMentionModal(true);
+  };
+
+  const handleMentionEdit = async (mention: Mention) => {
+    try {
+      await apiService.updateMention(mention.id.toString(), {
+        name: mention.name,
+        enabled: mention.enabled
+      });
+      
+      // Recargar menciones desde la API para asegurar sincronización
+      const { mentions } = await apiService.getAllMentions();
+      setMenciones(mentions);
+      
+      setSnackbar({ message: 'Mención actualizada correctamente', show: true, type: 'success' });
+    } catch (error) {
+      console.error('Error al actualizar mención:', error);
+      const apiMsg = error instanceof Error ? error.message : '';
+      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al actualizar la mención', show: true, type: 'error' });
+    }
+  };
+
+  const handleMentionCreate = async (mentionData: any) => {
+    try {
+      await apiService.createMention({
+        name: mentionData.name,
+        enabled: mentionData.enabled
+      });
+      
+      // Recargar menciones desde la API para asegurar sincronización
+      const { mentions } = await apiService.getAllMentions();
+      setMenciones(mentions);
+      
+      setSnackbar({ message: 'Mención creada correctamente', show: true, type: 'success' });
+    } catch (error) {
+      console.error('Error al crear mención:', error);
+      const apiMsg = error instanceof Error ? error.message : '';
+      setSnackbar({ message: apiMsg?.trim() ? apiMsg : 'Error al crear la mención', show: true, type: 'error' });
+    }
   };
 
 
@@ -224,10 +309,15 @@ export default function AdminPage() {
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold text-white">Temas</h2>
               <button
-                onClick={() => setShowEventoForm(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                onClick={() => {
+                  setSelectedTopic(null);
+                  setIsCreatingTopic(true);
+                  setShowTopicModal(true);
+                }}
+                className="h-11 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 px-6"
               >
-                + Agregar Tema
+                <span className="text-white font-bold">+</span>
+                <span>Agregar Tema</span>
               </button>
             </div>
 
@@ -257,11 +347,12 @@ export default function AdminPage() {
                     topic={evento}
                     variant="management"
                     showActions={true}
-                    onEdit={handleEventoEdit}
+                    onView={handleTopicView}
+                    onEdit={handleTopicEditClick}
                     onDelete={handleEventoDelete}
                   />
-                ))}
-              </div>
+              ))}
+            </div>
             )}
           </div>
         )}
@@ -273,10 +364,15 @@ export default function AdminPage() {
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold text-white">Menciones de Personas</h2>
               <button
-                onClick={() => setShowMencionForm(true)}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                onClick={() => {
+                  setSelectedMention(null);
+                  setIsCreatingMention(true);
+                  setShowMentionModal(true);
+                }}
+                className="h-11 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 px-6"
               >
-                + Agregar Mención
+                <span className="text-white font-bold">+</span>
+                <span>Agregar Mención</span>
               </button>
             </div>
 
@@ -305,7 +401,8 @@ export default function AdminPage() {
                     key={mencion.id}
                     mention={mencion}
                     showActions={true}
-                    onEdit={handleMencionEdit}
+                    onView={handleMentionView}
+                    onEdit={handleMentionEditClick}
                     onDelete={handleMencionDelete}
                   />
                 ))}
@@ -316,31 +413,56 @@ export default function AdminPage() {
       </div>
 
       {/* Modal para Tema */}
-      <TopicFormModal
-        isOpen={showEventoForm}
-        editingTopic={editingEvento}
+      <TopicModal
+        topic={selectedTopic}
+        isOpen={showTopicModal}
         onClose={() => {
-          setShowEventoForm(false);
-          setEditingEvento(null);
+          setShowTopicModal(false);
+          setSelectedTopic(null);
+          setIsCreatingTopic(false);
         }}
-        onSubmit={handleEventoSubmit}
+        onEdit={handleTopicEdit}
+        onDelete={handleEventoDelete}
+        onCreateTopic={handleTopicCreate}
+        isCreateMode={isCreatingTopic}
+        initialEditMode={selectedTopic !== null && !isCreatingTopic}
       />
 
       {/* Modal para Mención */}
-      <MentionFormModal
-        isOpen={showMencionForm}
-        editingMention={editingMencion}
+      <MentionModal
+        mention={selectedMention}
+        isOpen={showMentionModal}
         onClose={() => {
-          setShowMencionForm(false);
-          setEditingMencion(null);
+          setShowMentionModal(false);
+          setSelectedMention(null);
+          setIsCreatingMention(false);
         }}
-        onSubmit={handleMencionSubmit}
+        onEdit={handleMentionEdit}
+        onDelete={handleMencionDelete}
+        onCreateMention={handleMentionCreate}
+        isCreateMode={isCreatingMention}
+        initialEditMode={selectedMention !== null && !isCreatingMention}
       />
 
-      {/* Snackbar de errores */}
+      {/* Modal de confirmación para eliminación */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setConfirmModalConfig(null);
+        }}
+        onConfirm={confirmModalConfig?.onConfirm || (() => {})}
+        title={confirmModalConfig?.title || ''}
+        message={confirmModalConfig?.message || ''}
+        confirmText="Eliminar"
+        type="danger"
+      />
+
+      {/* Snackbar de mensajes */}
       <Snackbar
         message={snackbar.message}
         isOpen={snackbar.show}
+        type={snackbar.type}
         onClose={() => setSnackbar(prev => ({ ...prev, show: false }))}
         duration={6000}
       />

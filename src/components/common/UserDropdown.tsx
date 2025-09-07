@@ -115,8 +115,8 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
                 </svg>
               </div>
               <div className="flex-1 text-left" style={{ marginLeft: '20px' }}>
-                <span className="font-semibold text-lg">Eventos y Temas</span>
-                <p className="text-sm text-white/60 mt-1">Gestiona eventos, temas y etiquetas</p>
+                <span className="font-semibold text-lg">Temas y menciones</span>
+                <p className="text-sm text-white/60 mt-1">Gestiona temas y menciones de personas</p>
               </div>
             </button>
 

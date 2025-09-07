@@ -5,6 +5,7 @@ interface MentionCardProps {
   mention: Mention;
   onEdit?: (mention: Mention) => void;
   onDelete?: (id: number) => void;
+  onView?: (mention: Mention) => void;
   showActions?: boolean;
   className?: string;
 }
@@ -13,16 +14,25 @@ export const MentionCard: React.FC<MentionCardProps> = ({
   mention,
   onEdit,
   onDelete,
+  onView,
   showActions = false,
   className = ''
 }) => {
 
+  const handleClick = () => {
+    if (onView) {
+      onView(mention);
+    }
+  };
+
   return (
-    <div className={`
-      mention-card bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 p-6 
-      hover:bg-black/40 hover:border-white/30 hover:shadow-xl hover:scale-105
-      transition-all duration-300 group ${className}
-    `}>
+    <div 
+      onClick={handleClick}
+      className={`
+        mention-card bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 p-6 
+        hover:bg-black/40 hover:border-white/30 hover:shadow-xl hover:scale-105
+        transition-all duration-300 group cursor-pointer ${className}
+      `}>
       {/* Estado con espaciado apropiado */}
       <div className="flex items-center justify-between mb-3" style={{ paddingLeft: '16px' }}>
         <span className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-bold border-2 ${
@@ -81,7 +91,7 @@ export const MentionCard: React.FC<MentionCardProps> = ({
             className={`h-full transition-all duration-500 ${
               mention.enabled 
                 ? 'bg-gradient-to-r from-green-400 to-emerald-500 w-full' 
-                : 'bg-gradient-to-r from-red-400 to-rose-500 w-1/4'
+                : 'bg-gradient-to-r from-red-400 to-rose-500 w-full'
             }`}
           />
         </div>

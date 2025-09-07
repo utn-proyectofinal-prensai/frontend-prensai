@@ -7,6 +7,7 @@ interface TopicCardProps {
   onSelect?: (topic: Topic) => void;
   onEdit?: (topic: Topic) => void;
   onDelete?: (id: number) => void;
+  onView?: (topic: Topic) => void;
   showActions?: boolean;
   variant?: 'selection' | 'management';
   className?: string;
@@ -18,6 +19,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
   onSelect,
   onEdit,
   onDelete,
+  onView,
   showActions = false,
   variant = 'selection',
   className = ''
@@ -26,12 +28,14 @@ export const TopicCard: React.FC<TopicCardProps> = ({
   const handleClick = () => {
     if (onSelect && variant === 'selection') {
       onSelect(topic);
+    } else if (onView && variant === 'management') {
+      onView(topic);
     }
   };
 
   const baseClasses = `
     relative overflow-hidden rounded-xl border transition-all duration-300 group
-    ${variant === 'selection' ? 'cursor-pointer hover:scale-105 hover:shadow-2xl' : 'hover:shadow-xl'}
+    ${variant === 'selection' ? 'cursor-pointer hover:scale-105 hover:shadow-2xl' : onView ? 'cursor-pointer hover:shadow-xl hover:scale-105' : 'hover:shadow-xl'}
     ${className}
   `;
 
@@ -109,7 +113,9 @@ export const TopicCard: React.FC<TopicCardProps> = ({
 
   // Variant 'management'
   return (
-    <div className={`${baseClasses} topic-card bg-black/30 border-white/20 hover:bg-black/40`}>
+    <div 
+      onClick={handleClick}
+      className={`${baseClasses} topic-card bg-black/30 border-white/20 hover:bg-black/40`}>
       <div className="backdrop-blur-sm p-6">
         {/* Estado con espaciado apropiado */}
         <div className="flex items-center justify-between mb-3" style={{ paddingLeft: '16px' }}>

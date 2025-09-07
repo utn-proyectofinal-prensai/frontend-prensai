@@ -232,7 +232,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold mb-3 text-white drop-shadow-sm">Administración</h3>
-                    <p className="text-orange-300 text-base leading-relaxed font-medium drop-shadow-sm">Gestiona eventos, temas y menciones</p>
+                    <p className="text-orange-300 text-base leading-relaxed font-medium drop-shadow-sm">Gestiona temas y menciones de personas</p>
                   </div>
                 </div>
               </button>
