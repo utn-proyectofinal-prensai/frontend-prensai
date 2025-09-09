@@ -424,7 +424,7 @@ export default function AdminUsersPage() {
         message={snackbarMessage}
         isOpen={snackbarOpen}
         onClose={() => setSnackbarOpen(false)}
-        type={snackbarType}
+        variant={snackbarType}
         duration={3000}
       />
     </>

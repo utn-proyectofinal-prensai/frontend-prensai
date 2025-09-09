@@ -462,7 +462,7 @@ export default function AdminPage() {
       <Snackbar
         message={snackbar.message}
         isOpen={snackbar.show}
-        type={snackbar.type}
+        variant={snackbar.type}
         onClose={() => setSnackbar(prev => ({ ...prev, show: false }))}
         duration={6000}
       />
