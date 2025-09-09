@@ -1,191 +1,51 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNews, useEnabledTopics, useEnabledMentions } from '../hooks';
-import { apiService, type BatchProcessRequest, parseApiError } from '../services/api';
-import Snackbar from '../components/common/Snackbar';
-
-interface NewsUrl {
-  id: string;
-  url: string;
-  isValid: boolean;
-  error?: string;
-}
-
-interface ExcelPreview {
-  headers: string[];
-  preview_rows: Record<string, string | number | boolean>[];
-  total_rows: number;
-}
+import { useWorkflow } from '../hooks/useWorkflow';
+import { type BatchProcessRequest, parseApiError } from '../services/api';
+import { 
+  Snackbar, 
+  PanelCard, 
+  ActionButton, 
+  InputWithButton,
+  CenteredCardSelection,
+  SimpleWorkflowStepper
+} from '../components/common';
+import { TEXT_STYLES, STATUS_STYLES } from '../constants/styles';
 
 export default function UploadNewsPage() {
   const { batchProcess, processing } = useNews();
+  const { topics: enabledTopics, loading: topicsLoading } = useEnabledTopics();
+  const { mentions: enabledMentions, loading: mentionsLoading } = useEnabledMentions();
   
-  // Estados para URLs
-  const [urls, setUrls] = useState<NewsUrl[]>([]);
-  const [urlInput, setUrlInput] = useState('');
-  
-  // Estados para Excel
-  const [uploadMethod, setUploadMethod] = useState<'urls' | 'excel'>('urls');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [excelPreview, setExcelPreview] = useState<ExcelPreview | null>(null);
-  const [isPreviewing, setIsPreviewing] = useState(false);
-  
-  // Estados para procesamiento (spinner simple por ahora)
+  const {
+    workflowState,
+    addUrl,
+    removeUrl,
+    clearUrls,
+    toggleTopic,
+    toggleMention,
+    selectAllTopics,
+    clearTopics,
+    selectAllMentions,
+    clearMentions,
+    setUrlInput,
+    isTopicsStepValid,
+    isMentionsStepValid,
+    isUrlsStepValid
+  } = useWorkflow();
+
+  // Estados para procesamiento
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState('');
-  
-  // Estados para temas y menciones
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [selectedMentions, setSelectedMentions] = useState<string[]>([]);
   
   // Estados para mensajes
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [successVariant, setSuccessVariant] = useState<'success' | 'warning'>('success');
-  
-  // Hooks para obtener solo datos habilitados desde el backend (enabled=true)
-  const { topics: enabledTopics, loading: topicsLoading } = useEnabledTopics();
-  const { mentions: enabledMentions, loading: mentionsLoading } = useEnabledMentions();
 
-  // Función para validar URL
-  const isValidUrl = (url: string): boolean => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  // Agregar URL al set
-  const addUrl = () => {
-    if (!urlInput.trim()) return;
-
-    const trimmedUrl = urlInput.trim();
-    
-    // Verificar si la URL ya existe
-    const urlExists = urls.some(url => url.url.toLowerCase() === trimmedUrl.toLowerCase());
-    
-    if (urlExists) {
-      setUrlInput('');
-      setErrorMessage('Esta URL ya ha sido agregada');
-      setTimeout(() => setErrorMessage(''), 3000);
-      return;
-    }
-
-    const newUrl: NewsUrl = {
-      id: Date.now().toString(),
-      url: trimmedUrl,
-      isValid: isValidUrl(trimmedUrl),
-      error: isValidUrl(trimmedUrl) ? undefined : 'URL inválida'
-    };
-
-    setUrls([...urls, newUrl]);
-    setUrlInput('');
-  };
-
-  // Eliminar URL del set
-  const removeUrl = (id: string) => {
-    setUrls(urls.filter(url => url.id !== id));
-  };
-
-  // Manejar selección de archivo
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const validTypes = [
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-excel',
-        'text/csv'
-      ];
-      
-      if (!validTypes.includes(file.type)) {
-        setErrorMessage('Por favor selecciona un archivo Excel (.xlsx, .xls) o CSV');
-        setTimeout(() => setErrorMessage(''), 3000);
-        return;
-      }
-      
-      setSelectedFile(file);
-      setExcelPreview(null);
-      setErrorMessage('');
-    }
-  };
-
-  // Previsualizar archivo Excel
-  const previewExcelFile = async () => {
-    if (!selectedFile) return;
-
-    setIsPreviewing(true);
-    setErrorMessage('');
-
-    try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      const response = await fetch('http://localhost:3000/api/upload/preview', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwt-token')}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al previsualizar archivo');
-      }
-
-      const result = await response.json();
-      setExcelPreview(result);
-      
-    } catch (error) {
-      console.error('Error previsualizando archivo:', error);
-      
-      const errorMessage = parseApiError(error, 'Error al previsualizar el archivo. Verifica que el formato sea correcto.');
-      setErrorMessage(errorMessage);
-    } finally {
-      setIsPreviewing(false);
-    }
-  };
-
-  // Procesar archivo Excel
-  const processExcelFile = async () => {
-    if (!selectedFile) return;
-
-    setIsProcessing(true);
-    setProcessingStatus('Iniciando importación...');
-
-    try {
-      const result = await apiService.importNews(selectedFile);
-
-      const total = (result as any).totalProcesadas ?? (result.importadas + result.errores);
-      if (result.importadas > 0 && result.errores === 0) {
-        setSuccessVariant('success');
-        setProcessingStatus('Importación completada exitosamente');
-        setSuccessMessage(`Listo: ${result.importadas}/${total} noticias importadas correctamente.`);
-      } else if (result.importadas > 0 && result.errores > 0) {
-        setSuccessVariant('warning');
-        setProcessingStatus('Importación parcial');
-        setSuccessMessage(`Parcial: ${result.importadas}/${total} importadas. ${result.errores} con error.`);
-      } else {
-        setProcessingStatus('Error en la importación');
-        setErrorMessage('No se pudo importar ninguna noticia. Verifica el archivo.');
-      }
-
-    } catch (error) {
-      console.error('Error importando archivo:', error);
-      setProcessingStatus('Error en la importación');
-      
-      const errorMessage = parseApiError(error, 'Error al importar el archivo. Verifica que el formato sea correcto.');
-      setErrorMessage(errorMessage);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Procesar set completo de URLs
-  const processNewsSet = async () => {
-    if (urls.length === 0) return;
-
-    const validUrls = urls.filter(url => url.isValid).map(url => url.url);
+  // Procesar noticias
+  const processNews = async () => {
+    const validUrls = workflowState.urls.filter(url => url.isValid).map(url => url.url);
     if (validUrls.length === 0) {
       setErrorMessage('No hay URLs válidas para procesar');
       return;
@@ -197,8 +57,8 @@ export default function UploadNewsPage() {
     try {
       const requestData: BatchProcessRequest = {
         urls: validUrls,
-        topics: selectedTopics,
-        mentions: selectedMentions
+        topics: workflowState.selectedTopics,
+        mentions: workflowState.selectedMentions
       };
 
       const response = await batchProcess(requestData);
@@ -234,163 +94,97 @@ export default function UploadNewsPage() {
     }
   };
 
-  // Manejar selección de temas
-  const handleTopicToggle = (topicName: string) => {
-    setSelectedTopics(prev => 
-      prev.includes(topicName) 
-        ? prev.filter(name => name !== topicName)
-        : [...prev, topicName]
-    );
-  };
+  // Definir los pasos del workflow
+  const workflowSteps = [
+    {
+      id: 'topics',
+      title: 'Selecciona los temas',
+      description: 'Elige los temas que quieres analizar en las noticias',
+      component: (
+        <CenteredCardSelection
+          items={enabledTopics.map(topic => ({
+            id: topic.id.toString(),
+            name: topic.name,
+            description: topic.description,
+            color: 'blue'
+          }))}
+          selectedItems={workflowState.selectedTopics}
+          onToggle={toggleTopic}
+          onSelectAll={() => selectAllTopics(enabledTopics.map(t => t.name))}
+          onClearAll={clearTopics}
+          title="Temas a analizar"
+          loading={topicsLoading}
+          loadingText="Cargando temas..."
+          emptyText="No hay temas habilitados"
+          maxSelections={10}
+        />
+      ),
+      isValid: isTopicsStepValid
+    },
+    {
+      id: 'mentions',
+      title: 'Selecciona las menciones',
+      description: 'Elige las menciones que quieres buscar en las noticias',
+      component: (
+        <CenteredCardSelection
+          items={enabledMentions.map(mention => ({
+            id: mention.id.toString(),
+            name: mention.name,
+            description: 'Menciones de ' + mention.name,
+            color: 'green'
+          }))}
+          selectedItems={workflowState.selectedMentions}
+          onToggle={toggleMention}
+          onSelectAll={() => selectAllMentions(enabledMentions.map(m => m.name))}
+          onClearAll={clearMentions}
+          title="Menciones a buscar"
+          loading={mentionsLoading}
+          loadingText="Cargando menciones..."
+          emptyText="No hay menciones habilitadas"
+          maxSelections={8}
+        />
+      ),
+      isValid: isMentionsStepValid
+    },
+    {
+      id: 'urls',
+      title: 'Agrega las URLs',
+      description: 'Ingresa las URLs de las noticias que quieres procesar',
+      component: (
+        <div className="space-y-6">
+          <InputWithButton
+            value={workflowState.urlInput}
+            onChange={setUrlInput}
+            onButtonClick={addUrl}
+            onKeyDown={(e) => e.key === 'Enter' && addUrl()}
+            placeholder="https://ejemplo.com/noticia..."
+            buttonText="Agregar"
+            buttonDisabled={!workflowState.urlInput.trim()}
+          />
 
-  // Manejar selección de menciones
-  const handleMentionToggle = (mentionName: string) => {
-    setSelectedMentions(prev => 
-      prev.includes(mentionName) 
-        ? prev.filter(name => name !== mentionName)
-        : [...prev, mentionName]
-    );
-  };
-
-  return (
-    <div className="w-full">
-      {/* Título de bienvenida */}
-      <div className="mb-8 text-center">
-        <h2 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">Carga tus noticias para analizar</h2>
-        <p className="text-white/90 text-lg font-medium drop-shadow-md">Elige el método que prefieras para cargar tus noticias.</p>
-      </div>
-
-      {/* Selector de método */}
-      <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setUploadMethod('urls')}
-            className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${
-              uploadMethod === 'urls'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
-            }`}
-          >
-            URLs de noticias
-          </button>
-          <button
-            onClick={() => setUploadMethod('excel')}
-            className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all ${
-              uploadMethod === 'excel'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
-            }`}
-          >
-            Archivo Excel
-          </button>
-        </div>
-      </div>
-
-      {/* Selección de Temas y Menciones */}
-      <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
-        <h3 className="text-xl font-bold text-white mb-6">Configuración de análisis</h3>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Temas */}
-          <div>
-            <h4 className="text-lg font-semibold text-white mb-4">Temas a analizar</h4>
-            {topicsLoading ? (
-              <div className="text-white/70">Cargando temas...</div>
-            ) : enabledTopics.length === 0 ? (
-              <div className="text-white/70">No hay temas habilitados</div>
-            ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {enabledTopics.map((topic) => (
-                  <label key={topic.id} className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedTopics.includes(topic.name)}
-                      onChange={() => handleTopicToggle(topic.name)}
-                      className="w-4 h-4 text-blue-600 bg-white/10 border-white/20 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <div className="flex-1">
-                      <span className="text-white font-medium">{topic.name}</span>
-                      {topic.description && (
-                        <p className="text-white/60 text-sm">{topic.description}</p>
-                      )}
-                    </div>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Menciones */}
-          <div>
-            <h4 className="text-lg font-semibold text-white mb-4">Menciones a buscar</h4>
-            {mentionsLoading ? (
-              <div className="text-white/70">Cargando menciones...</div>
-            ) : enabledMentions.length === 0 ? (
-              <div className="text-white/70">No hay menciones habilitadas</div>
-            ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {enabledMentions.map((mention) => (
-                  <label key={mention.id} className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedMentions.includes(mention.name)}
-                      onChange={() => handleMentionToggle(mention.name)}
-                      className="w-4 h-4 text-blue-600 bg-white/10 border-white/20 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <span className="text-white font-medium">{mention.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Método URLs */}
-      {uploadMethod === 'urls' && (
-        <>
-          {/* Formulario de entrada */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
-            <div className="flex space-x-4">
-              <input
-                type="text"
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addUrl()}
-                placeholder="https://ejemplo.com/noticia..."
-                className="flex-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-blue-400 transition-all"
-              />
-              <button
-                onClick={addUrl}
-                disabled={!urlInput.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
-              >
-                Agregar
-              </button>
-            </div>
-          </div>
-
-          {/* Lista de URLs */}
-          {urls.length > 0 && (
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-white">URLs a procesar ({urls.length})</h3>
-                <button
-                  onClick={() => setUrls([])}
-                  className="text-white hover:text-white/80 text-sm font-medium transition-colors"
+          {workflowState.urls.length > 0 && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-white">
+                  URLs a procesar ({workflowState.urls.length})
+                </h3>
+                <ActionButton
+                  onClick={clearUrls}
+                  variant="secondary"
+                  size="sm"
                 >
                   Limpiar todo
-                </button>
+                </ActionButton>
               </div>
               
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {urls.map((url) => (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {workflowState.urls.map((url) => (
                   <div 
                     key={url.id}
                     className={`flex items-center justify-between p-4 rounded-xl border ${
                       url.isValid 
-                        ? 'bg-green-500/10 border-green-500/30' 
-                        : 'bg-red-500/10 border-red-500/30'
+                        ? STATUS_STYLES.success
+                        : STATUS_STYLES.error
                     }`}
                   >
                     <div className="flex-1">
@@ -412,152 +206,97 @@ export default function UploadNewsPage() {
               </div>
             </div>
           )}
-
-          {/* Botón de procesamiento URLs */}
-          {urls.length > 0 && (
-            <div className="text-center">
-              <button
-                onClick={processNewsSet}
-                disabled={isProcessing || processing || urls.filter(url => url.isValid).length === 0}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl"
-              >
-                {isProcessing || processing ? 'Procesando...' : `Procesar ${urls.filter(url => url.isValid).length} noticias`}
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Método Excel */}
-      {uploadMethod === 'excel' && (
-        <>
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
-            <div className="text-center">
-              <div className="mb-6">
-                <svg className="w-16 h-16 text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <h3 className="text-xl font-bold text-white mb-2">Subir archivo Excel</h3>
-                <p className="text-white/70 text-sm">Selecciona un archivo Excel (.xlsx, .xls) o CSV con tus noticias</p>
+        </div>
+      ),
+      isValid: isUrlsStepValid
+    },
+    {
+      id: 'review',
+      title: 'Revisa tu configuración',
+      description: 'Verifica que todo esté correcto antes de procesar',
+      component: (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Resumen de temas */}
+            <PanelCard title="Temas seleccionados" padding="sm">
+              <div className="space-y-2">
+                {workflowState.selectedTopics.length > 0 ? (
+                  workflowState.selectedTopics.map((topic, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                      <span className="text-white">{topic}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-white/60">No hay temas seleccionados</p>
+                )}
               </div>
-              
-              <div className="border-2 border-dashed border-white/30 rounded-xl p-8 hover:border-blue-400 transition-colors">
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="cursor-pointer block"
-                >
-                  <div className="text-center">
-                    <svg className="w-12 h-12 text-white/50 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-white font-medium">
-                      {selectedFile ? selectedFile.name : 'Haz clic para seleccionar archivo'}
-                    </p>
-                    <p className="text-white/50 text-sm mt-2">
-                      {selectedFile ? 'Archivo seleccionado' : 'o arrastra el archivo aquí'}
-                    </p>
-                  </div>
-                </label>
+            </PanelCard>
+
+            {/* Resumen de menciones */}
+            <PanelCard title="Menciones seleccionadas" padding="sm">
+              <div className="space-y-2">
+                {workflowState.selectedMentions.length > 0 ? (
+                  workflowState.selectedMentions.map((mention, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      <span className="text-white">{mention}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-white/60">No hay menciones seleccionadas</p>
+                )}
               </div>
-              
-              {selectedFile && (
-                <div className="mt-6 flex space-x-4 justify-center">
-                  <button
-                    onClick={previewExcelFile}
-                    disabled={isPreviewing}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
-                  >
-                    {isPreviewing ? 'Previsualizando...' : 'Previsualizar'}
-                  </button>
-                  <button
-                    onClick={processExcelFile}
-                    disabled={isProcessing}
-                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
-                  >
-                    {isProcessing ? 'Importando...' : 'Importar directamente'}
-                  </button>
-                </div>
-              )}
-            </div>
+            </PanelCard>
           </div>
 
-          {/* Previsualización del Excel */}
-          {excelPreview && (
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-white mb-2">Previsualización del archivo</h3>
-                <p className="text-white/70 text-sm">
-                  Total de filas: {excelPreview.total_rows} | Mostrando primeras 5 filas
-                </p>
-              </div>
-              
-              {/* Headers */}
-              <div className="mb-4">
-                <h4 className="text-lg font-semibold text-white mb-2">Columnas detectadas:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {excelPreview.headers.map((header, index) => (
-                    <span
-                      key={index}
-                      className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-lg text-sm font-medium border border-blue-500/30"
-                    >
-                      {header}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Preview de datos */}
-              <div className="mb-6">
-                <h4 className="text-lg font-semibold text-white mb-2">Vista previa de datos:</h4>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white/10 rounded-lg overflow-hidden">
-                    <thead className="bg-white/20">
-                      <tr>
-                        {excelPreview.headers.map((header, index) => (
-                          <th key={index} className="px-4 py-2 text-left text-white font-semibold text-sm">
-                            {header}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {excelPreview.preview_rows.map((row, rowIndex) => (
-                        <tr key={rowIndex} className="border-t border-white/10">
-                          {excelPreview.headers.map((header, colIndex) => (
-                            <td key={colIndex} className="px-4 py-2 text-white/90 text-sm">
-                              {row[header] || '-'}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              
-              {/* Botón para importar después de previsualizar */}
-              <div className="text-center">
-                <button
-                  onClick={processExcelFile}
-                  disabled={isProcessing}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl"
-                >
-                  {isProcessing ? 'Importando...' : 'Importar noticias'}
-                </button>
-              </div>
+          {/* Resumen de URLs */}
+          <PanelCard title="URLs a procesar" padding="sm">
+            <div className="space-y-2">
+              {workflowState.urls.length > 0 ? (
+                workflowState.urls.map((url, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${url.isValid ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                    <span className="text-white truncate">{url.url}</span>
+                    {url.error && (
+                      <span className="text-red-400 text-sm">({url.error})</span>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-white/60">No hay URLs agregadas</p>
+              )}
             </div>
-          )}
-        </>
-      )}
+          </PanelCard>
+        </div>
+      ),
+      isValid: isTopicsStepValid && isMentionsStepValid && isUrlsStepValid
+    }
+  ];
 
-      {/* Overlay de procesamiento con spinner*/}
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Título de bienvenida */}
+      <div className="flex-shrink-0 text-center py-8">
+        <h1 className={TEXT_STYLES.title.main}>Carga tus noticias para analizar</h1>
+        <p className={TEXT_STYLES.subtitle.main}>Sigue los pasos para configurar y procesar tus noticias</p>
+      </div>
+
+      {/* Workflow - área principal con altura fija */}
+      <div className="flex-1 px-4 pb-4">
+        <PanelCard className="h-full">
+          <SimpleWorkflowStepper
+            steps={workflowSteps}
+            onComplete={processNews}
+            onStepChange={(stepId, stepIndex) => {
+              console.log(`Cambiado a paso: ${stepId} (${stepIndex})`);
+            }}
+            className="h-full"
+          />
+        </PanelCard>
+      </div>
+
+      {/* Overlay de procesamiento */}
       {(isProcessing || processing) && (
         <div
           role="dialog"
@@ -572,8 +311,12 @@ export default function UploadNewsPage() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
               </svg>
             </div>
-            <h3 id="processing-title" className="text-white font-bold text-lg">{processingStatus || 'Procesando noticias…'}</h3>
-            <p className="text-white/70 text-sm mt-1">Esto puede tardar unos segundos.</p>
+            <h3 id="processing-title" className={TEXT_STYLES.title.section}>
+              {processingStatus || 'Procesando noticias…'}
+            </h3>
+            <p className={TEXT_STYLES.subtitle.secondary + ' mt-1'}>
+              Esto puede tardar unos segundos.
+            </p>
           </div>
         </div>
       )}
