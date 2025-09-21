@@ -143,7 +143,13 @@ export default function HistoryPage() {
                     </td>
                     <td>
                       <div className="history-table-cell-content">
-                        {item.publication_type || '-'}
+                        {item.publication_type === 'REVISAR MANUAL' || !item.publication_type ? (
+                          <span className="history-badge history-badge-warning">
+                            {item.publication_type || 'Sin tipo'}
+                          </span>
+                        ) : (
+                          item.publication_type
+                        )}
                       </div>
                     </td>
                     <td>
@@ -174,6 +180,8 @@ export default function HistoryPage() {
                           ? 'history-badge-neutral'
                           : item.valuation === 'negative'
                           ? 'history-badge-negative'
+                          : item.valuation === 'REVISAR MANUAL' || !item.valuation
+                          ? 'history-badge-warning'
                           : 'history-badge-neutral'
                       }`}>
                         {item.valuation || 'Sin valoración'}
@@ -184,7 +192,7 @@ export default function HistoryPage() {
                         {item.crisis ? (
                           <span className="text-red-400 font-semibold">SÍ</span>
                         ) : (
-                          <span className="text-green-400 font-semibold">NO</span>
+                          <span className="text-white font-semibold">NO</span>
                         )}
                       </div>
                     </td>
@@ -218,7 +226,13 @@ export default function HistoryPage() {
                     </td>
                     <td>
                       <div className="history-table-cell-content">
-                        {item.political_factor || '-'}
+                        {item.political_factor === 'REVISAR MANUAL' || !item.political_factor ? (
+                          <span className="history-badge history-badge-warning">
+                            {item.political_factor || 'Sin factor'}
+                          </span>
+                        ) : (
+                          item.political_factor
+                        )}
                       </div>
                     </td>
                     <td>

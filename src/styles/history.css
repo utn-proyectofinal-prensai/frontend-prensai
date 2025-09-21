@@ -241,6 +241,12 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+.history-badge-warning {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: rgb(245, 158, 11);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 .history-badge-processed {
   background-color: rgba(34, 197, 94, 0.2);
   color: rgb(34, 197, 94);
