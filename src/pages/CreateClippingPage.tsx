@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
-import type { ClippingMetrics } from '../services/api';
+import { useNews } from '../hooks/useNews';
+import type { ClippingMetrics, NewsItem } from '../services/api';
 import * as XLSX from 'xlsx';
 import MetricsCharts from '../components/MetricsCharts';
 import { TopicCard } from '../components/common';
@@ -16,36 +17,8 @@ interface EventoTema {
   etiquetas: string[];
 }
 
-interface Noticia {
-  id: string;
-  titulo: string;
-  tipoPublicacion: string;
-  fecha: string;
-  soporte: string;
-  medio: string;
-  seccion: string;
-  autor: string;
-  conductor: string;
-  entrevistado: string;
-  tema: string;
-  etiqueta1: string;
-  etiqueta2: string;
-  link: string;
-  alcance: string;
-  cotizacion: string;
-  tapa: string;
-  valoracion: string;
-  ejeComunicacional: string;
-  factorPolitico: string;
-  crisis: string;
-  gestion: string;
-  area: string;
-  mencion1: string;
-  mencion2: string;
-  mencion3: string;
-  mencion4: string;
-  mencion5: string;
-}
+// Usar la interfaz NewsItem de la API
+type Noticia = NewsItem;
 
 export default function CreateClippingPage() {
   const { user } = useAuth();
@@ -54,26 +27,28 @@ export default function CreateClippingPage() {
   const [eventosTemas, setEventosTemas] = useState<EventoTema[]>([]);
   const [isLoadingTemas, setIsLoadingTemas] = useState(true);
 
+  // Hook para obtener las noticias
+  const { news: allNews } = useNews({ limit: 1000 });
+
   // Cargar temas reales de la base de datos
   useEffect(() => {
-    const loadTemas = async () => {
+    if (allNews.length > 0) {
       try {
         setIsLoadingTemas(true);
-        const allNews = await apiService.getNews({ limit: 1000 }); // Cargar todas las noticias
         
         // Extraer temas únicos de las noticias
-        const temasUnicos = [...new Set(allNews.map(news => news.tema))].filter(tema => tema && tema.trim() !== '');
+        const temasUnicos = [...new Set(allNews.map(news => news.topic?.name).filter(Boolean))];
         
         // Generar colores para cada tema
         const colores = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
         
         const temasFormateados: EventoTema[] = temasUnicos.map((tema, index) => ({
           id: (index + 1).toString(),
-          nombre: tema,
+          nombre: tema!,
           descripcion: `Noticias relacionadas con ${tema}`,
           color: colores[index % colores.length],
           activo: true,
-          etiquetas: [tema.toLowerCase()]
+          etiquetas: [tema!.toLowerCase()]
         }));
         
         setEventosTemas(temasFormateados);
@@ -82,16 +57,14 @@ export default function CreateClippingPage() {
       } finally {
         setIsLoadingTemas(false);
       }
-    };
-
-    loadTemas();
-  }, []);
+    }
+  }, [allNews]);
 
 
   const [isLoadingNoticias, setIsLoadingNoticias] = useState(false);
 
   const [eventoTemaSeleccionado, setEventoTemaSeleccionado] = useState<string>('');
-  const [noticiasSeleccionadas, setNoticiasSeleccionadas] = useState<Set<string>>(new Set());
+  const [noticiasSeleccionadas, setNoticiasSeleccionadas] = useState<Set<number>>(new Set());
   const [noticiasFiltradas, setNoticiasFiltradas] = useState<Noticia[]>([]);
   const [metricas, setMetricas] = useState<ClippingMetrics | null>(null);
   const [isLoadingMetricas, setIsLoadingMetricas] = useState(false);
@@ -105,43 +78,10 @@ export default function CreateClippingPage() {
           const eventoTema = eventosTemas.find(e => e.id === eventoTemaSeleccionado);
           
           if (eventoTema) {
-            // Cargar todas las noticias y filtrar por tema
-            const allNews = await apiService.getNews({ limit: 1000 });
-            const noticiasDelTema = allNews.filter(noticia => noticia.tema === eventoTema.nombre);
+            // Filtrar noticias por tema
+            const noticiasDelTema = allNews.filter(noticia => noticia.topic?.name === eventoTema.nombre);
             
-            // Convertir NewsItem a Noticia
-            const noticiasConvertidas: Noticia[] = noticiasDelTema.map(news => ({
-              id: news.id,
-              titulo: news.titulo,
-              tipoPublicacion: news.tipoPublicacion,
-              fecha: news.fecha,
-              soporte: news.soporte,
-              medio: news.medio,
-              seccion: news.seccion,
-              autor: news.autor,
-              conductor: news.conductor,
-              entrevistado: news.entrevistado,
-              tema: news.tema,
-              etiqueta1: news.etiqueta1,
-              etiqueta2: news.etiqueta2,
-              link: news.link,
-              alcance: news.alcance,
-              cotizacion: news.cotizacion,
-              tapa: news.tapa,
-              valoracion: news.valoracion,
-              ejeComunicacional: news.ejeComunicacional,
-              factorPolitico: news.factorPolitico,
-              crisis: news.crisis,
-              gestion: news.gestion,
-              area: news.area,
-              mencion1: news.mencion1,
-              mencion2: news.mencion2,
-              mencion3: news.mencion3,
-              mencion4: news.mencion4,
-              mencion5: news.mencion5
-            }));
-            
-            setNoticiasFiltradas(noticiasConvertidas);
+            setNoticiasFiltradas(noticiasDelTema);
             setNoticiasSeleccionadas(new Set());
           }
         } catch (error) {
@@ -156,13 +96,13 @@ export default function CreateClippingPage() {
     };
 
     loadNoticiasPorTema();
-  }, [eventoTemaSeleccionado, eventosTemas]);
+  }, [eventoTemaSeleccionado, eventosTemas, allNews]);
 
   const handleEventoTemaChange = (eventoId: string) => {
     setEventoTemaSeleccionado(eventoId);
   };
 
-  const handleNoticiaToggle = (noticiaId: string) => {
+  const handleNoticiaToggle = (noticiaId: number) => {
     const nuevasSeleccionadas = new Set(noticiasSeleccionadas);
     if (nuevasSeleccionadas.has(noticiaId)) {
       nuevasSeleccionadas.delete(noticiaId);
@@ -195,33 +135,32 @@ export default function CreateClippingPage() {
     try {
       // Preparar los datos para el Excel (mismo formato que noticias.xlsx)
       const excelData = noticiasDelClipping.map(noticia => ({
-        'TITULO': noticia.titulo,
-        'TIPO PUBLICACION': noticia.tipoPublicacion,
-        'FECHA': noticia.fecha,
-        'SOPORTE': noticia.soporte,
-        'MEDIO': noticia.medio,
-        'SECCION': noticia.seccion,
-        'AUTOR': noticia.autor,
-        'CONDUCTOR': noticia.conductor,
-        'ENTREVISTADO': noticia.entrevistado,
-        'TEMA': noticia.tema,
-        'ETIQUETA_1': noticia.etiqueta1,
-        'ETIQUETA_2': noticia.etiqueta2,
+        'TITULO': noticia.title,
+        'TIPO PUBLICACION': noticia.publication_type,
+        'FECHA': noticia.date,
+        'SOPORTE': noticia.support,
+        'MEDIO': noticia.media,
+        'SECCION': noticia.section,
+        'AUTOR': noticia.author,
+        'ENTREVISTADO': noticia.interviewee || '-',
+        'TEMA': noticia.topic?.name || '-',
+        'ETIQUETA_1': '-',
+        'ETIQUETA_2': '-',
         'LINK': noticia.link,
-        'ALCANCE': noticia.alcance,
-        'COTIZACION': noticia.cotizacion,
-        'TAPA': noticia.tapa,
-        'VALORACION': noticia.valoracion,
-        'EJE COMUNICACIONAL': noticia.ejeComunicacional,
-        'FACTOR POLITICO': noticia.factorPolitico,
-        'CRISIS': noticia.crisis,
-        'GESTION': noticia.gestion,
-        'AREA': noticia.area,
-        'MENCION_1': noticia.mencion1,
-        'MENCION_2': noticia.mencion2,
-        'MENCION_3': noticia.mencion3,
-        'MENCION_4': noticia.mencion4,
-        'MENCION_5': noticia.mencion5
+        'ALCANCE': noticia.audience_size || '-',
+        'COTIZACION': noticia.quotation || '-',
+        'TAPA': '-',
+        'VALORACION': noticia.valuation || '-',
+        'EJE COMUNICACIONAL': '-',
+        'FACTOR POLITICO': noticia.political_factor || '-',
+        'CRISIS': noticia.crisis ? 'Sí' : 'No',
+        'GESTION': '-',
+        'AREA': '-',
+        'MENCION_1': noticia.mentions[0]?.name || '-',
+        'MENCION_2': noticia.mentions[1]?.name || '-',
+        'MENCION_3': noticia.mentions[2]?.name || '-',
+        'MENCION_4': noticia.mentions[3]?.name || '-',
+        'MENCION_5': noticia.mentions[4]?.name || '-'
       }));
 
       // Crear el workbook y worksheet
@@ -255,7 +194,7 @@ export default function CreateClippingPage() {
 
     try {
       setIsLoadingMetricas(true);
-      const newsIds = Array.from(noticiasSeleccionadas);
+      const newsIds = Array.from(noticiasSeleccionadas).map(id => id.toString());
       const response = await apiService.calculateClippingMetrics(newsIds);
       setMetricas(response.metricas);
       console.log('Métricas calculadas:', response.metricas);
@@ -386,7 +325,9 @@ export default function CreateClippingPage() {
                       name: evento.nombre,
                       description: evento.descripcion,
                       enabled: evento.activo,
-                      crisis: false
+                      crisis: false,
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString()
                     }}
                     variant="selection"
                     isSelected={eventoTemaSeleccionado === evento.id}
@@ -524,40 +465,40 @@ export default function CreateClippingPage() {
                               />
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.titulo}</div>
+                              <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.title}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.tipoPublicacion}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.publication_type}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.fecha}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.date}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.soporte}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.support}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.medio}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.media}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.seccion}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.section}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.autor}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.author}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.conductor || '-'}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.entrevistado || '-'}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.interviewee || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.tema}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.topic?.name || 'Sin tema'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.etiqueta1}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.etiqueta2}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
                               <div className="text-sm font-medium text-white/90">
@@ -567,56 +508,56 @@ export default function CreateClippingPage() {
                               </div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.alcance}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.audience_size || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.cotizacion}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.quotation || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.tapa}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                             </td>
                             <td className="px-6 py-3 text-center">
                               <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
-                                noticia.valoracion === 'Muy Positiva' 
+                                noticia.valuation === 'positive' 
                                   ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
-                                  : noticia.valoracion === 'Positiva'
+                                  : noticia.valuation === 'neutral'
                                   ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
-                                  : noticia.valoracion === 'Negativa'
+                                  : noticia.valuation === 'negative'
                                   ? 'bg-red-500/20 text-red-300 border border-red-300/30'
                                   : 'bg-white/20 text-white/90 border border-white/30'
                               }`}>
-                                {noticia.valoracion}
+                                {noticia.valuation || 'Sin valoración'}
                               </span>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.ejeComunicacional}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.factorPolitico}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.political_factor || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.crisis}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.crisis ? 'Sí' : 'No'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.gestion}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.area}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion1 || '-'}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion2 || '-'}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion3 || '-'}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[2]?.name || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion4 || '-'}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[3]?.name || '-'}</div>
                             </td>
                             <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mencion5 || '-'}</div>
+                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[4]?.name || '-'}</div>
                             </td>
                           </tr>
                         ))}

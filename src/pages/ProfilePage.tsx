@@ -160,7 +160,7 @@ const ProfilePage: React.FC = () => {
     setShowPasswordModal(true);
   };
 
-  const handlePasswordChange = async (newPassword: string, currentPassword?: string) => {
+  const handlePasswordChange = async (currentPassword?: string) => {
     try {
       // Para perfil personal, se requiere la contraseña actual
       if (!currentPassword) {
@@ -505,7 +505,7 @@ const ProfilePage: React.FC = () => {
       <Snackbar
         message={snackbar.message}
         isOpen={snackbar.show}
-        type={snackbar.type}
+        variant={snackbar.type}
         onClose={handleCloseSnackbar}
       />
 
