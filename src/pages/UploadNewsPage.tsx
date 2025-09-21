@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNews, useEnabledTopics, useEnabledMentions } from '../hooks';
 import { useWorkflow } from '../hooks/useWorkflow';
 import { type BatchProcessRequest, parseApiError } from '../services/api';
@@ -14,7 +14,6 @@ export default function UploadNewsPage() {
   
   const {
     workflowState,
-    addUrl,
     addMultipleUrls,
     removeUrl,
     clearUrls,
@@ -24,7 +23,6 @@ export default function UploadNewsPage() {
     clearTopics,
     selectAllMentions,
     clearMentions,
-    setUrlInput,
     isTopicsStepValid,
     isMentionsStepValid,
     isUrlsStepValid
@@ -41,6 +39,8 @@ export default function UploadNewsPage() {
 
   // Estados para la nueva interfaz
   const [activeSection, setActiveSection] = useState<'topics' | 'mentions' | 'urls' | 'summary'>('topics');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
 
   // Funciones para seleccionar todos los elementos
@@ -51,6 +51,46 @@ export default function UploadNewsPage() {
   const handleSelectAllMentions = () => {
     selectAllMentions(enabledMentions.map(m => m.name));
   };
+
+  // Funciones para el dropdown
+  const handleDropdownToggle = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleSectionChange = (section: 'topics' | 'mentions' | 'urls' | 'summary') => {
+    setActiveSection(section);
+    setIsDropdownOpen(false);
+  };
+
+  // Función para obtener el texto del paso actual
+  const getCurrentStepText = () => {
+    switch (activeSection) {
+      case 'topics':
+        return 'Paso 1: Temas';
+      case 'mentions':
+        return 'Paso 2: Menciones';
+      case 'urls':
+        return 'Paso 3: Links';
+      case 'summary':
+        return 'Paso 4: Procesar';
+      default:
+        return 'Paso 1: Temas';
+    }
+  };
+
+  // Efecto para cerrar el dropdown cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
 
 
@@ -114,7 +154,7 @@ export default function UploadNewsPage() {
     <div className="upload-news-section">
       <div className="upload-news-section-header">
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
             <h3 className="upload-news-section-title">Paso 1: Temas a analizar</h3>
             <div className="upload-news-tip">
               <p className="upload-news-tip-text">
@@ -124,14 +164,14 @@ export default function UploadNewsPage() {
             <div className="upload-news-section-actions">
           <button
             onClick={handleSelectAllTopics}
-                className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
           >
                 <span className="text-white font-bold mr-1">✓</span>
                 <span>Seleccionar todo</span>
           </button>
           <button
             onClick={clearTopics}
-                className="h-11 px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
           >
                 <span>✨</span>
                 <span>Limpiar</span>
@@ -144,14 +184,14 @@ export default function UploadNewsPage() {
       {topicsLoading ? (
         <div className="text-center py-8 text-white/70">Cargando temas...</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 max-h-80 overflow-y-auto justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6 max-h-80 overflow-y-auto justify-items-center">
           {enabledTopics.map((topic) => {
             const isSelected = workflowState.selectedTopics.includes(topic.name);
             return (
               <div
                 key={topic.id}
                 onClick={() => toggleTopic(topic.name)}
-                className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[180px] max-w-[240px] ${
+                className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] ${
                   isSelected
                     ? 'border-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20'
                     : 'border-white/20 bg-white/5 hover:border-blue-400/50 hover:bg-white/10'
@@ -187,7 +227,7 @@ export default function UploadNewsPage() {
     <div className="upload-news-section">
       <div className="upload-news-section-header">
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
             <h3 className="upload-news-section-title">Paso 2: Menciones a buscar</h3>
             <div className="upload-news-tip">
               <p className="upload-news-tip-text">
@@ -197,14 +237,14 @@ export default function UploadNewsPage() {
             <div className="upload-news-section-actions">
           <button
             onClick={handleSelectAllMentions}
-                className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
           >
                 <span className="text-white font-bold mr-1">✓</span>
                 <span>Seleccionar todo</span>
           </button>
           <button
             onClick={clearMentions}
-                className="h-11 px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
           >
                 <span>✨</span>
                 <span>Limpiar</span>
@@ -217,14 +257,14 @@ export default function UploadNewsPage() {
       {mentionsLoading ? (
         <div className="text-center py-8 text-white/70">Cargando menciones...</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 max-h-80 overflow-y-auto justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6 max-h-80 overflow-y-auto justify-items-center">
           {enabledMentions.map((mention) => {
             const isSelected = workflowState.selectedMentions.includes(mention.name);
             return (
               <div
                 key={mention.id}
                 onClick={() => toggleMention(mention.name)}
-                className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[180px] max-w-[240px] ${
+                className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] ${
                   isSelected
                     ? 'border-green-400 bg-green-500/10 shadow-lg shadow-green-500/20'
                     : 'border-white/20 bg-white/5 hover:border-green-400/50 hover:bg-white/10'
@@ -331,7 +371,7 @@ export default function UploadNewsPage() {
         .map(item => item.url);
       
       // Usar la nueva función para agregar múltiples URLs
-      const addedCount = addMultipleUrls(validUrls);
+      addMultipleUrls(validUrls);
       
       setLocalTextArea('');
       setPreviewUrls([]);
@@ -343,7 +383,7 @@ export default function UploadNewsPage() {
     <div className="upload-news-section">
       <div className="upload-news-section-header">
         <div className="flex-1">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
           <h3 className="upload-news-section-title">Paso 3: Links de noticias</h3>
           <div className="upload-news-tip">
             <p className="upload-news-tip-text">
@@ -354,7 +394,7 @@ export default function UploadNewsPage() {
           <button
               onClick={handleAddUrls}
               disabled={validCount === 0}
-              className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100"
+              className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm sm:text-base"
           >
               <span>+</span>
               <span>Agregar {validCount} links</span>
@@ -375,7 +415,7 @@ export default function UploadNewsPage() {
       <div className="space-y-4">
         
         {/* Carga de URLs */}
-        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">
               <h4 className="text-lg font-semibold text-white leading-tight">📋 Agregar links</h4>
@@ -389,7 +429,7 @@ export default function UploadNewsPage() {
               value={localTextArea}
               onChange={handleTextChange}
               placeholder="https://ejemplo.com/noticia1&#10;https://ejemplo.com/noticia2&#10;https://ejemplo.com/noticia3"
-              className="w-full h-32 bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-xl p-4 text-white placeholder-white/50 resize-none transition-all duration-300 focus:outline-none focus:border-blue-400"
+              className="w-full h-28 sm:h-32 bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-xl p-3 sm:p-4 text-white placeholder-white/50 resize-none transition-all duration-300 focus:outline-none focus:border-blue-400 text-sm sm:text-base"
           />
           <div className="absolute bottom-3 right-3 text-xs text-white/50">
               {previewUrls.length > 0 && (
@@ -490,7 +530,7 @@ export default function UploadNewsPage() {
     <div className="upload-news-section">
       <div className="upload-news-section-header">
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
           <h3 className="upload-news-section-title">Paso 4: Procesar noticias</h3>
           <div className="upload-news-tip">
             <p className="upload-news-tip-text">
@@ -501,7 +541,7 @@ export default function UploadNewsPage() {
             <button
               onClick={processNews}
               disabled={!isReadyToProcess || isProcessing}
-              className="h-11 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100"
+              className="h-10 sm:h-11 px-4 sm:px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm sm:text-base"
             >
               {isProcessing ? (
                 <>
@@ -525,10 +565,10 @@ export default function UploadNewsPage() {
       {/* Resumen de configuración */}
         <div className="space-y-6">
         {/* Temas seleccionados */}
-        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between">
+        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
@@ -549,10 +589,10 @@ export default function UploadNewsPage() {
         </div>
 
         {/* Menciones seleccionadas */}
-        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between">
+        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -573,9 +613,9 @@ export default function UploadNewsPage() {
         </div>
 
         {/* URLs a procesar */}
-        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+            <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
@@ -624,7 +664,7 @@ export default function UploadNewsPage() {
     <div className="upload-news-container">
       {/* Header */}
       <div className="upload-news-header">
-        <h1 className="upload-news-title">Carga tus noticias para analizar</h1>
+        <h1 className="upload-news-title text-2xl sm:text-3xl lg:text-4xl">Carga tus noticias para analizar</h1>
                     </div>
 
       {/* Contenido principal */}
@@ -634,6 +674,139 @@ export default function UploadNewsPage() {
               
               {/* Navegación por pestañas con flujo secuencial */}
             <div className="upload-news-navigation">
+              
+              {/* Dropdown para móviles */}
+              <div className="upload-news-mobile-dropdown" ref={dropdownRef}>
+                <button
+                  onClick={handleDropdownToggle}
+                  className={`upload-news-dropdown-button ${activeSection === 'topics' ? 'active' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                      {activeSection === 'topics' ? '1' : activeSection === 'mentions' ? '2' : activeSection === 'urls' ? '3' : '4'}
+                    </div>
+                    <span>{getCurrentStepText()}</span>
+                    <div className="flex items-center gap-2">
+                      {activeSection === 'topics' && workflowState.selectedTopics.length > 0 && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">
+                          {workflowState.selectedTopics.length}
+                        </span>
+                      )}
+                      {activeSection === 'mentions' && workflowState.selectedMentions.length > 0 && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
+                          {workflowState.selectedMentions.length}
+                        </span>
+                      )}
+                      {activeSection === 'urls' && workflowState.urls.length > 0 && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white">
+                          {workflowState.urls.length}
+                        </span>
+                      )}
+                      {activeSection === 'summary' && isReadyToProcess && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <svg 
+                    className={`w-5 h-5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isDropdownOpen && (
+                  <div className="upload-news-dropdown-content">
+                    <div
+                      onClick={() => handleSectionChange('topics')}
+                      className={`upload-news-dropdown-item ${activeSection === 'topics' ? 'active' : ''}`}
+                    >
+                      <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                        1
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Paso 1: Temas</div>
+                        <div className="text-xs text-white/50">Selecciona los temas que quieres analizar</div>
+                      </div>
+                      {workflowState.selectedTopics.length > 0 && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">
+                          {workflowState.selectedTopics.length}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div
+                      onClick={() => isTopicsStepValid ? handleSectionChange('mentions') : undefined}
+                      className={`upload-news-dropdown-item ${activeSection === 'mentions' ? 'active' : ''} ${!isTopicsStepValid ? 'disabled' : ''}`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                        !isTopicsStepValid ? 'bg-white/10' : 'bg-green-500/20'
+                      }`}>
+                        {!isTopicsStepValid ? '🔒' : '2'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Paso 2: Menciones</div>
+                        <div className="text-xs text-white/50">
+                          {!isTopicsStepValid ? 'Completa el paso anterior primero' : 'Elige las menciones que quieres buscar'}
+                        </div>
+                      </div>
+                      {workflowState.selectedMentions.length > 0 && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
+                          {workflowState.selectedMentions.length}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div
+                      onClick={() => isMentionsStepValid ? handleSectionChange('urls') : undefined}
+                      className={`upload-news-dropdown-item ${activeSection === 'urls' ? 'active' : ''} ${!isMentionsStepValid ? 'disabled' : ''}`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                        !isMentionsStepValid ? 'bg-white/10' : 'bg-purple-500/20'
+                      }`}>
+                        {!isMentionsStepValid ? '🔒' : '3'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Paso 3: Links</div>
+                        <div className="text-xs text-white/50">
+                          {!isMentionsStepValid ? 'Completa el paso anterior primero' : 'Agrega los links de las noticias'}
+                        </div>
+                      </div>
+                      {workflowState.urls.length > 0 && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white">
+                          {workflowState.urls.length}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div
+                      onClick={() => isUrlsStepValid ? handleSectionChange('summary') : undefined}
+                      className={`upload-news-dropdown-item ${activeSection === 'summary' ? 'active' : ''} ${!isUrlsStepValid ? 'disabled' : ''}`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                        !isUrlsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
+                      }`}>
+                        {!isUrlsStepValid ? '🔒' : '4'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Paso 4: Procesar</div>
+                        <div className="text-xs text-white/50">
+                          {!isUrlsStepValid ? 'Completa el paso anterior primero' : 'Revisa y procesa las noticias'}
+                        </div>
+                      </div>
+                      {isReadyToProcess && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
                 {/* Indicador de progreso secuencial */}
                 <div className="upload-news-step-indicators">
                   <div className="upload-news-step-item">
