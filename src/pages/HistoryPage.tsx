@@ -106,17 +106,25 @@ export default function HistoryPage() {
                     <thead>
                       <tr>
                         <th>Título</th>
-                        <th>Tipo</th>
                         <th>Fecha</th>
                         <th>Medio</th>
+                        <th>Tipo</th>
+                        <th>Soporte</th>
                         <th>Sección</th>
                         <th>Autor</th>
-                        <th>Tema</th>
+                        <th>Entrevistado</th>
                         <th>Valoración</th>
                         <th>Crisis</th>
+                        <th>Tema</th>
                         <th>Menciones</th>
+                        <th>Factor Político</th>
+                        <th>Audiencia</th>
+                        <th>Presupuesto</th>
                         <th>Link</th>
-                        <th>Estado</th>
+                        <th>Creador</th>
+                        <th>Revisor</th>
+                        <th>Fecha de Creación</th>
+                        <th>Última Actualización</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -125,11 +133,6 @@ export default function HistoryPage() {
                           <td>
                             <div className="history-table-cell-content font-semibold">
                               {item.title}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="history-table-cell-content">
-                              {item.publication_type || '-'}
                             </div>
                           </td>
                           <td>
@@ -144,6 +147,16 @@ export default function HistoryPage() {
                           </td>
                           <td>
                             <div className="history-table-cell-content">
+                              {item.publication_type || '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.support || '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
                               {item.section || '-'}
                             </div>
                           </td>
@@ -154,7 +167,7 @@ export default function HistoryPage() {
                           </td>
                           <td>
                             <div className="history-table-cell-content">
-                              {item.topic?.name || 'Sin tema'}
+                              {item.interviewee || '-'}
                             </div>
                           </td>
                           <td>
@@ -171,24 +184,55 @@ export default function HistoryPage() {
                             </span>
                           </td>
                           <td>
-                            {item.crisis ? (
-                              <span className="history-badge history-badge-crisis">
-                                ⚠️ Crisis
-                              </span>
-                            ) : (
-                              <span className="text-white/50">-</span>
-                            )}
+                            <div className="history-table-cell-content">
+                              {item.crisis ? (
+                                <span className="text-red-400 font-semibold">SÍ</span>
+                              ) : (
+                                <span className="text-green-400 font-semibold">NO</span>
+                              )}
+                            </div>
                           </td>
                           <td>
                             <div className="history-table-cell-content">
-                              {item.mentions.slice(0, 2).map((mention, index) => (
-                                <span key={index} className="inline-block bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs mr-1 mb-1">
-                                  {mention.name}
-                                </span>
-                              ))}
-                              {item.mentions.length > 2 && (
-                                <span className="text-white/50 text-xs">+{item.mentions.length - 2}</span>
+                              {item.topic ? (
+                                <div className="flex flex-col gap-1">
+                                  <span className="inline-block bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
+                                    {item.topic.name}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-white/50">-</span>
                               )}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.mentions.length > 0 ? (
+                                <div className="flex flex-col gap-1">
+                                  {item.mentions.map((mention, index) => (
+                                    <span key={index} className="inline-block bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                                      {mention.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-white/50">-</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.political_factor || '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.audience_size ? item.audience_size.toLocaleString('es-AR') : '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.quotation ? `$${item.quotation.toLocaleString('es-AR')}` : '-'}
                             </div>
                           </td>
                           <td>
@@ -202,9 +246,24 @@ export default function HistoryPage() {
                             </a>
                           </td>
                           <td>
-                            <span className="history-badge history-badge-processed">
-                              ✓ Procesada
-                            </span>
+                            <div className="history-table-cell-content">
+                              {item.creator?.name || '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.reviewer?.name || '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {new Date(item.updated_at).toLocaleDateString()}
+                            </div>
                           </td>
                         </tr>
                       ))}
