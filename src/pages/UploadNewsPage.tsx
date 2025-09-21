@@ -1,21 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNews, useEnabledTopics, useEnabledMentions } from '../hooks';
 import { useWorkflow } from '../hooks/useWorkflow';
 import { type BatchProcessRequest, parseApiError } from '../services/api';
 import { 
   Snackbar
 } from '../components/common';
-import { TEXT_STYLES } from '../constants/styles';
 import '../styles/upload-news.css';
 
 export default function UploadNewsPage() {
-  const { batchProcess, processing } = useNews();
+  const { batchProcess } = useNews();
   const { topics: enabledTopics, loading: topicsLoading } = useEnabledTopics();
   const { mentions: enabledMentions, loading: mentionsLoading } = useEnabledMentions();
   
   const {
     workflowState,
     addUrl,
+    addMultipleUrls,
     removeUrl,
     clearUrls,
     toggleTopic,
@@ -40,43 +40,25 @@ export default function UploadNewsPage() {
   const [successVariant, setSuccessVariant] = useState<'success' | 'warning'>('success');
 
   // Estados para la nueva interfaz
-  const [urlTextArea, setUrlTextArea] = useState('');
-  const [activeSection, setActiveSection] = useState<'topics' | 'mentions' | 'urls'>('topics');
+  const [activeSection, setActiveSection] = useState<'topics' | 'mentions' | 'urls' | 'summary'>('topics');
 
-  // Efecto para navegar automáticamente al siguiente paso (solo cuando el usuario hace clic en "Seleccionar todo")
+
+  // Funciones para seleccionar todos los elementos
   const handleSelectAllTopics = () => {
     selectAllTopics(enabledTopics.map(t => t.name));
-    // Solo navegar automáticamente si se seleccionaron todos los temas
-    setTimeout(() => setActiveSection('mentions'), 1000);
   };
 
   const handleSelectAllMentions = () => {
     selectAllMentions(enabledMentions.map(m => m.name));
-    // Solo navegar automáticamente si se seleccionaron todas las menciones
-    setTimeout(() => setActiveSection('urls'), 1000);
   };
 
-  // Funciones para manejo de URLs múltiples
-  const handleMultipleUrls = () => {
-    const urls = urlTextArea
-      .split('\n')
-      .map(url => url.trim())
-      .filter(url => url.length > 0);
-    
-    urls.forEach(url => {
-      setUrlInput(url);
-      addUrl();
-    });
-    
-    setUrlTextArea('');
-  };
 
 
   // Procesar noticias
   const processNews = async () => {
     const validUrls = workflowState.urls.filter(url => url.isValid).map(url => url.url);
     if (validUrls.length === 0) {
-      setErrorMessage('No hay URLs válidas para procesar');
+      setErrorMessage('No hay links válidos para procesar');
       return;
     }
 
@@ -106,7 +88,7 @@ export default function UploadNewsPage() {
         setSuccessMessage(`Parcial: ${response.persisted}/${response.received} OK. ${response.errors.length} con error.`);
       } else if (none) {
         setProcessingStatus('Error en el procesamiento');
-        setErrorMessage('No se pudo procesar ninguna noticia. Revisa las URLs ingresadas.');
+        setErrorMessage('No se pudo procesar ninguna noticia. Revisa los links ingresados.');
       } else {
         setSuccessVariant('warning');
         setProcessingStatus('Procesamiento finalizado');
@@ -125,6 +107,7 @@ export default function UploadNewsPage() {
 
   // Verificar si está listo para procesar
   const isReadyToProcess = isTopicsStepValid && isMentionsStepValid && isUrlsStepValid;
+  const isSummaryStepValid = isReadyToProcess;
 
   // Componente de selección de temas mejorado
   const TopicsSection = () => (
@@ -139,20 +122,20 @@ export default function UploadNewsPage() {
               </p>
             </div>
             <div className="upload-news-section-actions">
-              <button
-                onClick={handleSelectAllTopics}
+          <button
+            onClick={handleSelectAllTopics}
                 className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
+          >
                 <span className="text-white font-bold mr-1">✓</span>
                 <span>Seleccionar todo</span>
-              </button>
-              <button
-                onClick={clearTopics}
+          </button>
+          <button
+            onClick={clearTopics}
                 className="h-11 px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
+          >
                 <span>✨</span>
                 <span>Limpiar</span>
-              </button>
+          </button>
             </div>
           </div>
         </div>
@@ -212,20 +195,20 @@ export default function UploadNewsPage() {
               </p>
             </div>
             <div className="upload-news-section-actions">
-              <button
-                onClick={handleSelectAllMentions}
+          <button
+            onClick={handleSelectAllMentions}
                 className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
+          >
                 <span className="text-white font-bold mr-1">✓</span>
                 <span>Seleccionar todo</span>
-              </button>
-              <button
-                onClick={clearMentions}
+          </button>
+          <button
+            onClick={clearMentions}
                 className="h-11 px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
+          >
                 <span>✨</span>
                 <span>Limpiar</span>
-              </button>
+          </button>
             </div>
           </div>
         </div>
@@ -271,83 +254,191 @@ export default function UploadNewsPage() {
   );
 
   // Componente de carga de URLs mejorado
-  const UrlsSection = () => (
+  const UrlsSection = () => {
+    // Estado local para el textarea
+    const [localTextArea, setLocalTextArea] = useState('');
+    const [previewUrls, setPreviewUrls] = useState<Array<{url: string, isValid: boolean, error?: string}>>([]);
+
+    // Función de validación de URL
+    const isValidUrl = (url: string): boolean => {
+      try {
+        const urlObj = new URL(url);
+        return (
+          (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') &&
+          urlObj.hostname.includes('.') &&
+          urlObj.hostname.length >= 3
+        );
+      } catch {
+        return false;
+      }
+    };
+
+    // Actualizar preview cuando cambia el texto
+    const updatePreview = (text: string) => {
+      if (!text.trim()) {
+        setPreviewUrls([]);
+        return;
+      }
+      
+      const urlLines = text
+        .split('\n')
+        .map(url => url.trim())
+        .filter(url => url.length > 0);
+      
+      // Detectar URLs repetidas
+      const urlCounts = new Map<string, number>();
+      urlLines.forEach(url => {
+        urlCounts.set(url.toLowerCase(), (urlCounts.get(url.toLowerCase()) || 0) + 1);
+      });
+      
+      // Verificar duplicados con URLs ya existentes
+      const existingUrls = workflowState.urls.map(url => url.url.toLowerCase());
+      
+      const urls = urlLines.map(url => {
+        const isValid = isValidUrl(url);
+        const isDuplicate = urlCounts.get(url.toLowerCase())! > 1;
+        const isExistingDuplicate = existingUrls.includes(url.toLowerCase());
+        
+        let error;
+        if (!isValid) {
+          error = 'URL inválida';
+        } else if (isDuplicate || isExistingDuplicate) {
+          error = 'URL duplicada';
+        }
+        
+        return {
+          url,
+          isValid: isValid && !isDuplicate && !isExistingDuplicate,
+          error
+        };
+      });
+      
+      setPreviewUrls(urls);
+    };
+
+    const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      setLocalTextArea(value);
+      updatePreview(value);
+    };
+
+    const handleAddUrls = () => {
+      if (previewUrls.length === 0) return;
+      
+      // Solo agregar URLs válidas
+      const validUrls = previewUrls
+        .filter(item => item.isValid)
+        .map(item => item.url);
+      
+      // Usar la nueva función para agregar múltiples URLs
+      const addedCount = addMultipleUrls(validUrls);
+      
+      setLocalTextArea('');
+      setPreviewUrls([]);
+    };
+
+    const validCount = previewUrls.filter(item => item.isValid).length;
+
+    return (
     <div className="upload-news-section">
       <div className="upload-news-section-header">
         <div className="flex-1">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="upload-news-section-title">Paso 3: URLs de noticias</h3>
+          <h3 className="upload-news-section-title">Paso 3: Links de noticias</h3>
           <div className="upload-news-tip">
             <p className="upload-news-tip-text">
-              💡 <strong>Tip:</strong> Agrega al menos una URL válida para poder procesar las noticias
-            </p>
-          </div>
+                💡 <strong>Tip:</strong> Agrega al menos un link válido para poder procesar las noticias
+              </p>
+            </div>
           <div className="upload-news-section-actions">
-            <button
-              onClick={clearUrls}
+          <button
+              onClick={handleAddUrls}
+              disabled={validCount === 0}
+              className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100"
+          >
+              <span>+</span>
+              <span>Agregar {validCount} links</span>
+          </button>
+          <button
+            onClick={clearUrls}
               className="h-11 px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-            >
+          >
               <span>✨</span>
               <span>Limpiar todo</span>
-            </button>
+          </button>
           </div>
         </div>
         </div>
       </div>
 
-      {/* Entrada múltiple de URLs */}
-      <div className="upload-news-url-input-area">
-        <div className="upload-news-textarea-container">
+      {/* Opciones de carga de URLs */}
+      <div className="space-y-4">
+        
+        {/* Carga de URLs */}
+        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+          <div className="mb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <h4 className="text-lg font-semibold text-white leading-tight">📋 Agregar links</h4>
+              <p className="text-white/70 text-sm">Pegá los links, uno por línea</p>
+            </div>
+          </div>
+
+          {/* Textarea de URLs */}
+        <div className="relative">
           <textarea
-            value={urlTextArea}
-            onChange={(e) => setUrlTextArea(e.target.value)}
-            placeholder="Pega aquí múltiples URLs, una por línea:&#10;https://ejemplo.com/noticia1&#10;https://ejemplo.com/noticia2&#10;https://ejemplo.com/noticia3"
-            className="upload-news-textarea"
+              value={localTextArea}
+              onChange={handleTextChange}
+              placeholder="https://ejemplo.com/noticia1&#10;https://ejemplo.com/noticia2&#10;https://ejemplo.com/noticia3"
+              className="w-full h-32 bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-xl p-4 text-white placeholder-white/50 resize-none transition-all duration-300 focus:outline-none focus:border-blue-400"
           />
-          <div className="upload-news-url-counter">
-            {urlTextArea.split('\n').filter(line => line.trim()).length} URLs detectadas
+          <div className="absolute bottom-3 right-3 text-xs text-white/50">
+              {previewUrls.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400">✅ {previewUrls.filter(item => item.isValid).length} válidas</span>
+                  {previewUrls.filter(item => !item.isValid).length > 0 && (
+                    <span className="text-red-400">❌ {previewUrls.filter(item => !item.isValid).length} inválidas</span>
+                  )}
+                  {previewUrls.filter(item => item.error === 'URL duplicada').length > 0 && (
+                    <span className="text-yellow-400">⚠️ {previewUrls.filter(item => item.error === 'URL duplicada').length} duplicadas</span>
+                  )}
+                </div>
+              )}
           </div>
         </div>
         
-        <div className="upload-news-url-actions">
-          <div className="upload-news-url-buttons">
-          <button
-            onClick={handleMultipleUrls}
-            disabled={!urlTextArea.trim()}
-            className="h-11 px-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 lg:w-auto w-full"
-          >
-            <span className="text-white font-bold mr-1">+</span>
-            <span>Agregar todas las URLs</span>
-          </button>
-          
-          {/* Entrada individual */}
-          <div className="upload-news-url-single">
-            <input
-              type="text"
-            value={workflowState.urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addUrl()}
-            placeholder="https://ejemplo.com/noticia..."
-              className="upload-news-url-input"
-            />
-            <button
-              onClick={addUrl}
-              disabled={!workflowState.urlInput.trim()}
-              className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100"
-            >
-              <span className="text-white font-bold mr-1">+</span>
-              <span>Agregar</span>
-            </button>
+          {/* Preview de URLs */}
+          {previewUrls.length > 0 && (
+            <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/10">
+              <h4 className="font-medium text-white mb-3">Vista previa de links:</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {previewUrls.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                      item.isValid 
+                        ? 'bg-green-400' 
+                        : item.error === 'URL duplicada'
+                        ? 'bg-yellow-400'
+                        : 'bg-red-400'
+                    }`}></div>
+                    <span className="text-white/80 truncate flex-1">{item.url}</span>
+                    {item.error && <span className={`text-xs ${
+                      item.error === 'URL duplicada' ? 'text-yellow-400' : 'text-red-400'
+                    }`}>{item.error}</span>}
           </div>
+                ))}
         </div>
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Lista de URLs mejorada */}
-      {workflowState.urls.length > 0 && (
+          {workflowState.urls.length > 0 && (
         <div className="upload-news-url-list">
           <div className="upload-news-url-list-header">
             <h4 className="upload-news-url-list-title">
-              URLs a procesar ({workflowState.urls.length})
+                  Links a procesar ({workflowState.urls.length})
             </h4>
             <div className="upload-news-url-stats">
               <span className="flex items-center gap-1">
@@ -359,7 +450,7 @@ export default function UploadNewsPage() {
                 {workflowState.urls.filter(url => !url.isValid).length} inválidas
               </span>
             </div>
-          </div>
+              </div>
               
           <div className="upload-news-url-list-items">
                 {workflowState.urls.map((url) => (
@@ -391,23 +482,157 @@ export default function UploadNewsPage() {
             </div>
           )}
         </div>
+  );
+  };
+
+  // Componente de resumen
+  const SummarySection = () => (
+    <div className="upload-news-section">
+      <div className="upload-news-section-header">
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-2">
+          <h3 className="upload-news-section-title">Paso 4: Procesar noticias</h3>
+          <div className="upload-news-tip">
+            <p className="upload-news-tip-text">
+              💡 <strong>Tip:</strong> Revisa la configuración antes de procesar las noticias
+            </p>
+          </div>
+          <div className="upload-news-section-actions">
+            <button
+              onClick={processNews}
+              disabled={!isReadyToProcess || isProcessing}
+              className="h-11 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Procesando...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>Procesar {workflowState.urls.filter(url => url.isValid).length} noticias</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+        </div>
+                    </div>
+
+      {/* Resumen de configuración */}
+        <div className="space-y-6">
+        {/* Temas seleccionados */}
+        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Temas seleccionados
+              </h4>
+              <div className="flex items-center gap-2">
+                {workflowState.selectedTopics.map((topic) => (
+                  <span key={topic} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
+              {workflowState.selectedTopics.length}
+            </div>
+          </div>
+        </div>
+
+        {/* Menciones seleccionadas */}
+        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Menciones seleccionadas
+              </h4>
+              <div className="flex items-center gap-2">
+                {workflowState.selectedMentions.map((mention) => (
+                  <span key={mention} className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm font-medium">
+                    {mention}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">
+              {workflowState.selectedMentions.length}
+            </div>
+          </div>
+        </div>
+
+        {/* URLs a procesar */}
+        <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              Links a procesar
+            </h4>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">
+                {workflowState.urls.length}
+              </div>
+              {workflowState.urls.filter(url => !url.isValid).length > 0 && (
+                <span className="px-3 py-1 bg-red-500 text-white rounded-full text-sm font-bold">
+                  {workflowState.urls.filter(url => !url.isValid).length} inválidas
+                </span>
+              )}
+            </div>
+          </div>
+          
+          {/* Lista compacta de URLs */}
+          <div className="max-h-48 overflow-y-auto space-y-2">
+            {workflowState.urls.map((url) => (
+              <div key={url.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                    url.isValid ? 'bg-green-400' : 'bg-red-400'
+                  }`}></div>
+                  <span className="text-white/80 truncate text-sm">{url.url}</span>
+                </div>
+                <button
+                  onClick={() => removeUrl(url.id)}
+                  className="p-1 text-white/50 hover:text-red-400 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
-    );
+    </div>
+  );
 
   return (
     <div className="upload-news-container">
       {/* Header */}
       <div className="upload-news-header">
         <h1 className="upload-news-title">Carga tus noticias para analizar</h1>
-        <p className="upload-news-subtitle">Sigue los pasos en orden: Temas → Menciones → URLs</p>
-      </div>
+                    </div>
 
       {/* Contenido principal */}
       <div className="upload-news-main-content">
         <div className="upload-news-content-wrapper">
           <div className="upload-news-sections">
               
-            {/* Navegación por pestañas con flujo secuencial */}
+              {/* Navegación por pestañas con flujo secuencial */}
             <div className="upload-news-navigation">
                 {/* Indicador de progreso secuencial */}
                 <div className="upload-news-step-indicators">
@@ -455,6 +680,23 @@ export default function UploadNewsPage() {
                     }`}>
                       {isUrlsStepValid ? '✓' : '3'}
                     </div>
+                    <div className={`upload-news-step-connector ${
+                      isUrlsStepValid ? 'bg-green-500' : 'bg-white/20'
+                    }`}></div>
+                  </div>
+                  
+                  <div className="upload-news-step-item">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                      isSummaryStepValid 
+                        ? 'bg-green-500 text-white' 
+                        : activeSection === 'summary'
+                        ? 'bg-orange-500 text-white'
+                        : isUrlsStepValid
+                        ? 'bg-white/30 text-white/70'
+                        : 'bg-white/10 text-white/30'
+                    }`}>
+                      {isSummaryStepValid ? '✓' : '4'}
+                    </div>
                   </div>
                 </div>
 
@@ -467,26 +709,26 @@ export default function UploadNewsPage() {
                   >
                     <div className="flex flex-col items-center justify-center gap-1">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
-                          1
-                        </div>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        <span className="text-base">Temas</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          workflowState.selectedTopics.length > 0 
-                            ? 'bg-blue-500 text-white' 
-                            : 'bg-white/20 text-white/70'
-                        }`}>
-                          {workflowState.selectedTopics.length}
-                        </span>
-                        {isTopicsStepValid && (
-                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                        )}
+                      <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                        1
+                      </div>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      <span className="text-base">Temas</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        workflowState.selectedTopics.length > 0 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-white/20 text-white/70'
+                      }`}>
+                        {workflowState.selectedTopics.length}
+                      </span>
+                      {isTopicsStepValid && (
+                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                )}
                       </div>
                       <span className="text-xs text-white/60">Selecciona los temas que quieres analizar</span>
-                    </div>
+              </div>
                   </button>
                   
                   <button
@@ -496,27 +738,29 @@ export default function UploadNewsPage() {
                   >
                     <div className="flex flex-col items-center justify-center gap-1">
                       <div className="flex items-center gap-2">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
-                          !isTopicsStepValid ? 'bg-white/10' : 'bg-green-500/20'
-                        }`}>
-                          2
-                        </div>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <span className="text-base">Menciones</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          workflowState.selectedMentions.length > 0 
-                            ? 'bg-green-500 text-white' 
-                            : 'bg-white/20 text-white/70'
-                        }`}>
-                          {workflowState.selectedMentions.length}
-                        </span>
-                        {isMentionsStepValid && (
-                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                        )}
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                        !isTopicsStepValid ? 'bg-white/10' : 'bg-green-500/20'
+                      }`}>
+                          {!isTopicsStepValid ? '🔒' : '2'}
                       </div>
-                      <span className="text-xs text-white/60">Elige las menciones que quieres buscar</span>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span className="text-base">Menciones</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        workflowState.selectedMentions.length > 0 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-white/20 text-white/70'
+                      }`}>
+                        {workflowState.selectedMentions.length}
+                      </span>
+                      {isMentionsStepValid && (
+                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      )}
+                      </div>
+                      <span className="text-xs text-white/60">
+                        {!isTopicsStepValid ? 'Completa el paso anterior primero' : 'Elige las menciones que quieres buscar'}
+                      </span>
                     </div>
                   </button>
                   
@@ -527,27 +771,62 @@ export default function UploadNewsPage() {
                   >
                     <div className="flex flex-col items-center justify-center gap-1">
                       <div className="flex items-center gap-2">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          !isMentionsStepValid ? 'bg-white/10' : 'bg-purple-500/20'
-                        }`}>
-                          3
-                        </div>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                        <span>URLs</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          workflowState.urls.length > 0 
-                            ? 'bg-purple-500 text-white' 
-                            : 'bg-white/20 text-white/70'
-                        }`}>
-                          {workflowState.urls.length}
-                        </span>
-                        {isUrlsStepValid && (
-                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                        )}
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        !isMentionsStepValid ? 'bg-white/10' : 'bg-purple-500/20'
+                      }`}>
+                          {!isMentionsStepValid ? '🔒' : '3'}
                       </div>
-                      <span className="text-xs text-white/60">Agrega las URLs de las noticias</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      <span>Links</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        workflowState.urls.length > 0 
+                          ? 'bg-purple-500 text-white' 
+                          : 'bg-white/20 text-white/70'
+                      }`}>
+                        {workflowState.urls.length}
+                      </span>
+                      {isUrlsStepValid && (
+                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      )}
+                    </div>
+                      <span className="text-xs text-white/60">
+                        {!isMentionsStepValid ? 'Completa el paso anterior primero' : 'Agrega los links de las noticias'}
+                      </span>
+                </div>
+                  </button>
+                  
+                <button
+                    onClick={() => setActiveSection('summary')}
+                    disabled={!isUrlsStepValid}
+                    className={`upload-news-tab ${activeSection === 'summary' ? 'active' : ''} ${!isUrlsStepValid ? 'disabled' : ''}`}
+                  >
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        !isUrlsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
+                      }`}>
+                          {!isUrlsStepValid ? '🔒' : '4'}
+                      </div>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span>Procesar noticias</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        isReadyToProcess 
+                          ? 'bg-orange-500 text-white' 
+                          : 'bg-white/20 text-white/70'
+                      }`}>
+                        {isReadyToProcess ? '✓' : '0'}
+                      </span>
+                      {isSummaryStepValid && (
+                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      )}
+                      </div>
+                      <span className="text-xs text-white/60">
+                        {!isUrlsStepValid ? 'Completa el paso anterior primero' : 'Revisa y procesa las noticias'}
+                      </span>
                     </div>
                   </button>
                 </div>
@@ -558,48 +837,15 @@ export default function UploadNewsPage() {
                 {activeSection === 'topics' && <TopicsSection />}
                 {activeSection === 'mentions' && <MentionsSection />}
                 {activeSection === 'urls' && <UrlsSection />}
-              </div>
-
-              {/* Botón de procesamiento prominente */}
-              <div className="upload-news-process-button">
-                <button
-                  onClick={processNews}
-                  disabled={!isReadyToProcess || isProcessing || processing}
-                >
-                  <div className="flex items-center justify-center gap-4">
-                    {isProcessing || processing ? (
-                      <>
-                        <svg className="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>
-                        Procesando noticias...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        Procesar noticias
-                      </>
-                    )}
-                  </div>
-                </button>
+                {activeSection === 'summary' && <SummarySection />}
               </div>
               
-              {!isReadyToProcess && (
-                <div className="upload-news-completion-message">
-                  <p>
-                    Completa todos los pasos para procesar
-                  </p>
-                </div>
-              )}
             </div>
         </div>
       </div>
 
       {/* Overlay de procesamiento */}
-      {(isProcessing || processing) && (
+      {isProcessing && (
         <div
           role="dialog"
           aria-modal="true"
@@ -613,10 +859,10 @@ export default function UploadNewsPage() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
               </svg>
             </div>
-            <h3 id="processing-title" className={TEXT_STYLES.title.section}>
+            <h3 id="processing-title" className="text-xl font-semibold text-white">
               {processingStatus || 'Procesando noticias…'}
             </h3>
-            <p className={TEXT_STYLES.subtitle.secondary + ' mt-1'}>
+            <p className="text-white/70 mt-1">
               Esto puede tardar unos segundos.
             </p>
           </div>

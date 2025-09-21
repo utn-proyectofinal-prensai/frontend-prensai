@@ -135,6 +135,28 @@ export const useWorkflow = () => {
     }));
   }, []);
 
+  // Agregar múltiples URLs
+  const addMultipleUrls = useCallback((urls: string[]) => {
+    const existingUrls = workflowState.urls.map(url => url.url.toLowerCase());
+    const newUrls = urls
+      .filter(url => !existingUrls.includes(url.toLowerCase()))
+      .map(url => ({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        url: url.trim(),
+        isValid: isValidUrl(url.trim()),
+        error: isValidUrl(url.trim()) ? undefined : 'URL inválida'
+      }));
+
+    if (newUrls.length > 0) {
+      setWorkflowState(prev => ({
+        ...prev,
+        urls: [...prev.urls, ...newUrls]
+      }));
+    }
+
+    return newUrls.length;
+  }, [workflowState.urls]);
+
   // Validaciones
   const isTopicsStepValid = workflowState.selectedTopics.length > 0;
   const isMentionsStepValid = workflowState.selectedMentions.length > 0;
@@ -143,6 +165,7 @@ export const useWorkflow = () => {
   return {
     workflowState,
     addUrl,
+    addMultipleUrls,
     removeUrl,
     clearUrls,
     toggleTopic,
