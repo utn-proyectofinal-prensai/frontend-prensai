@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useNews } from '../hooks/useNews';
+import '../styles/history.css';
 
 export default function HistoryPage() {
-  const navigate = useNavigate();
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -25,275 +24,186 @@ export default function HistoryPage() {
 
 
   return (
-    <div className="dashboard-container w-full h-screen relative overflow-x-hidden" style={{ backgroundColor: '#1e293b' }}>
-      {/* Fondo que cubre TODA la pantalla */}
-      <div 
-        className="fixed top-0 left-0 w-screen h-screen"
-        style={{
-          backgroundImage: `url('/images/fondodashboard.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
-          zIndex: 0
-        }}
-      ></div>
+    <div className="history-container">
+      {/* Header de la página */}
+      <div className="history-header">
+        <h1 className="history-title">Historial de Noticias Procesadas</h1>
+        <p className="history-subtitle">
+          Revisa todas las noticias que han sido procesadas por el sistema
+        </p>
+      </div>
 
-      {/* Overlay muy sutil */}
-      <div 
-        className="fixed top-0 left-0 w-screen h-screen bg-black/5" 
-        style={{ zIndex: 1 }}
-      ></div>
-
-      {/* Contenido principal */}
-      <div className="relative z-10 w-full h-full">
-        {/* Header transparente */}
-        <div className="bg-black/20 backdrop-blur-md shadow-lg border-b border-white/10 w-full">
-          <div className="w-full px-6 py-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-6">
-                <button 
-                  onClick={() => navigate('/')}
-                  className="text-white hover:text-blue-300 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                </button>
-                <div className="w-32 h-32 flex items-center justify-center">
-                  <img 
-                    src="/images/fondoblanco.png" 
-                    alt="PrensAI Logo" 
-                    className="w-28 h-28 object-contain"
-                    onError={(e) => {
-                      console.log('Error loading logo:', e);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-white drop-shadow-lg">
-                    PrensAI
-                  </h1>
-                  <p className="text-white/80 text-sm font-medium">Historial de noticias</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Contenido principal */}
-        <div className="w-full px-6 py-8 h-full overflow-y-auto flex justify-center">
-          <div className="max-w-7xl w-full">
-            
-            {/* Header de la página */}
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl font-bold text-white mb-4 drop-shadow-lg">
-                Historial de Noticias Procesadas
-              </h2>
-              <p className="text-white/80 text-lg">
-                Revisa todas las noticias que han sido procesadas por el sistema
-              </p>
-              <p className="text-white/60 text-sm mt-2">
-                Total: {newsHistory.length} noticias | Mostrando: {filteredNews.length}
-              </p>
-            </div>
-
-            {/* Filtros y búsqueda */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Filtros y búsqueda mejorados */}
+            <div className="history-filters">
+              <div className="history-filters-grid">
                 {/* Búsqueda */}
-                <div>
-                  <label className="block text-white/90 text-sm font-medium mb-2">
-                    Buscar
+                <div className="history-filter-group">
+                  <label className="history-filter-label">
+                    🔍 Buscar noticias
                   </label>
                   <input
                     type="text"
-                    placeholder="Buscar por título, fuente o categoría..."
+                    placeholder="Buscar por título, fuente, tema o mención..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                    className="history-filter-input"
                   />
                 </div>
 
                 {/* Filtro por estado */}
-                <div>
-                  <label className="block text-white/90 text-sm font-medium mb-2">
-                    Estado
+                <div className="history-filter-group">
+                  <label className="history-filter-label">
+                    📊 Estado de procesamiento
                   </label>
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full px-4 py-3 bg-black/50 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    style={{
-                      color: 'white',
-                      backgroundColor: 'rgba(0, 0, 0, 0.5)'
-                    }}
+                    className="history-filter-select"
                   >
-                    <option value="all" style={{ backgroundColor: '#1e293b', color: 'white' }}>Todos los estados</option>
-                    <option value="processed" style={{ backgroundColor: '#1e293b', color: 'white' }}>Procesado</option>
-                    <option value="pending" style={{ backgroundColor: '#1e293b', color: 'white' }}>Pendiente</option>
-                    <option value="error" style={{ backgroundColor: '#1e293b', color: 'white' }}>Error</option>
+                    <option value="all">Todos los estados</option>
+                    <option value="processed">Procesado</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="error">Error</option>
                   </select>
                 </div>
 
-                {/* Estadísticas */}
-                <div>
-                  <label className="block text-white/90 text-sm font-medium mb-2">
-                    Estadísticas
-                  </label>
-                  <div className="text-white/80 text-sm">
-                    <div>Procesadas: {newsHistory.length}</div>
-                    <div>Pendientes: 0</div>
-                    <div>Errores: 0</div>
+                {/* Estadísticas mejoradas */}
+                <div className="history-stats">
+                  <div className="history-stat-item">
+                    <div className="history-stat-value">{newsHistory.length}</div>
+                    <div className="history-stat-label">Total</div>
+                  </div>
+                  <div className="history-stat-item">
+                    <div className="history-stat-value">{filteredNews.length}</div>
+                    <div className="history-stat-label">Mostrando</div>
+                  </div>
+                  <div className="history-stat-item">
+                    <div className="history-stat-value">
+                      {newsHistory.filter(n => n.valuation === 'positive').length}
+                    </div>
+                    <div className="history-stat-label">Positivas</div>
+                  </div>
+                  <div className="history-stat-item">
+                    <div className="history-stat-value">
+                      {newsHistory.filter(n => n.crisis).length}
+                    </div>
+                    <div className="history-stat-label">Crisis</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Tabla de noticias */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+            {/* Tabla de noticias mejorada */}
+            <div className="history-table-container">
               {isLoading ? (
-                <div className="p-12 text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                  <p className="text-white/80">Cargando historial...</p>
+                <div className="history-loading">
+                  <div className="history-loading-spinner"></div>
+                  <p>Cargando historial de noticias...</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full">
-                    <thead className="bg-black/20">
+                  <table className="history-table">
+                    <thead>
                       <tr>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TÍTULO</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TIPO PUBLICACIÓN</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FECHA</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SOPORTE</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MEDIO</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SECCIÓN</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">AUTOR</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CONDUCTOR</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ENTREVISTADO</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TEMA</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_1</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_2</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">LINK</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ALCANCE</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">COTIZACIÓN</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TAPA</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">VALORACIÓN</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">EJE COMUNICACIONAL</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FACTOR POLÍTICO</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CRISIS</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">GESTIÓN</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ÁREA</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_1</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_2</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_3</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_4</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_5</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ESTADO</th>
+                        <th>Título</th>
+                        <th>Tipo</th>
+                        <th>Fecha</th>
+                        <th>Medio</th>
+                        <th>Sección</th>
+                        <th>Autor</th>
+                        <th>Tema</th>
+                        <th>Valoración</th>
+                        <th>Crisis</th>
+                        <th>Menciones</th>
+                        <th>Link</th>
+                        <th>Estado</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/10">
+                    <tbody>
                       {filteredNews.map((item) => (
-                        <tr key={item.id} className="hover:bg-black/20 transition-colors duration-200">
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{item.title}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.publication_type}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{new Date(item.date).toLocaleDateString()}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.support}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.media}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.section}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.author}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.interviewee || '-'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.topic?.name || 'Sin tema'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[0]?.name || '-'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[1]?.name || '-'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90">
-                              <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">
-                                Ver
-                              </a>
+                        <tr key={item.id}>
+                          <td>
+                            <div className="history-table-cell-content font-semibold">
+                              {item.title}
                             </div>
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.audience_size || '-'}</div>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.publication_type || '-'}
+                            </div>
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.quotation || '-'}</div>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {new Date(item.date).toLocaleDateString()}
+                            </div>
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.media}
+                            </div>
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.section || '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.author || '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.topic?.name || 'Sin tema'}
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`history-badge ${
                               item.valuation === 'positive' 
-                                ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
+                                ? 'history-badge-positive' 
                                 : item.valuation === 'neutral'
-                                ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
+                                ? 'history-badge-neutral'
                                 : item.valuation === 'negative'
-                                ? 'bg-red-500/20 text-red-300 border border-red-300/30'
-                                : 'bg-white/20 text-white/90 border border-white/30'
+                                ? 'history-badge-negative'
+                                : 'history-badge-neutral'
                             }`}>
                               {item.valuation || 'Sin valoración'}
                             </span>
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
+                          <td>
+                            {item.crisis ? (
+                              <span className="history-badge history-badge-crisis">
+                                ⚠️ Crisis
+                              </span>
+                            ) : (
+                              <span className="text-white/50">-</span>
+                            )}
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.political_factor || '-'}</div>
+                          <td>
+                            <div className="history-table-cell-content">
+                              {item.mentions.slice(0, 2).map((mention, index) => (
+                                <span key={index} className="inline-block bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs mr-1 mb-1">
+                                  {mention.name}
+                                </span>
+                              ))}
+                              {item.mentions.length > 2 && (
+                                <span className="text-white/50 text-xs">+{item.mentions.length - 2}</span>
+                              )}
+                            </div>
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.crisis ? 'Sí' : 'No'}</div>
+                          <td>
+                            <a 
+                              href={item.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="history-link"
+                            >
+                              Ver
+                            </a>
                           </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[0]?.name || '-'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[1]?.name || '-'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[2]?.name || '-'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[3]?.name || '-'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="text-sm font-medium text-white/90 whitespace-nowrap">{item.mentions[4]?.name || '-'}</div>
-                          </td>
-                          <td className="px-6 py-3 text-center">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border bg-green-500/20 text-green-300 border-green-400/40`}>
-                              Procesada
+                          <td>
+                            <span className="history-badge history-badge-processed">
+                              ✓ Procesada
                             </span>
                           </td>
                         </tr>
@@ -304,38 +214,38 @@ export default function HistoryPage() {
               )}
 
               {filteredNews.length === 0 && !isLoading && (
-                <div className="text-center py-12">
-                  <div className="text-white/60 text-lg">No se encontraron noticias</div>
-                  <div className="text-white/40 text-sm mt-2">
+                <div className="history-empty">
+                  <div className="history-empty-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div className="text-lg font-medium">No se encontraron noticias</div>
+                  <div className="text-sm mt-2">
                     {searchTerm ? 'Intenta con otros términos de búsqueda' : 'No hay noticias en el historial'}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Paginación */}
+            {/* Paginación mejorada */}
             {!isLoading && filteredNews.length > 0 && (
-              <div className="mt-8 flex justify-center">
-                <div className="bg-black/30 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 px-6 py-3">
-                  <div className="flex items-center space-x-4">
-                    <button className="text-white/60 hover:text-white transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <span className="text-white">Página 1 de 1</span>
-                    <button className="text-white/60 hover:text-white transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
+              <div className="history-pagination">
+                <div className="history-pagination-container">
+                  <button className="history-pagination-button" disabled>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <span className="history-pagination-info">Página 1 de 1</span>
+                  <button className="history-pagination-button" disabled>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 } 
