@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import { useNews } from '../hooks/useNews';
+import { useEnabledTopics } from '../hooks/useTopics';
+import { useEnabledMentions } from '../hooks/useMentions';
+import { apiService, type NewsItem } from '../services/api';
+import Snackbar from '../components/common/Snackbar';
+import { EditNewsModal } from '../components/common/EditNewsModal';
 import '../styles/history.css';
 import '../styles/upload-news.css';
 
@@ -8,11 +13,22 @@ export default function HistoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  // Estados para el modal de edición
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
   // Hook para obtener las noticias
-  const { news: newsHistory, pagination, loading: isLoading, setFilters } = useNews({ 
+  const { news: newsHistory, pagination, loading: isLoading, setFilters, refetch } = useNews({ 
     page: currentPage,
     limit: pageSize
   });
+
+  // Hooks para obtener temas y menciones
+  const { topics: enabledTopics } = useEnabledTopics();
+  const { mentions: enabledMentions } = useEnabledMentions();
 
   // Manejar cambios de página
   const handlePageChange = (page: number) => {
@@ -44,6 +60,59 @@ export default function HistoryPage() {
       limit: pageSize,
       search: term || undefined
     });
+  };
+
+  // Funciones para manejar la edición
+  const handleEditNews = (newsItem: NewsItem) => {
+    setEditingNews(newsItem);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingNews(null);
+    setErrorMessage('');
+    setSuccessMessage('');
+  };
+
+  const handleSaveNews = async (updatedData: Partial<NewsItem>) => {
+    if (!editingNews) return;
+
+    setIsSaving(true);
+    setErrorMessage('');
+
+    try {
+      await apiService.updateNews(editingNews.id, {
+        title: updatedData.title,
+        publication_type: updatedData.publication_type,
+        date: updatedData.date,
+        support: updatedData.support,
+        media: updatedData.media,
+        section: updatedData.section,
+        author: updatedData.author,
+        interviewee: updatedData.interviewee || undefined,
+        audience_size: updatedData.audience_size || undefined,
+        quotation: updatedData.quotation || undefined,
+        valuation: updatedData.valuation || undefined,
+        political_factor: updatedData.political_factor || undefined,
+        crisis: updatedData.crisis,
+        topic_id: updatedData.topic?.id,
+        mention_ids: updatedData.mentions?.map(m => m.id) || []
+      });
+
+      setSuccessMessage('Noticia actualizada exitosamente');
+      handleCloseEditModal();
+      
+      // Refrescar la lista de noticias
+      if (refetch) {
+        refetch();
+      }
+    } catch (error) {
+      console.error('Error actualizando noticia:', error);
+      setErrorMessage('Error al actualizar la noticia. Por favor, inténtalo de nuevo.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Los datos ya vienen filtrados y paginados del backend
@@ -123,33 +192,47 @@ export default function HistoryPage() {
               ) : (
                 <div className="overflow-x-auto">
             <table className="history-table">
-              <thead>
-                <tr>
-                  <th>Título</th>
-                  <th>Fecha</th>
-                  <th>Medio</th>
-                  <th>Tipo</th>
-                  <th>Soporte</th>
-                  <th>Sección</th>
-                  <th>Autor</th>
-                  <th>Entrevistado</th>
-                  <th>Valoración</th>
-                  <th>Crisis</th>
-                  <th>Tema</th>
-                  <th>Menciones</th>
-                  <th>Factor Político</th>
-                  <th>Audiencia</th>
-                  <th>Presupuesto</th>
-                  <th>Link</th>
-                  <th>Creador</th>
-                  <th>Revisor</th>
-                  <th>Fecha de Creación</th>
-                  <th>Última Actualización</th>
+                <thead>
+                  <tr>
+                    <th>Acciones</th>
+                    <th>Título</th>
+                    <th>Fecha</th>
+                    <th>Medio</th>
+                    <th>Link</th>
+                    <th>Tipo</th>
+                    <th>Soporte</th>
+                    <th>Sección</th>
+                    <th>Valoración</th>
+                    <th>Tema</th>
+                    <th>Menciones</th>
+                    <th>Autor</th>
+                    <th>Entrevistado</th>
+                    <th>Crisis</th>
+                    <th>Factor Político</th>
+                    <th>Audiencia</th>
+                    <th>Presupuesto</th>
+                    <th>Creador</th>
+                    <th>Revisor</th>
+                    <th>Fecha de Creación</th>
+                    <th>Última Actualización</th>
                       </tr>
                     </thead>
               <tbody>
                       {filteredNews.map((item) => (
                   <tr key={item.id}>
+                    <td>
+                      <div className="history-table-cell-content">
+                        <button
+                          onClick={() => handleEditNews(item)}
+                          className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors duration-200"
+                          title="Editar noticia"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      </div>
+                          </td>
                     <td>
                       <div className="history-table-cell-content font-semibold">
                         {item.title}
@@ -164,6 +247,16 @@ export default function HistoryPage() {
                       <div className="history-table-cell-content">
                         {item.media}
                       </div>
+                          </td>
+                    <td>
+                      <a 
+                        href={item.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="history-link"
+                      >
+                        Ver
+                      </a>
                           </td>
                     <td>
                       <div className="history-table-cell-content">
@@ -184,16 +277,6 @@ export default function HistoryPage() {
                     <td>
                       <div className="history-table-cell-content">
                         {item.section || '-'}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.author || '-'}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.interviewee || '-'}
                             </div>
                           </td>
                     <td>
@@ -214,15 +297,6 @@ export default function HistoryPage() {
                          item.valuation === 'REVISAR MANUAL' ? 'Revisar manual' :
                          item.valuation || 'Sin valoración'}
                       </span>
-                    </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.crisis ? (
-                          <span className="text-red-400 font-semibold">SÍ</span>
-                        ) : (
-                          <span className="text-white font-semibold">NO</span>
-                        )}
-                      </div>
                     </td>
                     <td>
                       <div className="history-table-cell-content">
@@ -254,6 +328,25 @@ export default function HistoryPage() {
                           </td>
                     <td>
                       <div className="history-table-cell-content">
+                        {item.author || '-'}
+                      </div>
+                          </td>
+                    <td>
+                      <div className="history-table-cell-content">
+                        {item.interviewee || '-'}
+                            </div>
+                          </td>
+                    <td>
+                      <div className="history-table-cell-content">
+                        {item.crisis ? (
+                          <span className="text-red-400 font-semibold">SÍ</span>
+                        ) : (
+                          <span className="text-white font-semibold">NO</span>
+                        )}
+                      </div>
+                          </td>
+                    <td>
+                      <div className="history-table-cell-content">
                         {item.political_factor === 'REVISAR MANUAL' || !item.political_factor ? (
                           <span className="history-badge history-badge-warning">
                             {item.political_factor || 'Sin factor'}
@@ -272,16 +365,6 @@ export default function HistoryPage() {
                       <div className="history-table-cell-content">
                         {item.quotation ? `$${item.quotation.toLocaleString('es-AR')}` : '-'}
                       </div>
-                          </td>
-                    <td>
-                      <a 
-                        href={item.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="history-link"
-                      >
-                        Ver
-                      </a>
                           </td>
                     <td>
                       <div className="history-table-cell-content">
@@ -384,6 +467,33 @@ export default function HistoryPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de edición */}
+      {isEditModalOpen && editingNews && (
+        <EditNewsModal
+          newsItem={editingNews}
+          topics={enabledTopics}
+          mentions={enabledMentions}
+          isOpen={isEditModalOpen}
+          isSaving={isSaving}
+          onClose={handleCloseEditModal}
+          onSave={handleSaveNews}
+        />
+      )}
+
+      {/* Snackbars para feedback */}
+      <Snackbar
+        message={successMessage}
+        isOpen={!!successMessage}
+        onClose={() => setSuccessMessage('')}
+        variant="success"
+      />
+      <Snackbar
+        message={errorMessage}
+        isOpen={!!errorMessage}
+        onClose={() => setErrorMessage('')}
+        variant="error"
+      />
     </div>
   );
 } 

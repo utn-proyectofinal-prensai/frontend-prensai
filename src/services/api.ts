@@ -317,6 +317,30 @@ export const apiService = {
     return apiRequest<NewsItem>(`/news/${id}`);
   },
 
+  // Actualizar una noticia
+  async updateNews(id: number, newsData: {
+    title?: string;
+    publication_type?: string;
+    date?: string;
+    support?: string;
+    media?: string;
+    section?: string;
+    author?: string;
+    interviewee?: string;
+    audience_size?: number;
+    quotation?: number;
+    valuation?: string;
+    political_factor?: string;
+    crisis?: boolean;
+    topic_id?: number;
+    mention_ids?: number[];
+  }): Promise<NewsItem> {
+    return apiRequest<NewsItem>(`/news/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ news: newsData }),
+    });
+  },
+
   // Procesar noticias por lotes
   async batchProcessNews(data: BatchProcessRequest): Promise<BatchProcessResponse> {
     return apiRequest<BatchProcessResponse>('/news/batch_process', {
