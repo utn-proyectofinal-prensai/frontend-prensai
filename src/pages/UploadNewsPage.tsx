@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNews, useEnabledTopics, useEnabledMentions } from '../hooks';
 import { useWorkflow } from '../hooks/useWorkflow';
 import { type BatchProcessRequest, parseApiError } from '../services/api';
@@ -8,6 +9,7 @@ import {
 import '../styles/upload-news.css';
 
 export default function UploadNewsPage() {
+  const navigate = useNavigate();
   const { batchProcess } = useNews();
   const { topics: enabledTopics, loading: topicsLoading } = useEnabledTopics();
   const { mentions: enabledMentions, loading: mentionsLoading } = useEnabledMentions();
@@ -122,10 +124,20 @@ export default function UploadNewsPage() {
         setSuccessVariant('success');
         setProcessingStatus('Procesamiento completado exitosamente');
         setSuccessMessage(`Listo: ${response.persisted}/${response.received} procesadas correctamente.`);
+        
+        // Redirigir al dashboard de histórico después de 2 segundos
+        setTimeout(() => {
+          navigate('/history');
+        }, 2000);
       } else if (partial) {
         setSuccessVariant('warning');
         setProcessingStatus('Procesamiento parcial');
         setSuccessMessage(`Parcial: ${response.persisted}/${response.received} OK. ${response.errors.length} con error.`);
+        
+        // Redirigir al dashboard de histórico después de 3 segundos (más tiempo para leer el mensaje)
+        setTimeout(() => {
+          navigate('/history');
+        }, 3000);
       } else if (none) {
         setProcessingStatus('Error en el procesamiento');
         setErrorMessage('No se pudo procesar ninguna noticia. Revisa los links ingresados.');
@@ -1017,27 +1029,41 @@ export default function UploadNewsPage() {
         </div>
       </div>
 
-      {/* Overlay de procesamiento */}
+      {/* Overlay de procesamiento mejorado */}
       {isProcessing && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="processing-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300"
         >
-          <div className="w-full max-w-md mx-4 rounded-2xl border border-white/20 bg-gradient-to-b from-slate-900/90 to-slate-800/90 shadow-2xl p-6 text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center animate-pulse-glow mb-4">
-              <svg className="w-6 h-6 text-blue-300 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-              </svg>
+          <div className="w-auto max-w-sm mx-4 rounded-3xl border border-white/20 bg-gradient-to-br from-slate-900/95 to-slate-800/95 shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300 min-h-[400px] flex flex-col justify-center">
+            {/* Spinner principal centrado */}
+            <div className="flex justify-center py-6">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/20 to-emerald-500/20 animate-pulse"></div>
+                <div className="absolute inset-2 rounded-full bg-gradient-to-r from-blue-500/30 to-emerald-500/30 animate-ping"></div>
+                <div className="relative w-full h-full rounded-full bg-gradient-to-r from-blue-500/40 to-emerald-500/40 border border-blue-400/50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <h3 id="processing-title" className="text-xl font-semibold text-white">
-              {processingStatus || 'Procesando noticias…'}
-            </h3>
-            <p className="text-white/70 mt-1">
-              Esto puede tardar unos segundos.
-            </p>
+            
+            {/* Contenido del modal centrado */}
+            <div className="text-center">
+              <h3 id="processing-title" className="text-xl font-bold text-white py-6">
+                {processingStatus || 'Procesando noticias…'}
+              </h3>
+              <p className="text-white/70 text-sm py-6">
+                Analizando contenido y extrayendo información
+              </p>
+              <p className="text-white/60 text-xs py-4">
+                Esto puede tardar unos segundos. Por favor, no cierres esta ventana.
+              </p>
+            </div>
           </div>
         </div>
       )}
