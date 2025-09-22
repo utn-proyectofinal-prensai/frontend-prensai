@@ -292,6 +292,8 @@ export const apiService = {
     media?: string;
     date_from?: string;
     date_to?: string;
+    search?: string;
+    status?: string;
   }): Promise<NewsListResponse> {
     const params = new URLSearchParams();
     
@@ -301,6 +303,8 @@ export const apiService = {
     if (filters?.media) params.append('media', filters.media);
     if (filters?.date_from) params.append('date_from', filters.date_from);
     if (filters?.date_to) params.append('date_to', filters.date_to);
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.status) params.append('status', filters.status);
 
     const queryString = params.toString();
     const endpoint = `/news${queryString ? `?${queryString}` : ''}`;

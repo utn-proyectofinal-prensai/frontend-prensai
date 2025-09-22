@@ -15,6 +15,8 @@ interface UseNewsFilters {
   media?: string;
   date_from?: string;
   date_to?: string;
+  search?: string;
+  status?: string;
 }
 
 interface UseNewsReturn {

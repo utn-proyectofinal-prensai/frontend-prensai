@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   padding-bottom: 1rem;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .history-header {
@@ -43,7 +43,8 @@
 /* Panel de filtros compacto */
 .history-filters-panel {
   min-height: auto !important;
-  padding: 1rem 1.5rem !important;
+  padding: 0.75rem 1.5rem !important;
+  margin-bottom: 1.5rem !important;
 }
 
 /* Filtros mejorados */
@@ -324,37 +325,52 @@
 .history-pagination-container {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  gap: 2rem;
   background-color: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(8px);
   border-radius: 0.75rem;
   padding: 0.75rem 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  max-width: 800px;
+  min-height: 2.5rem;
 }
 
 .history-pagination-button {
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  border: none;
+  border-radius: 0.375rem;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1;
 }
 
 .history-pagination-button:hover:not(:disabled) {
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
+  transform: translateY(-1px);
 }
 
 .history-pagination-button:disabled {
-  opacity: 0.3;
+  opacity: 0.5;
   cursor: not-allowed;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
 }
+
 
 .history-pagination-info {
   color: white;
@@ -362,10 +378,35 @@
   font-size: 0.875rem;
 }
 
+/* Estilos específicos para el selector de página */
+.history-pagination-container select {
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.history-pagination-container label,
+.history-pagination-container span {
+  display: flex;
+  align-items: center;
+  height: 1.75rem;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .history-filters-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .history-pagination-container {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .history-pagination-container > div {
+    width: 100%;
+    justify-content: center;
   }
   
   .history-stats {

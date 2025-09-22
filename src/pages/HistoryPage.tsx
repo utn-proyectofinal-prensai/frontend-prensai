@@ -4,22 +4,50 @@ import '../styles/history.css';
 import '../styles/upload-news.css';
 
 export default function HistoryPage() {
-  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Hook para obtener las noticias
-  const { news: newsHistory, pagination, loading: isLoading } = useNews({ limit: 100 });
-
-  // Filtrar noticias basado en estado y término de búsqueda
-  const filteredNews = newsHistory.filter(news => {
-    const matchesStatus = filterStatus === 'all'; // La nueva API no tiene status
-    const matchesSearch = searchTerm === '' || 
-      news.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      news.media.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (news.topic?.name && news.topic.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    return matchesStatus && matchesSearch;
+  const { news: newsHistory, pagination, loading: isLoading, setFilters } = useNews({ 
+    page: currentPage,
+    limit: pageSize
   });
+
+  // Manejar cambios de página
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setFilters({ 
+      page, 
+      limit: pageSize,
+      search: searchTerm || undefined
+    });
+  };
+
+  // Manejar cambios de tamaño de página
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset a la primera página
+    setFilters({ 
+      page: 1, 
+      limit: newPageSize,
+      search: searchTerm || undefined
+    });
+  };
+
+  // Manejar cambios en la búsqueda
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1); // Reset a la primera página
+    setFilters({ 
+      page: 1, 
+      limit: pageSize,
+      search: term || undefined
+    });
+  };
+
+  // Los datos ya vienen filtrados y paginados del backend
+  const filteredNews = newsHistory;
 
   return (
     <div className="history-container px-6">
@@ -43,23 +71,19 @@ export default function HistoryPage() {
                 type="text"
                 placeholder="🔍 Buscar por título, fuente, tema o mención..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="history-filter-input"
-              />
-            </div>
+                  />
+                </div>
 
-            {/* Filtro por estado */}
+            {/* Botón de filtros (TODO: implementar filtros avanzados) */}
             <div className="history-filter-group flex-shrink-0">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="history-filter-select"
+              <button
+                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+                onClick={() => alert('TODO: Implementar filtros avanzados (fecha, medio, tema, etc.)')}
               >
-                <option value="all">📊 Todos los estados</option>
-                <option value="processed">Procesado</option>
-                <option value="pending">Pendiente</option>
-                <option value="error">Error</option>
-              </select>
+                🔍 Filtrar
+              </button>
             </div>
           </div>
         </div>
@@ -79,25 +103,25 @@ export default function HistoryPage() {
               {newsHistory.filter(n => n.valuation === 'positive').length}
             </div>
             <div className="history-stat-label">Positivas</div>
-          </div>
+                </div>
           <div className="history-stat-item">
             <div className="history-stat-value">
               {newsHistory.filter(n => n.crisis).length}
-            </div>
+                </div>
             <div className="history-stat-label">Crisis</div>
-          </div>
-        </div>
-      </div>
+                </div>
+              </div>
+            </div>
 
       {/* Tabla de noticias mejorada */}
       <div className="history-table-container">
-        {isLoading ? (
+              {isLoading ? (
           <div className="history-loading">
             <div className="history-loading-spinner"></div>
             <p>Cargando historial de noticias...</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
             <table className="history-table">
               <thead>
                 <tr>
@@ -121,26 +145,26 @@ export default function HistoryPage() {
                   <th>Revisor</th>
                   <th>Fecha de Creación</th>
                   <th>Última Actualización</th>
-                </tr>
-              </thead>
+                      </tr>
+                    </thead>
               <tbody>
-                {filteredNews.map((item) => (
+                      {filteredNews.map((item) => (
                   <tr key={item.id}>
                     <td>
                       <div className="history-table-cell-content font-semibold">
                         {item.title}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {new Date(item.date).toLocaleDateString()}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.media}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.publication_type === 'REVISAR MANUAL' || !item.publication_type ? (
@@ -151,40 +175,44 @@ export default function HistoryPage() {
                           item.publication_type
                         )}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.support || '-'}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.section || '-'}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.author || '-'}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.interviewee || '-'}
-                      </div>
-                    </td>
+                            </div>
+                          </td>
                     <td>
                       <span className={`history-badge ${
-                        item.valuation === 'positive' 
+                              item.valuation === 'positive' 
                           ? 'history-badge-positive' 
-                          : item.valuation === 'neutral'
+                                : item.valuation === 'neutral'
                           ? 'history-badge-neutral'
-                          : item.valuation === 'negative'
+                                : item.valuation === 'negative'
                           ? 'history-badge-negative'
                           : item.valuation === 'REVISAR MANUAL' || !item.valuation
                           ? 'history-badge-warning'
                           : 'history-badge-neutral'
                       }`}>
-                        {item.valuation || 'Sin valoración'}
+                        {item.valuation === 'positive' ? 'Positiva' :
+                         item.valuation === 'negative' ? 'Negativa' :
+                         item.valuation === 'neutral' ? 'Neutra' :
+                         item.valuation === 'REVISAR MANUAL' ? 'Revisar manual' :
+                         item.valuation || 'Sin valoración'}
                       </span>
                     </td>
                     <td>
@@ -208,7 +236,7 @@ export default function HistoryPage() {
                           <span className="text-white/50">-</span>
                         )}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.mentions.length > 0 ? (
@@ -223,7 +251,7 @@ export default function HistoryPage() {
                           <span className="text-white/50">-</span>
                         )}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.political_factor === 'REVISAR MANUAL' || !item.political_factor ? (
@@ -234,17 +262,17 @@ export default function HistoryPage() {
                           item.political_factor
                         )}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.audience_size ? item.audience_size.toLocaleString('es-AR') : '-'}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.quotation ? `$${item.quotation.toLocaleString('es-AR')}` : '-'}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <a 
                         href={item.link} 
@@ -254,67 +282,108 @@ export default function HistoryPage() {
                       >
                         Ver
                       </a>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.creator?.name || '-'}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {item.reviewer?.name || '-'}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {new Date(item.created_at).toLocaleDateString()}
                       </div>
-                    </td>
+                          </td>
                     <td>
                       <div className="history-table-cell-content">
                         {new Date(item.updated_at).toLocaleDateString()}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-        {filteredNews.length === 0 && !isLoading && (
+              {filteredNews.length === 0 && !isLoading && (
           <div className="history-empty">
             <div className="history-empty-icon">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-            </div>
+                  </div>
             <h3 className="text-xl font-semibold text-white mb-2">No se encontraron noticias</h3>
             <p className="text-white/70">
               {searchTerm ? `No hay noticias que coincidan con "${searchTerm}"` : 'No hay noticias procesadas aún'}
             </p>
-          </div>
-        )}
+                </div>
+              )}
 
-        {/* Paginación mejorada */}
-        {filteredNews.length > 0 && (
+        {/* Controles de paginación */}
+        {(pagination || newsHistory.length > 0) && (
           <div className="history-pagination">
             <div className="history-pagination-container">
-              <button className="history-pagination-button" disabled>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <span className="history-pagination-info">Página 1 de 1</span>
-              <button className="history-pagination-button" disabled>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+              {/* Selector de tamaño de página */}
+              <div className="flex items-center gap-2">
+                <select 
+                  value={pageSize} 
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-sm text-white font-medium">por página</span>
+            </div>
+
+              {/* Información de paginación */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-white/70">
+                  {pagination ? (
+                    `Mostrando ${((pagination.page - 1) * pageSize) + 1} a ${Math.min(pagination.page * pageSize, pagination.count)} de ${pagination.count} resultados`
+                  ) : (
+                    `Mostrando ${newsHistory.length} resultados`
+                  )}
+                </span>
+                
+                {/* Navegación de páginas */}
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handlePageChange((pagination?.page || 1) - 1)}
+                    disabled={!pagination || pagination.page <= 1}
+                    className="history-pagination-button"
+                  >
+                    ‹
+                    </button>
+                  
+                  <span className="text-sm text-white px-3">
+                    {pagination ? (
+                      `Página ${pagination.page} de ${pagination.pages}`
+                    ) : (
+                      `Página 1 de 1`
+                    )}
+                  </span>
+                  
+                  <button 
+                    onClick={() => handlePageChange((pagination?.page || 1) + 1)}
+                    disabled={!pagination || pagination.page >= pagination.pages}
+                    className="history-pagination-button"
+                  >
+                    ›
+                    </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
     </div>
   );
-}
+} 
