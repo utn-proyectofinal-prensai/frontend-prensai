@@ -162,13 +162,13 @@ export interface AiOption {
 
 export interface AiConfiguration {
   key: string;
-  value: string | string[] | number;
-  value_type: 'string' | 'array' | 'reference';
+  value: string | string[] | number | boolean | null;
+  value_type: 'string' | 'array' | 'reference' | 'number' | 'boolean';
   display_name: string;
   description: string;
   enabled: boolean;
-  reference_type?: string; // informativo
-  options?: AiOption[]; // opciones para reference
+  reference_type?: string;
+  options?: AiOption[];
   created_at: string;
   updated_at: string;
 }
@@ -179,8 +179,8 @@ export interface AiConfigurationListResponse {
 
 export interface UpdateAiConfigurationRequest {
   ai_configuration: {
-    value: string | string[] | number;
-    enabled: boolean;
+    value: string | string[] | number | boolean | null;
+    enabled?: boolean;
   };
 }
 
@@ -667,7 +667,7 @@ export const apiService = {
 
   async updateAiConfiguration(key: string, data: UpdateAiConfigurationRequest): Promise<AiConfiguration> {
     return apiRequest<AiConfiguration>(`/ai_configurations/${key}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
