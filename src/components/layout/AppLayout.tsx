@@ -61,6 +61,11 @@ const routeConfig: Record<string, RouteConfig> = {
     title: 'Gestión de Usuarios - Administra cuentas del sistema',
     showBackButton: true,
     backTo: '/dashboard'
+  },
+  '/ai-configurations': { 
+    title: 'Configuraciones de IA - Parámetros del módulo de inteligencia artificial',
+    showBackButton: true,
+    backTo: '/dashboard'
   }
 };
 

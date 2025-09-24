@@ -122,7 +122,7 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
 
             <button 
               onClick={() => handleNavigation('/users')}
-              className="w-full flex items-center px-6 py-5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 group"
+              className="w-full flex items-center px-6 py-5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 group mb-4"
             >
               <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition-all duration-300">
                 <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,6 +132,22 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
               <div className="flex-1 text-left" style={{ marginLeft: '20px' }}>
                 <span className="font-semibold text-lg">Gestión de Usuarios</span>
                 <p className="text-sm text-white/60 mt-1">Administra usuarios y permisos</p>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => handleNavigation('/ai-configurations')}
+              className="w-full flex items-center px-6 py-5 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300 group"
+            >
+              <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-all duration-300">
+                <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div className="flex-1 text-left" style={{ marginLeft: '20px' }}>
+                <span className="font-semibold text-lg">Configuraciones de IA</span>
+                <p className="text-sm text-white/60 mt-1">Parámetros del módulo de inteligencia artificial</p>
               </div>
             </button>
           </div>

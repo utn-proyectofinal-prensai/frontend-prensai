@@ -6,6 +6,7 @@ import UploadNewsPage from '../pages/UploadNewsPage';
 import HistoryPage from '../pages/HistoryPage';
 import SettingsPage from '../pages/SettingsPage';
 import UsersPage from '../pages/UsersPage';
+import AiConfigurationsPage from '../pages/AiConfigurationsPage';
 import CreateClippingPage from '../pages/CreateClippingPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -66,6 +67,14 @@ export const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <UsersPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'ai-configurations',
+        element: (
+          <AdminRoute>
+            <AiConfigurationsPage />
           </AdminRoute>
         ),
       },
