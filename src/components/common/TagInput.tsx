@@ -14,6 +14,7 @@ interface TagInputProps {
   inputId?: string;
   ariaLabel?: string;
   variant?: "dark" | "white";          // <-- NUEVO
+  className?: string;
 }
 
 const MAX_DEFAULT_TAGS = 10;
@@ -31,6 +32,7 @@ export default function TagInput({
   inputId,
   ariaLabel,
   variant = "white",                     // <-- por defecto caja blanca
+  className = "",
 }: TagInputProps) {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -95,15 +97,15 @@ export default function TagInput({
   // ---------- CLASES POR VARIANTE ----------
   const styles = variant === "white"
     ? {
-        wrapper: "rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm px-3 py-2 focus-within:ring-1 focus-within:ring-sky-400",
+        wrapper: "rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm px-3 py-3 focus-within:ring-1 focus-within:ring-sky-400 transition-colors h-12 flex items-center",
         chip: "bg-slate-100 text-slate-800 shadow-sm",
         closeBtn: "text-slate-500 hover:text-slate-800",
-        input: "!bg-transparent !border-0 !shadow-none !ring-0 !outline-none appearance-none text-sm text-slate-900 placeholder:text-slate-400",
-        helper: "text-xs text-slate-500",
+        input: "!bg-transparent !border-0 !shadow-none !ring-0 !outline-none appearance-none text-sm text-slate-900 placeholder:text-slate-400 placeholder:text-sm",
+        helper: "text-xs text-white/60",
         counter: "text-xs text-slate-500",
       }
     : {
-        wrapper: "rounded-xl border border-white/25 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] px-3 py-2 focus-within:ring-2 focus-within:ring-sky-300/40",
+        wrapper: "rounded-xl border border-white/25 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] px-4 py-3 focus-within:ring-2 focus-within:ring-sky-300/40 transition-colors",
         chip: "bg-sky-500/20 text-white shadow-sm shadow-sky-900/30",
         closeBtn: "text-white/80 hover:text-white hover:bg-sky-400/50 rounded-full px-1",
         input: "!bg-transparent !border-0 !shadow-none !ring-0 !outline-none appearance-none text-sm text-white placeholder:text-white/50",
@@ -116,7 +118,7 @@ export default function TagInput({
       <div
         role="group"
         aria-label={ariaLabel}
-        className={`flex flex-wrap items-center gap-2 cursor-text ${styles.wrapper}`}
+        className={`flex flex-wrap items-center gap-2 cursor-text ${styles.wrapper} ${className}`.trim()}
         onClick={focusInput}
       >
         {value.map((tag) => (
@@ -149,13 +151,14 @@ export default function TagInput({
           placeholder={value.length === 0 ? placeholder : undefined}
           id={resolvedId}
           aria-describedby={helperId}
-          className={`min-w-[7.5rem] flex-1 ${styles.input} ${value.length === 0 ? "opacity-70" : "opacity-100"}`}
+          className={`min-w-[7.5rem] flex-1 ${styles.input}`}
           disabled={disabled || hasReachedLimit}
           aria-label="Agregar elemento"
+          style={{ fontSize: '14px' }}
         />
 
         {/* contador a la derecha, dentro de la caja */}
-        <span className={`ms-auto ${styles.counter}`}>{remaining} restantes</span>
+        <span className={`ml-auto ${styles.counter}`}>{remaining} restantes</span>
       </div>
 
       <p id={helperId} className={styles.helper}>

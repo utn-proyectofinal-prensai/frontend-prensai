@@ -162,8 +162,8 @@ export interface AiOption {
 
 export interface AiConfiguration {
   key: string;
-  value: string | string[] | number | boolean | null;
-  value_type: 'string' | 'array' | 'reference' | 'number' | 'boolean';
+  value: string | string[] | null;
+  value_type: 'string' | 'array' | 'reference';
   display_name: string;
   description: string;
   enabled: boolean;
@@ -179,7 +179,7 @@ export interface AiConfigurationListResponse {
 
 export interface UpdateAiConfigurationRequest {
   ai_configuration: {
-    value: string | string[] | number | boolean | null;
+    value: string | string[] | null;
     enabled?: boolean;
   };
 }
