@@ -10,8 +10,7 @@ interface AiConfigurationFieldProps {
 const MAX_ARRAY_ITEMS = 10;
 
 type DraftValue = AiConfiguration['value'];
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+type SaveStatus = 'idle' | 'pending' | 'saving' | 'synced' | 'error';
 
 function normalizeValue(config: AiConfiguration): DraftValue {
   const { value, value_type: valueType } = config;
@@ -41,7 +40,7 @@ function normalizeValue(config: AiConfiguration): DraftValue {
       }
       return value ?? null;
     case 'boolean':
-      return Boolean(value);
+      return value === true;
     default:
       return value == null ? '' : String(value);
   }
@@ -115,7 +114,7 @@ function serializeValue(
       return value ?? null;
     }
     case 'boolean':
-      return Boolean(value);
+      return value === true;
     default:
       return value == null ? '' : String(value);
   }
@@ -127,6 +126,7 @@ export default function AiConfigurationField({ configuration, onUpdate }: AiConf
   const [status, setStatus] = useState<SaveStatus>('idle');
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const fieldId = useMemo(() => `ai-config-${configuration.key}`, [configuration.key]);
 
   useEffect(() => {
     setDraftValue(normalized);
@@ -135,43 +135,55 @@ export default function AiConfigurationField({ configuration, onUpdate }: AiConf
     setIsDirty(false);
   }, [normalized]);
 
+  useEffect(() => {
+    if (!isDirty) {
+      return;
+    }
+
+    setStatus('pending');
+
+    const handler = setTimeout(async () => {
+      setStatus('saving');
+      try {
+        const payload = serializeValue(draftValue, configuration.value_type, configuration.options);
+        await onUpdate(configuration.key, payload);
+        setStatus('synced');
+        setIsDirty(false);
+        setFieldError(null);
+      } catch (error) {
+        setStatus('error');
+        setFieldError(error instanceof Error ? error.message : 'No se pudo guardar el cambio.');
+      }
+    }, 600);
+
+    return () => clearTimeout(handler);
+  }, [draftValue, isDirty, configuration.key, configuration.options, configuration.value_type, onUpdate]);
+
+  useEffect(() => {
+    if (status !== 'synced') {
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setStatus('idle');
+    }, 2000);
+    return () => clearTimeout(timeout);
+  }, [status]);
+
   const handleChange = useCallback(
     (value: DraftValue) => {
       setDraftValue(value);
-      setIsDirty(!valuesAreEqual(value, normalized, configuration.value_type));
-      setStatus('idle');
+      const dirty = !valuesAreEqual(value, normalized, configuration.value_type);
+      setIsDirty(dirty);
+      setStatus(dirty ? 'pending' : 'idle');
       setFieldError(null);
     },
     [configuration.value_type, normalized]
   );
 
-  const handleSave = useCallback(async () => {
-    if (!isDirty || status === 'saving') {
-      return;
-    }
-
-    setStatus('saving');
-    try {
-      const payload = serializeValue(draftValue, configuration.value_type, configuration.options);
-      await onUpdate(configuration.key, payload);
-      setStatus('saved');
-      setIsDirty(false);
-    } catch (error) {
-      setStatus('error');
-      setFieldError(error instanceof Error ? error.message : 'No se pudo guardar el cambio.');
-    }
-  }, [configuration.key, configuration.options, configuration.value_type, draftValue, isDirty, onUpdate, status]);
-
-  const handleReset = useCallback(() => {
-    setDraftValue(normalized);
-    setIsDirty(false);
-    setStatus('idle');
-    setFieldError(null);
-  }, [normalized]);
+  const baseInputClasses =
+    'h-10 w-full rounded-xl border border-white/25 bg-white/10 px-3 text-sm text-white placeholder:text-white/60 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-300/40 backdrop-blur';
 
   const renderField = () => {
-    const baseInputClasses = 'w-full rounded-md border border-slate-700/70 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 shadow-sm placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30';
-
     switch (configuration.value_type) {
       case 'array':
         return (
@@ -179,15 +191,17 @@ export default function AiConfigurationField({ configuration, onUpdate }: AiConf
             value={Array.isArray(draftValue) ? draftValue : []}
             onChange={(tags) => handleChange(tags)}
             disabled={status === 'saving'}
-            placeholder="Agregar palabra y presionar Enter"
             maxTags={MAX_ARRAY_ITEMS}
-            helperText={`Máximo ${MAX_ARRAY_ITEMS} elementos`}
+            helperText={`Máximo ${MAX_ARRAY_ITEMS} elementos. Escribí y presioná Enter o pegá una lista.`}
+            inputId={fieldId}
+            ariaLabel={`Editor de elementos para ${configuration.display_name}`}
           />
         );
       case 'reference':
         if (configuration.options && configuration.options.length > 0) {
           return (
             <select
+              id={fieldId}
               value={draftValue == null ? '' : String(draftValue)}
               onChange={(event) => {
                 const raw = event.target.value;
@@ -197,7 +211,7 @@ export default function AiConfigurationField({ configuration, onUpdate }: AiConf
               className={baseInputClasses}
               disabled={status === 'saving'}
             >
-              <option value="">Seleccionar una opción</option>
+              <option value="">Seleccioná una opción</option>
               {configuration.options.map((option) => (
                 <option key={option.value} value={String(option.value)}>
                   {option.label}
@@ -208,33 +222,36 @@ export default function AiConfigurationField({ configuration, onUpdate }: AiConf
         }
         return (
           <input
+            id={fieldId}
             type="text"
             value={draftValue == null ? '' : String(draftValue)}
             onChange={(event) => handleChange(event.target.value)}
             className={baseInputClasses}
-            placeholder="Ingrese el valor de referencia"
+            placeholder="Ingresá el valor de referencia"
             disabled={status === 'saving'}
           />
         );
       case 'number':
         return (
           <input
+            id={fieldId}
             type="number"
             value={draftValue == null ? '' : String(draftValue)}
             onChange={(event) => handleChange(event.target.value)}
             className={baseInputClasses}
-            placeholder="Ingrese un valor numérico"
+            placeholder="Ingresá un valor numérico"
             disabled={status === 'saving'}
           />
         );
       case 'boolean':
         return (
-          <label className="flex items-center gap-3 text-sm text-slate-200">
+          <label htmlFor={fieldId} className="flex items-center gap-3 text-sm text-white/80">
             <input
+              id={fieldId}
               type="checkbox"
               checked={draftValue === true}
               onChange={(event) => handleChange(event.target.checked)}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-900/60 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-white/40 text-sky-300 focus:ring-sky-400"
               disabled={status === 'saving'}
             />
             <span>{draftValue === true ? 'Activado' : 'Desactivado'}</span>
@@ -243,6 +260,7 @@ export default function AiConfigurationField({ configuration, onUpdate }: AiConf
       default:
         return (
           <input
+            id={fieldId}
             type="text"
             value={draftValue == null ? '' : String(draftValue)}
             onChange={(event) => handleChange(event.target.value)}
@@ -255,64 +273,73 @@ export default function AiConfigurationField({ configuration, onUpdate }: AiConf
     }
   };
 
-  const statusInfo = useMemo(() => {
-    if (status === 'saving') {
-      return { label: 'Guardando…', tone: 'text-amber-200', accent: 'bg-amber-500/30' };
+  const labelText = useMemo(() => {
+    switch (configuration.value_type) {
+      case 'array':
+        return 'Elementos';
+      case 'reference':
+        return 'Seleccioná una opción';
+      case 'number':
+        return 'Valor numérico';
+      case 'boolean':
+        return 'Estado';
+      default:
+        return 'Valor';
     }
-    if (status === 'error') {
-      return { label: fieldError ?? 'Error al guardar', tone: 'text-rose-200', accent: 'bg-rose-500/30' };
+  }, [configuration.value_type]);
+
+  const statusLabel = useMemo(() => {
+    switch (status) {
+      case 'pending':
+      case 'saving':
+        return 'Guardando…';
+      case 'synced':
+        return 'Sincronizado';
+      case 'error':
+        return 'Error al guardar';
+      default:
+        return 'Sin cambios';
     }
-    if (status === 'saved') {
-      return { label: 'Cambios guardados', tone: 'text-emerald-200', accent: 'bg-emerald-500/30' };
-    }
-    if (isDirty) {
-      return { label: 'Cambios pendientes', tone: 'text-amber-100', accent: 'bg-amber-500/20' };
-    }
-    return { label: 'Sin cambios', tone: 'text-slate-200', accent: 'bg-slate-600/30' };
-  }, [fieldError, isDirty, status]);
+  }, [status]);
+
+  const statusTone =
+    status === 'error'
+      ? 'text-rose-200'
+      : status === 'synced'
+        ? 'text-emerald-200'
+        : status === 'pending' || status === 'saving'
+          ? 'text-white/70'
+          : 'text-white/60';
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_25px_60px_-30px_rgba(8,47,73,0.45)] backdrop-blur">
-      <div className="space-y-3">
+    <section className="rounded-3xl border border-white/15 bg-white/8 p-6 text-white shadow-[0_18px_45px_-25px_rgba(15,23,42,0.6)] backdrop-blur">
+      <header className="space-y-1">
         <h3 className="text-xl font-semibold text-white">{configuration.display_name}</h3>
         <p className="text-sm leading-6 text-white/70">{configuration.description}</p>
+      </header>
+
+      <div className="mt-4 space-y-3">
+        {configuration.value_type !== 'boolean' && (
+          <label htmlFor={fieldId} className="sr-only">
+            {labelText}
+          </label>
+        )}
+        {renderField()}
       </div>
 
-      <div className="mt-6">{renderField()}</div>
+      {configuration.value_type !== 'array' && configuration.value_type !== 'boolean' && (
+        <p className="mt-2 text-xs text-white/60">
+          {configuration.value_type === 'reference'
+            ? 'Seleccioná una opción disponible.'
+            : 'Actualizá el valor y los cambios se guardan automáticamente.'}
+        </p>
+      )}
 
-      <div className="mt-6 border-t border-white/10 pt-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!isDirty || status === 'saving'}
-              className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-                !isDirty || status === 'saving'
-                  ? 'bg-white/10 text-white/70'
-                  : 'bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              {status === 'saving' ? 'Guardando…' : 'Guardar cambios'}
-            </button>
-
-            {isDirty && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white"
-              >
-                Deshacer
-              </button>
-            )}
-          </div>
-
-          <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${statusInfo.accent} ${statusInfo.tone}`}>
-            <span className="h-2 w-2 rounded-full bg-current"></span>
-            <span>{statusInfo.label}</span>
-          </div>
-        </div>
-      </div>
+      <footer className="mt-5 flex items-center justify-end">
+        <span className={`text-xs font-medium ${statusTone}`}>
+          {status === 'error' && fieldError ? `${statusLabel}: ${fieldError}` : statusLabel}
+        </span>
+      </footer>
     </section>
   );
 }
