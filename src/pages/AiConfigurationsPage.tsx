@@ -189,15 +189,22 @@ export default function AiConfigurationsPage() {
   const hasDirtyFields = dirtyCount > 0;
 
   // Bloquear navegación interna si hay cambios sin guardar
-  useBlocker(() => {
-    if (!hasDirtyFields) return false;
-    
-    const confirmLeave = window.confirm(
-      'Tenés cambios sin guardar. ¿Estás seguro de que querés salir?'
-    );
-    
-    return !confirmLeave;
-  });
+  const blocker = useBlocker(() => hasDirtyFields);
+
+  // Manejar el estado del blocker
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      const confirmLeave = window.confirm(
+        'Tenés cambios sin guardar. ¿Estás seguro de que querés salir?'
+      );
+      
+      if (confirmLeave) {
+        blocker.proceed();
+      } else {
+        blocker.reset();
+      }
+    }
+  }, [blocker]);
 
   // Advertencia al refrescar/cerrar la página
   useEffect(() => {
