@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api';
 import type { DashboardStats, NewsItem } from '../services/api';
 import { DASHBOARD_MESSAGES } from '../constants/messages';
+import NewsTable from '../components/common/NewsTable';
+import '../styles/history.css';
 
 export default function DashboardPage() {
   const { } = useAuth();
@@ -57,7 +59,7 @@ export default function DashboardPage() {
       setNewsLoading(true);
       setNewsError(null);
       
-      const response = await apiService.getNews({ limit: 4 });
+      const response = await apiService.getNews({ limit: 5 });
       setUltimasNoticias(response.news);
     } catch (error) {
       console.error('Error cargando noticias:', error);
@@ -288,23 +290,20 @@ export default function DashboardPage() {
 
         {/* Últimas noticias */}
         <div className="news-section">
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-            <div className="px-8 py-8 border-b border-white/20">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Últimas noticias procesadas</h2>
-                <button 
-                  onClick={() => navigate('/history')}
-                  className="text-white !important hover:text-white/90 font-bold text-base transition-colors hover:scale-105 transform" 
-                  style={{ color: 'white' }}
-                >
-                  Ver todas →
-                </button>
-              </div>
+          <div className="upload-news-panel">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Últimas noticias procesadas</h2>
+              <button 
+                onClick={() => navigate('/history')}
+                className="text-white hover:text-white/90 font-bold text-base transition-colors hover:scale-105 transform" 
+              >
+                Ver todas →
+              </button>
             </div>
             
             {/* Mostrar error de noticias si existe */}
             {newsError && (
-              <div className="px-8 py-4 bg-red-500/20 border-b border-red-500/30">
+              <div className="mb-4 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
                 <div className="flex items-center">
                   <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -316,149 +315,20 @@ export default function DashboardPage() {
               </div>
             )}
             
-            <div className="overflow-x-auto">
-              {newsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-white/70 text-lg">Cargando noticias...</div>
-                </div>
-              ) : ultimasNoticias.length === 0 ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-white/70 text-lg">No hay noticias disponibles</div>
-                </div>
-              ) : (
-                <table className="min-w-full">
-                  <thead className="bg-black/20">
-                    <tr>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TÍTULO</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TIPO PUBLICACIÓN</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FECHA</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SOPORTE</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MEDIO</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SECCIÓN</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">AUTOR</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CONDUCTOR</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ENTREVISTADO</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TEMA</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_1</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_2</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">LINK</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ALCANCE</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">COTIZACIÓN</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TAPA</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">VALORACIÓN</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">EJE COMUNICACIONAL</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FACTOR POLÍTICO</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CRISIS</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">GESTIÓN</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ÁREA</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_1</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_2</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_3</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_4</th>
-                      <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_5</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/10">
-                    {ultimasNoticias.map((noticia) => (
-                      <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
-                        <td className="px-4 py-3 text-center">
-                          <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.title}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.publication_type}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{new Date(noticia.date).toLocaleDateString()}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.support}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.media}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.section}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.author}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.interviewee || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.topic?.name || 'Sin tema'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90">
-                            <a href={noticia.link} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">
-                              Ver
-                            </a>
-                          </div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.audience_size || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.quotation || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
-                            noticia.valuation === 'positive' 
-                              ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
-                              : noticia.valuation === 'neutral'
-                              ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
-                              : noticia.valuation === 'negative'
-                              ? 'bg-red-500/20 text-red-300 border border-red-300/30'
-                              : 'bg-white/20 text-white/90 border border-white/30'
-                          }`}>
-                            {noticia.valuation || 'Sin valoración'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.political_factor || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.crisis ? 'Sí' : 'No'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[2]?.name || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[3]?.name || '-'}</div>
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[4]?.name || '-'}</div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+            {newsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-white/70 text-lg">Cargando noticias...</div>
+              </div>
+            ) : ultimasNoticias.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-white/70 text-lg">No hay noticias disponibles</div>
+              </div>
+            ) : (
+              <NewsTable 
+                news={ultimasNoticias} 
+                showEditButton={false}
+              />
+            )}
           </div>
         </div>
     </>
