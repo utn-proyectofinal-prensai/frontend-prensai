@@ -5,6 +5,7 @@ import { useEnabledMentions } from '../hooks/useMentions';
 import { apiService, type NewsItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
 import { EditNewsModal } from '../components/common/EditNewsModal';
+import NewsTable from '../components/common/NewsTable';
 import '../styles/history.css';
 import '../styles/upload-news.css';
 
@@ -142,8 +143,8 @@ export default function HistoryPage() {
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="history-filter-input"
-                  />
-                </div>
+              />
+            </div>
 
             {/* Botón de filtros (TODO: implementar filtros avanzados) */}
             <div className="history-filter-group flex-shrink-0">
@@ -172,240 +173,44 @@ export default function HistoryPage() {
               {newsHistory.filter(n => n.valuation === 'positive').length}
             </div>
             <div className="history-stat-label">Positivas</div>
-                </div>
+          </div>
           <div className="history-stat-item">
             <div className="history-stat-value">
               {newsHistory.filter(n => n.crisis).length}
-                </div>
-            <div className="history-stat-label">Crisis</div>
-                </div>
-              </div>
             </div>
+            <div className="history-stat-label">Crisis</div>
+          </div>
+        </div>
+      </div>
 
       {/* Tabla de noticias mejorada */}
       <div className="history-table-container">
-              {isLoading ? (
+        {isLoading ? (
           <div className="history-loading">
             <div className="history-loading-spinner"></div>
             <p>Cargando historial de noticias...</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-            <table className="history-table">
-                <thead>
-                  <tr>
-                    <th>Acciones</th>
-                    <th>Título</th>
-                    <th>Fecha</th>
-                    <th>Medio</th>
-                    <th>Link</th>
-                    <th>Tipo</th>
-                    <th>Soporte</th>
-                    <th>Sección</th>
-                    <th>Valoración</th>
-                    <th>Tema</th>
-                    <th>Menciones</th>
-                    <th>Autor</th>
-                    <th>Entrevistado</th>
-                    <th>Crisis</th>
-                    <th>Factor Político</th>
-                    <th>Audiencia</th>
-                    <th>Presupuesto</th>
-                    <th>Creador</th>
-                    <th>Revisor</th>
-                    <th>Fecha de Creación</th>
-                    <th>Última Actualización</th>
-                      </tr>
-                    </thead>
-              <tbody>
-                      {filteredNews.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="history-table-cell-content">
-                        <button
-                          onClick={() => handleEditNews(item)}
-                          className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors duration-200"
-                          title="Editar noticia"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content font-semibold">
-                        {item.title}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {new Date(item.date).toLocaleDateString()}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.media}
-                      </div>
-                          </td>
-                    <td>
-                      <a 
-                        href={item.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="history-link"
-                      >
-                        Ver
-                      </a>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.publication_type === 'REVISAR MANUAL' || !item.publication_type ? (
-                          <span className="history-badge history-badge-warning">
-                            {item.publication_type || 'Sin tipo'}
-                          </span>
-                        ) : (
-                          item.publication_type
-                        )}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.support || '-'}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.section || '-'}
-                            </div>
-                          </td>
-                    <td>
-                      <span className={`history-badge ${
-                              item.valuation === 'positive' 
-                          ? 'history-badge-positive' 
-                                : item.valuation === 'neutral'
-                          ? 'history-badge-neutral'
-                                : item.valuation === 'negative'
-                          ? 'history-badge-negative'
-                          : item.valuation === 'REVISAR MANUAL' || !item.valuation
-                          ? 'history-badge-warning'
-                          : 'history-badge-neutral'
-                      }`}>
-                        {item.valuation === 'positive' ? 'Positiva' :
-                         item.valuation === 'negative' ? 'Negativa' :
-                         item.valuation === 'neutral' ? 'Neutra' :
-                         item.valuation === 'REVISAR MANUAL' ? 'Revisar manual' :
-                         item.valuation || 'Sin valoración'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.topic ? (
-                          <div className="flex flex-col gap-1">
-                            <span className="inline-block bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
-                              {item.topic.name}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-white/50">-</span>
-                        )}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.mentions.length > 0 ? (
-                          <div className="flex flex-col gap-1">
-                            {item.mentions.map((mention, index) => (
-                              <span key={index} className="inline-block bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
-                                {mention.name}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-white/50">-</span>
-                        )}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.author || '-'}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.interviewee || '-'}
-                            </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.crisis ? (
-                          <span className="text-red-400 font-semibold">SÍ</span>
-                        ) : (
-                          <span className="text-white font-semibold">NO</span>
-                        )}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.political_factor === 'REVISAR MANUAL' || !item.political_factor ? (
-                          <span className="history-badge history-badge-warning">
-                            {item.political_factor || 'Sin factor'}
-                          </span>
-                        ) : (
-                          item.political_factor
-                        )}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.audience_size ? item.audience_size.toLocaleString('es-AR') : '-'}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.quotation ? `$${item.quotation.toLocaleString('es-AR')}` : '-'}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.creator?.name || '-'}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {item.reviewer?.name || '-'}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </div>
-                          </td>
-                    <td>
-                      <div className="history-table-cell-content">
-                        {new Date(item.updated_at).toLocaleDateString()}
-                      </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+          </div>
+        ) : (
+          <NewsTable 
+            news={filteredNews} 
+            showEditButton={true}
+            onEditNews={handleEditNews}
+          />
+        )}
 
-              {filteredNews.length === 0 && !isLoading && (
+        {filteredNews.length === 0 && !isLoading && (
           <div className="history-empty">
             <div className="history-empty-icon">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-                  </div>
+            </div>
             <h3 className="text-xl font-semibold text-white mb-2">No se encontraron noticias</h3>
             <p className="text-white/70">
               {searchTerm ? `No hay noticias que coincidan con "${searchTerm}"` : 'No hay noticias procesadas aún'}
             </p>
-                </div>
-              )}
+          </div>
+        )}
 
         {/* Controles de paginación */}
         {(pagination || newsHistory.length > 0) && (
@@ -424,7 +229,7 @@ export default function HistoryPage() {
                   <option value={50}>50</option>
                 </select>
                 <span className="text-sm text-white font-medium">por página</span>
-            </div>
+              </div>
 
               {/* Información de paginación */}
               <div className="flex items-center gap-4">
@@ -444,7 +249,7 @@ export default function HistoryPage() {
                     className="history-pagination-button"
                   >
                     ‹
-                    </button>
+                  </button>
                   
                   <span className="text-sm text-white px-3">
                     {pagination ? (
@@ -460,7 +265,7 @@ export default function HistoryPage() {
                     className="history-pagination-button"
                   >
                     ›
-                    </button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -496,4 +301,4 @@ export default function HistoryPage() {
       />
     </div>
   );
-} 
+}

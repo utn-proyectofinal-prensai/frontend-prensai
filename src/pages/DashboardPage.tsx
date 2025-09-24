@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api';
 import type { DashboardStats, NewsItem } from '../services/api';
 import { DASHBOARD_MESSAGES } from '../constants/messages';
+import NewsTable from '../components/common/NewsTable';
 import '../styles/history.css';
 
 export default function DashboardPage() {
@@ -314,176 +315,20 @@ export default function DashboardPage() {
               </div>
             )}
             
-            <div className="history-table-container">
-              {newsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-white/70 text-lg">Cargando noticias...</div>
-                </div>
-              ) : ultimasNoticias.length === 0 ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-white/70 text-lg">No hay noticias disponibles</div>
-                </div>
-              ) : (
-                <table className="history-table">
-                  <thead>
-                    <tr>
-                      <th>Título</th>
-                      <th>Fecha</th>
-                      <th>Medio</th>
-                      <th>Link</th>
-                      <th>Tipo</th>
-                      <th>Soporte</th>
-                      <th>Sección</th>
-                      <th>Valoración</th>
-                      <th>Tema</th>
-                      <th>Menciones</th>
-                      <th>Autor</th>
-                      <th>Entrevistado</th>
-                      <th>Crisis</th>
-                      <th>Factor Político</th>
-                      <th>Audiencia</th>
-                      <th>Presupuesto</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ultimasNoticias.map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <div className="history-table-cell-content">
-                            <span className="font-medium text-white/90" title={item.title}>
-                              {item.title}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {new Date(item.date).toLocaleDateString('es-AR')}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.media}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            <a 
-                              href={item.link} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="history-link"
-                            >
-                              Ver
-                            </a>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.publication_type || '-'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.support}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.section || '-'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.valuation === 'positive' && (
-                              <span className="history-badge history-badge-positive">Positiva</span>
-                            )}
-                            {item.valuation === 'negative' && (
-                              <span className="history-badge history-badge-negative">Negativa</span>
-                            )}
-                            {item.valuation === 'neutral' && (
-                              <span className="history-badge history-badge-neutral">Neutra</span>
-                            )}
-                            {(!item.valuation || item.valuation === 'REVISAR MANUAL') && (
-                              <span className="history-badge history-badge-warning">
-                                {item.valuation === 'REVISAR MANUAL' ? 'Revisar manual' : 'Sin valoración'}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.topic ? (
-                              <span className="history-badge" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: 'rgb(34, 197, 94)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
-                                {item.topic.name}
-                              </span>
-                            ) : (
-                              '-'
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.mentions && item.mentions.length > 0 ? (
-                              <div className="flex flex-col gap-1">
-                                {item.mentions.map((mention, index) => (
-                                  <span 
-                                    key={index}
-                                    className="history-badge" 
-                                    style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)', color: 'rgb(59, 130, 246)', border: '1px solid rgba(59, 130, 246, 0.3)' }}
-                                  >
-                                    {mention.name}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              '-'
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.author || '-'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.interviewee || '-'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            <span className={item.crisis ? 'history-badge-crisis' : 'text-white/90'}>
-                              {item.crisis ? 'SÍ' : 'NO'}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.political_factor && item.political_factor !== 'REVISAR MANUAL' ? (
-                              item.political_factor
-                            ) : (
-                              <span className="history-badge history-badge-warning">
-                                {item.political_factor === 'REVISAR MANUAL' ? 'Revisar manual' : 'Sin factor'}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.audience_size ? item.audience_size.toLocaleString('es-AR') : '-'}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="history-table-cell-content">
-                            {item.quotation ? item.quotation.toLocaleString('es-AR') : '-'}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+            {newsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-white/70 text-lg">Cargando noticias...</div>
+              </div>
+            ) : ultimasNoticias.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-white/70 text-lg">No hay noticias disponibles</div>
+              </div>
+            ) : (
+              <NewsTable 
+                news={ultimasNoticias} 
+                showEditButton={false}
+              />
+            )}
           </div>
         </div>
     </>
