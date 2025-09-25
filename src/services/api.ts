@@ -162,7 +162,7 @@ export interface AiOption {
 
 export interface AiConfiguration {
   key: string;
-  value: string | string[] | null;
+  value: string | string[] | number | null;
   value_type: 'string' | 'array' | 'reference';
   display_name: string;
   description: string;

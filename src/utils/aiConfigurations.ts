@@ -2,7 +2,7 @@ import type { AiConfiguration, AiOption } from '../services/api';
 
 export const MAX_ARRAY_ITEMS = 10;
 
-export type DraftValue = string | string[] | null;
+export type DraftValue = string | string[] | number | null;
 
 export function normalizeValue(config: AiConfiguration): DraftValue {
   const { value, value_type: valueType } = config;
@@ -64,7 +64,7 @@ export function serializeValue(
       if (options && options.length > 0) {
         const match = options.find((option) => String(option.value) === String(value));
         if (match) {
-          return String(match.value);
+          return match.value;
         }
       }
       return String(value);
