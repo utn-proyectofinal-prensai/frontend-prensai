@@ -20,8 +20,8 @@ export default function NewsTable({
   };
 
   return (
-    <div className={`history-table-container ${className}`}>
-      <table className="history-table">
+    <div className={`history-table-container ${className}`} style={{ overflowX: 'auto' }}>
+      <table className="history-table" style={{ minWidth: '1200px' }}>
         <thead>
           <tr>
             {showEditButton && <th>Acción</th>}
