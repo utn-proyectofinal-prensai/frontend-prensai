@@ -5,13 +5,17 @@ interface NewsTableProps {
   showEditButton?: boolean;
   onEditNews?: (news: NewsItem) => void;
   className?: string;
+  selectedNewsIds?: Set<number>;
+  onNewsToggle?: (newsId: number) => void;
 }
 
 export default function NewsTable({ 
   news, 
   showEditButton = false, 
   onEditNews,
-  className = ""
+  className = "",
+  selectedNewsIds,
+  onNewsToggle
 }: NewsTableProps) {
   const handleEditNews = (item: NewsItem) => {
     if (onEditNews) {
@@ -19,11 +23,20 @@ export default function NewsTable({
     }
   };
 
+  const handleNewsToggle = (newsId: number) => {
+    if (onNewsToggle) {
+      onNewsToggle(newsId);
+    }
+  };
+
+  const showCheckboxes = selectedNewsIds !== undefined && onNewsToggle !== undefined;
+
   return (
-    <div className={`history-table-container ${className}`}>
-      <table className="history-table">
+    <div className={`history-table-container ${className}`} style={{ overflowX: 'auto' }}>
+      <table className="history-table" style={{ minWidth: '1200px' }}>
         <thead>
           <tr>
+            {showCheckboxes && <th>Seleccionar</th>}
             {showEditButton && <th>Acción</th>}
             <th>Título</th>
             <th>Fecha</th>
@@ -54,6 +67,18 @@ export default function NewsTable({
         <tbody>
           {news.map((item) => (
             <tr key={item.id}>
+              {showCheckboxes && (
+                <td>
+                  <div className="history-table-cell-content">
+                    <input
+                      type="checkbox"
+                      checked={selectedNewsIds?.has(item.id) || false}
+                      onChange={() => handleNewsToggle(item.id)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                  </div>
+                </td>
+              )}
               {showEditButton && (
                 <td>
                   <div className="history-table-cell-content">

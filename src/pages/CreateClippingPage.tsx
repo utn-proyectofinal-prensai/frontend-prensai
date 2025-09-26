@@ -1,715 +1,800 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
-import { apiService } from '../services/api';
-import { useNews } from '../hooks/useNews';
-import type { ClippingMetrics, NewsItem } from '../services/api';
-import * as XLSX from 'xlsx';
-import MetricsCharts from '../components/MetricsCharts';
-import { TopicCard } from '../components/common';
+import { apiService, type ClippingData } from '../services/api';
+import { useEnabledTopics } from '../hooks';
+import { NewsTable, Snackbar } from '../components/common';
+import '../styles/upload-news.css';
 
-interface EventoTema {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  color: string;
-  activo: boolean;
-  etiquetas: string[];
-}
-
-// Usar la interfaz NewsItem de la API
-type Noticia = NewsItem;
 
 export default function CreateClippingPage() {
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const { topics: enabledTopics, loading: topicsLoading } = useEnabledTopics();
   
-  const [eventosTemas, setEventosTemas] = useState<EventoTema[]>([]);
-  const [isLoadingTemas, setIsLoadingTemas] = useState(true);
+  // Estados para el flujo de tabs
+  const [activeSection, setActiveSection] = useState<'topic' | 'news' | 'generate'>('topic');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Hook para obtener las noticias
-  const { news: allNews } = useNews({ limit: 1000 });
+  // Estados para los datos del clipping
+  const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
+  const [dateFrom, setDateFrom] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date.toISOString().split('T')[0];
+  });
+  const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
+  const [filteredNews, setFilteredNews] = useState<any[]>([]);
+  const [selectedNewsIds, setSelectedNewsIds] = useState<Set<number>>(new Set());
+  const [isLoadingNews, setIsLoadingNews] = useState(false);
 
-  // Cargar temas reales de la base de datos
-  useEffect(() => {
-    if (allNews.length > 0) {
-      try {
-        setIsLoadingTemas(true);
-        
-        // Extraer temas únicos de las noticias
-        const temasUnicos = [...new Set(allNews.map(news => news.topic?.name).filter(Boolean))];
-        
-        // Generar colores para cada tema
-        const colores = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
-        
-        const temasFormateados: EventoTema[] = temasUnicos.map((tema, index) => ({
-          id: (index + 1).toString(),
-          nombre: tema!,
-          descripcion: `Noticias relacionadas con ${tema}`,
-          color: colores[index % colores.length],
-          activo: true,
-          etiquetas: [tema!.toLowerCase()]
-        }));
-        
-        setEventosTemas(temasFormateados);
-      } catch (error) {
-        console.error('Error cargando temas:', error);
-      } finally {
-        setIsLoadingTemas(false);
-      }
+  // Estados para procesamiento
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingStatus, setGeneratingStatus] = useState('');
+  
+  // Estados para mensajes
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [titleError, setTitleError] = useState('');
+
+
+  // Validaciones de pasos (memoizadas para evitar re-renders)
+  const isTopicStepValid = useMemo(() => {
+    return selectedTopic !== null;
+  }, [selectedTopic]);
+  const isDatesStepValid = useMemo(() => dateTo && (!dateFrom || new Date(dateFrom) <= new Date(dateTo)), [dateFrom, dateTo]);
+  const isNewsStepValid = useMemo(() => selectedNewsIds.size > 0, [selectedNewsIds.size]);
+  const isGenerateStepValid = useMemo(() => isNewsStepValid, [isNewsStepValid]);
+
+  // Funciones para el dropdown
+  const handleDropdownToggle = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleSectionChange = (section: 'topic' | 'news' | 'generate') => {
+    setActiveSection(section);
+    setIsDropdownOpen(false);
+  };
+
+  // Función para obtener el texto del paso actual
+  const getCurrentStepText = () => {
+    switch (activeSection) {
+      case 'topic':
+        return 'Paso 1: Tema';
+      case 'news':
+        return 'Paso 2: Noticias';
+      case 'generate':
+        return 'Paso 3: Generar';
+      default:
+        return 'Paso 1: Tema';
     }
-  }, [allNews]);
+  };
 
-
-  const [isLoadingNoticias, setIsLoadingNoticias] = useState(false);
-
-  const [eventoTemaSeleccionado, setEventoTemaSeleccionado] = useState<string>('');
-  const [noticiasSeleccionadas, setNoticiasSeleccionadas] = useState<Set<number>>(new Set());
-  const [noticiasFiltradas, setNoticiasFiltradas] = useState<Noticia[]>([]);
-  const [metricas, setMetricas] = useState<ClippingMetrics | null>(null);
-  const [isLoadingMetricas, setIsLoadingMetricas] = useState(false);
-
-  // Cargar noticias cuando cambia el evento/tema seleccionado
+  // Efecto para cerrar el dropdown cuando se hace clic fuera
   useEffect(() => {
-    const loadNoticiasPorTema = async () => {
-      if (eventoTemaSeleccionado) {
-        try {
-          setIsLoadingNoticias(true);
-          const eventoTema = eventosTemas.find(e => e.id === eventoTemaSeleccionado);
-          
-          if (eventoTema) {
-            // Filtrar noticias por tema
-            const noticiasDelTema = allNews.filter(noticia => noticia.topic?.name === eventoTema.nombre);
-            
-            setNoticiasFiltradas(noticiasDelTema);
-            setNoticiasSeleccionadas(new Set());
-          }
-        } catch (error) {
-          console.error('Error cargando noticias por tema:', error);
-        } finally {
-          setIsLoadingNoticias(false);
-        }
-      } else {
-        setNoticiasFiltradas([]);
-        setNoticiasSeleccionadas(new Set());
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
       }
     };
 
-    loadNoticiasPorTema();
-  }, [eventoTemaSeleccionado, eventosTemas, allNews]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-  const handleEventoTemaChange = (eventoId: string) => {
-    setEventoTemaSeleccionado(eventoId);
-  };
-
-  const handleNoticiaToggle = (noticiaId: number) => {
-    const nuevasSeleccionadas = new Set(noticiasSeleccionadas);
-    if (nuevasSeleccionadas.has(noticiaId)) {
-      nuevasSeleccionadas.delete(noticiaId);
+  // Cargar noticias automáticamente cuando se selecciona un tema
+  useEffect(() => {
+    if (selectedTopic === null) {
+      setFilteredNews([]);
+      setSelectedNewsIds(new Set());
     } else {
-      nuevasSeleccionadas.add(noticiaId);
+      // Cargar noticias automáticamente con los filtros por defecto
+      loadFilteredNews();
     }
-    setNoticiasSeleccionadas(nuevasSeleccionadas);
-  };
+  }, [selectedTopic]);
 
-  const handleSeleccionarTodas = () => {
-    const todasLasIds = noticiasFiltradas.map(noticia => noticia.id);
-    setNoticiasSeleccionadas(new Set(todasLasIds));
-  };
+  // Limpiar error cuando hay texto en el input (solo cuando se intenta generar)
+  useEffect(() => {
+    if (titleError && titleInputRef.current?.value?.trim()) {
+      setTitleError('');
+    }
+  }, [titleError]);
 
-  const handleDeseleccionarTodas = () => {
-    setNoticiasSeleccionadas(new Set());
-  };
-
-  const handleGenerarClipping = () => {
-    if (noticiasSeleccionadas.size === 0) {
-      alert('Por favor selecciona al menos una noticia para generar el clipping.');
+  // Función para cargar noticias filtradas
+  const loadFilteredNews = async () => {
+    if (!selectedTopic || !dateTo) {
+      setFilteredNews([]);
+      setSelectedNewsIds(new Set());
       return;
     }
 
-    const noticiasDelClipping = noticiasFiltradas.filter(noticia => 
-      noticiasSeleccionadas.has(noticia.id)
-    );
-
-    // Generar Excel con las noticias seleccionadas
+    setIsLoadingNews(true);
     try {
-      // Preparar los datos para el Excel (mismo formato que noticias.xlsx)
-      const excelData = noticiasDelClipping.map(noticia => ({
-        'TITULO': noticia.title,
-        'TIPO PUBLICACION': noticia.publication_type,
-        'FECHA': noticia.date,
-        'SOPORTE': noticia.support,
-        'MEDIO': noticia.media,
-        'SECCION': noticia.section,
-        'AUTOR': noticia.author,
-        'ENTREVISTADO': noticia.interviewee || '-',
-        'TEMA': noticia.topic?.name || '-',
-        'ETIQUETA_1': '-',
-        'ETIQUETA_2': '-',
-        'LINK': noticia.link,
-        'ALCANCE': noticia.audience_size || '-',
-        'COTIZACION': noticia.quotation || '-',
-        'TAPA': '-',
-        'VALORACION': noticia.valuation || '-',
-        'EJE COMUNICACIONAL': '-',
-        'FACTOR POLITICO': noticia.political_factor || '-',
-        'CRISIS': noticia.crisis ? 'Sí' : 'No',
-        'GESTION': '-',
-        'AREA': '-',
-        'MENCION_1': noticia.mentions[0]?.name || '-',
-        'MENCION_2': noticia.mentions[1]?.name || '-',
-        'MENCION_3': noticia.mentions[2]?.name || '-',
-        'MENCION_4': noticia.mentions[3]?.name || '-',
-        'MENCION_5': noticia.mentions[4]?.name || '-'
-      }));
-
-      // Crear el workbook y worksheet
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-      // Agregar el worksheet al workbook
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Noticias');
-
-      // Generar el nombre del archivo con fecha y tema
-      const eventoTema = getEventoTemaById(eventoTemaSeleccionado);
-      const fecha = new Date().toISOString().split('T')[0];
-      const nombreArchivo = `clipping_${eventoTema?.nombre?.replace(/\s+/g, '_')}_${fecha}.xlsx`;
-
-      // Descargar el archivo
-      XLSX.writeFile(workbook, nombreArchivo);
-
-      console.log('Excel generado con éxito:', nombreArchivo);
-      alert(`Excel generado con ${noticiasDelClipping.length} noticias seleccionadas.\nArchivo: ${nombreArchivo}`);
+      const response = await apiService.getNews({
+        topic_id: selectedTopic,
+        start_date: dateFrom || undefined,
+        end_date: dateTo,
+        limit: 1000
+      });
+      setFilteredNews(response.news);
+      setSelectedNewsIds(new Set());
     } catch (error) {
-      console.error('Error generando Excel:', error);
-      alert('Error al generar el archivo Excel. Por favor, intenta nuevamente.');
-    }
-  };
-
-  const handleGenerarMetricas = async () => {
-    if (noticiasSeleccionadas.size === 0) {
-      alert('Por favor selecciona al menos una noticia para generar las métricas.');
-      return;
-    }
-
-    try {
-      setIsLoadingMetricas(true);
-      const newsIds = Array.from(noticiasSeleccionadas).map(id => id.toString());
-      const response = await apiService.calculateClippingMetrics(newsIds);
-      setMetricas(response.metricas);
-      console.log('Métricas calculadas:', response.metricas);
-    } catch (error) {
-      console.error('Error generando métricas:', error);
-      alert('Error al generar las métricas. Por favor, intenta nuevamente.');
+      console.error('Error cargando noticias:', error);
+      setErrorMessage('Error al cargar las noticias filtradas');
     } finally {
-      setIsLoadingMetricas(false);
+      setIsLoadingNews(false);
     }
   };
 
-  const handleGenerarInforme = () => {
-    if (noticiasSeleccionadas.size === 0) {
-      alert('Por favor selecciona al menos una noticia para generar el informe.');
+  // Manejar selección de noticias
+  const handleNewsToggle = (newsId: number) => {
+    const newSelected = new Set(selectedNewsIds);
+    if (newSelected.has(newsId)) {
+      newSelected.delete(newsId);
+    } else {
+      newSelected.add(newsId);
+    }
+    setSelectedNewsIds(newSelected);
+  };
+
+  const handleSelectAllNews = () => {
+    setSelectedNewsIds(new Set(filteredNews.map(news => news.id)));
+  };
+
+  const handleDeselectAllNews = () => {
+    setSelectedNewsIds(new Set());
+  };
+
+
+  // Generar clipping
+  const generateClipping = async () => {
+    // Obtener el valor actual del input usando el ref
+    const currentTitle = titleInputRef.current?.value;
+    console.log('Título actual:', currentTitle);
+    
+    // Validar que hay noticias seleccionadas
+    if (!isNewsStepValid) {
+      setErrorMessage('Por favor selecciona al menos una noticia para generar el clipping');
       return;
     }
+    
+    // Validar que hay un título
+    if (!currentTitle || !currentTitle.trim()) {
+      console.log('Título vacío, estableciendo mensaje de error');
+      setTitleError('Por favor ingresa un título');
+      return;
+    }
+    
+    // Limpiar errores si todo está bien
+    setTitleError('');
 
-    const noticiasDelClipping = noticiasFiltradas.filter(noticia => 
-      noticiasSeleccionadas.has(noticia.id)
-    );
+    setIsGenerating(true);
+    setGeneratingStatus('Generando clipping...');
 
-    // Aquí iría la lógica para generar informe
-    console.log('Generando informe con:', noticiasDelClipping);
-    alert(`Informe generado con ${noticiasDelClipping.length} noticias seleccionadas.`);
+    try {
+      const clippingData: ClippingData = {
+        title: currentTitle.trim(),
+        topic_id: selectedTopic!,
+        start_date: dateFrom,
+        end_date: dateTo,
+        news_ids: Array.from(selectedNewsIds)
+      };
+
+      await apiService.createClipping(clippingData);
+      
+      setSuccessMessage(`Clipping "${currentTitle}" generado exitosamente con ${selectedNewsIds.size} noticias`);
+      
+      // Redirigir al dashboard después de 2 segundos
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error generando clipping:', error);
+      setErrorMessage('Error al generar el clipping. Por favor, intenta nuevamente.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const getEventoTemaById = (id: string) => {
-    return eventosTemas.find(evento => evento.id === id);
-  };
-
-  return (
-    <div className="dashboard-container w-full h-screen relative overflow-x-hidden" style={{ backgroundColor: '#1e293b' }}>
-      {/* Fondo que cubre TODA la pantalla */}
-      <div 
-        className="fixed top-0 left-0 w-screen h-screen"
-        style={{
-          backgroundImage: `url('/images/fondodashboard.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed',
-          zIndex: 0
-        }}
-      ></div>
-
-      {/* Overlay muy sutil */}
-      <div 
-        className="fixed top-0 left-0 w-screen h-screen bg-black/5" 
-        style={{ zIndex: 1 }}
-      ></div>
-
-      {/* Contenido principal */}
-      <div className="relative z-10 w-full h-full">
-        {/* Header transparente */}
-        <div className="bg-black/20 backdrop-blur-md shadow-lg border-b border-white/10 w-full">
-          <div className="w-full py-4 px-6">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-6">
-                <button 
-                  onClick={() => navigate('/dashboard')}
-                  className="text-white hover:text-blue-300 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                </button>
-                <div className="w-32 h-32 flex items-center justify-center">
-                  <img 
-                    src="/images/fondoblanco.png" 
-                    alt="PrensAI Logo" 
-                    className="w-28 h-28 object-contain"
-                    onError={(e) => {
-                      console.log('Error loading logo:', e);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+  // Componente de selección de tema
+  const TopicSection = () => (
+    <div className="upload-news-section">
+      <div className="upload-news-section-header">
+        <div className="flex-1">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
+            <h3 className="upload-news-section-title">Paso 1: Selecciona un tema</h3>
+            <div className="upload-news-tip">
+              <p className="upload-news-tip-text">
+                💡 <strong>Tip:</strong> Selecciona el tema que quieres analizar para tu clipping
+              </p>
+            </div>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-white drop-shadow-lg">
-                    PrensAI
-                  </h1>
-                  <p className="text-white/80 text-sm font-medium">Crear Clipping</p>
                 </div>
               </div>
               
-              <div className="flex flex-col items-end space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-white text-sm font-bold">
-                      {user?.username?.charAt(0).toUpperCase()}
-                    </span>
+      {topicsLoading ? (
+        <div className="text-center py-8 text-white/70">Cargando temas...</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6 max-h-80 overflow-y-auto justify-items-center">
+          {enabledTopics.map((topic) => {
+            const isSelected = selectedTopic === topic.id;
+            return (
+              <div
+                key={topic.id}
+                onClick={() => setSelectedTopic(topic.id)}
+                className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] ${
+                  isSelected
+                    ? 'border-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20'
+                    : 'border-white/20 bg-white/5 hover:border-blue-400/50 hover:bg-white/10'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                    isSelected ? 'border-blue-400 bg-blue-400' : 'border-white/30'
+                  }`}>
+                    {isSelected && (
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-white drop-shadow-md">Bienvenido, {user?.username}</p>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-white">{topic.name}</h4>
+                    {topic.description && (
+                      <p className="text-sm text-white/70 mt-1">{topic.description}</p>
+                    )}
                   </div>
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+                </div>
+  );
+
+
+  // Componente de selección de noticias
+  const NewsSection = () => (
+    <div className="upload-news-section">
+      <div className="upload-news-section-header">
+        <div className="flex-1">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
+            <h3 className="upload-news-section-title">Paso 2: Selecciona noticias</h3>
+            
+            <div className="upload-news-tip">
+              <p className="upload-news-tip-text">
+                💡 <strong>Tip:</strong> Las noticias se cargan automáticamente. Ajusta las fechas y haz clic en "Filtrar" para actualizar
+              </p>
+            </div>
+            
+            {/* Rango de fechas en línea */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span 
+                  style={{ 
+                    color: '#FFFFFF', 
+                    fontSize: '14px', 
+                    fontWeight: '500',
+                    display: 'block'
+                  }}
+                >
+                  Desde:
+                </span>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="h-10 bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-lg px-3 text-white text-sm focus:outline-none focus:border-blue-400"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span 
+                  style={{ 
+                    color: '#FFFFFF', 
+                    fontSize: '14px', 
+                    fontWeight: '500',
+                    display: 'block'
+                  }}
+                >
+                  Hasta:
+                </span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="h-10 bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-lg px-3 text-white text-sm focus:outline-none focus:border-blue-400"
+                />
+              </div>
+              <button
+                onClick={loadFilteredNews}
+                disabled={!isDatesStepValid}
+                className="h-10 px-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span>Filtrar</span>
+              </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Contenido principal */}
-        <div className="w-full py-16 px-6 h-full">
-          {/* Título y descripción */}
-          <div className="mb-32 text-center">
-            <h2 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">Crear Clipping</h2>
-            <p className="text-white/90 text-lg font-medium drop-shadow-md">
-              Selecciona un evento/tema y elige las noticias que quieres incluir en tu clipping
+      {isLoadingNews ? (
+        <div className="text-center py-8 text-white/70">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div>
+          Cargando noticias...
+        </div>
+      ) : filteredNews.length > 0 ? (
+        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-white/80">
+              {filteredNews.length} noticias encontradas • {selectedNewsIds.size} seleccionadas
             </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleSelectAllNews}
+                className="h-10 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm"
+              >
+                <span className="text-white font-bold mr-1">✓</span>
+                <span>Seleccionar todo</span>
+              </button>
+              <button
+                onClick={handleDeselectAllNews}
+                className="h-10 px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm"
+              >
+                <span>✨</span>
+                <span>Limpiar</span>
+              </button>
+            </div>
           </div>
 
-          {/* Paso 1: Seleccionar Evento/Tema */}
-          <div className="mt-16 mb-40">
-            <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Paso 1: Selecciona un Evento/Tema</h3>
-            
-            {isLoadingTemas ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <span className="ml-3 text-white/80">Cargando temas...</span>
+          <div style={{ overflowX: 'auto' }}>
+            <NewsTable 
+              news={filteredNews}
+              showEditButton={false}
+              onEditNews={() => {}} // No editamos en este contexto
+              selectedNewsIds={selectedNewsIds}
+              onNewsToggle={handleNewsToggle}
+            />
+          </div>
+        </div>
+      ) : isTopicStepValid && isDatesStepValid ? (
+        <div className="text-center py-12">
+          <p className="text-white/60 text-lg">No se encontraron noticias para los filtros seleccionados</p>
+          <p className="text-white/40 text-sm mt-2">Intenta ajustar el rango de fechas y vuelve a filtrar</p>
               </div>
             ) : (
-              <div className="cards-grid">
-                {eventosTemas.filter(evento => evento.activo).map((evento) => (
-                  <TopicCard
-                    key={evento.id}
-                    topic={{
-                      id: parseInt(evento.id),
-                      name: evento.nombre,
-                      description: evento.descripcion,
-                      enabled: evento.activo,
-                      crisis: false,
-                      created_at: new Date().toISOString(),
-                      updated_at: new Date().toISOString()
-                    }}
-                    variant="selection"
-                    isSelected={eventoTemaSeleccionado === evento.id}
-                    onSelect={(topic) => handleEventoTemaChange(topic.id.toString())}
-                  />
-                ))}
+        <div className="text-center py-12">
+          <p className="text-white/60 text-lg">Selecciona un tema para cargar las noticias automáticamente</p>
               </div>
             )}
           </div>
+  );
 
-          {/* Paso 2: Seleccionar Noticias */}
-          {eventoTemaSeleccionado && (
-            <div className="mt-16 mb-40">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white drop-shadow-md">
-                  Paso 2: Selecciona las noticias para el clipping
-                </h3>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleSeleccionarTodas}
-                    style={{ 
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                      backdropFilter: 'blur(8px)',
-                      color: 'white',
-                      padding: '12px 20px',
-                      borderRadius: '8px',
-                      border: '2px solid rgba(255, 255, 255, 0.4)',
-                      fontWeight: '700',
-                      fontSize: '14px',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    ✅ Marcar todas
-                  </button>
-                  <button
-                    onClick={handleDeseleccionarTodas}
-                    style={{ 
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                      backdropFilter: 'blur(8px)',
-                      color: 'white',
-                      padding: '12px 20px',
-                      borderRadius: '8px',
-                      border: '2px solid rgba(255, 255, 255, 0.4)',
-                      fontWeight: '700',
-                      fontSize: '14px',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    ❌ Desmarcar todas
-                  </button>
-                </div>
-              </div>
-
-                             {isLoadingNoticias ? (
-                 <div className="flex justify-center items-center py-12">
-                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                   <span className="ml-3 text-white/80">Cargando noticias...</span>
-                 </div>
-               ) : noticiasFiltradas.length > 0 ? (
-                <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                      <thead className="bg-black/20">
-                        <tr>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">
-                            <input
-                              type="checkbox"
-                              checked={noticiasSeleccionadas.size === noticiasFiltradas.length && noticiasFiltradas.length > 0}
-                              onChange={() => {
-                                if (noticiasSeleccionadas.size === noticiasFiltradas.length) {
-                                  handleDeseleccionarTodas();
-                                } else {
-                                  handleSeleccionarTodas();
-                                }
-                              }}
-                              className="rounded border-white/30 bg-black/20 text-blue-600 focus:ring-blue-500"
-                            />
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TÍTULO</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TIPO PUBLICACIÓN</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FECHA</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SOPORTE</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MEDIO</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">SECCIÓN</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">AUTOR</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CONDUCTOR</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ENTREVISTADO</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TEMA</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_1</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ETIQUETA_2</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">LINK</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ALCANCE</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">COTIZACIÓN</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">TAPA</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">VALORACIÓN</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">EJE COMUNICACIONAL</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">FACTOR POLÍTICO</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">CRISIS</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">GESTIÓN</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">ÁREA</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_1</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_2</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_3</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_4</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-white/80 uppercase tracking-wider">MENCIÓN_5</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/10">
-                        {noticiasFiltradas.map((noticia) => (
-                          <tr key={noticia.id} className="hover:bg-black/20 transition-colors duration-200">
-                            <td className="px-6 py-4">
-                              <input
-                                type="checkbox"
-                                checked={noticiasSeleccionadas.has(noticia.id)}
-                                onChange={() => handleNoticiaToggle(noticia.id)}
-                                className="rounded border-white/30 bg-black/20 text-blue-600 focus:ring-blue-500"
-                              />
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-semibold text-white max-w-xs truncate text-center">{noticia.title}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.publication_type}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.date}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.support}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.media}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.section}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.author}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.interviewee || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.topic?.name || 'Sin tema'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90">
-                                <a href={noticia.link} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">
-                                  Ver
-                                </a>
-                              </div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.audience_size || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.quotation || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
-                                noticia.valuation === 'positive' 
-                                  ? 'bg-green-500/20 text-green-300 border border-green-300/30' 
-                                  : noticia.valuation === 'neutral'
-                                  ? 'bg-blue-500/20 text-blue-300 border border-blue-300/30'
-                                  : noticia.valuation === 'negative'
-                                  ? 'bg-red-500/20 text-red-300 border border-red-300/30'
-                                  : 'bg-white/20 text-white/90 border border-white/30'
-                              }`}>
-                                {noticia.valuation || 'Sin valoración'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.political_factor || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.crisis ? 'Sí' : 'No'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">-</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[0]?.name || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[1]?.name || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[2]?.name || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[3]?.name || '-'}</div>
-                            </td>
-                            <td className="px-6 py-3 text-center">
-                              <div className="text-sm font-medium text-white/90 whitespace-nowrap">{noticia.mentions[4]?.name || '-'}</div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                             ) : (
-                 <div className="text-center py-12">
-                   <p className="text-white/60 text-lg">No hay noticias disponibles para este evento/tema</p>
-                 </div>
-               )}
-            </div>
-          )}
-
-          {/* Paso 3: Descargar Excel */}
-          {eventoTemaSeleccionado && noticiasSeleccionadas.size > 0 && (
-            <div className="mt-16 mb-40">
-              <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">
-                Paso 3: Descargar Excel
-              </h3>
-              <p className="text-white/80 text-sm mb-4">
-                Opcional. Se descargará un archivo Excel con las noticias seleccionadas y sus respectivos campos de análisis
+  // Componente de generación
+  const GenerateSection = () => (
+    <div className="upload-news-section">
+      <div className="upload-news-section-header">
+        <div className="flex-1">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
+            <h3 className="upload-news-section-title">Paso 3: Generar clipping</h3>
+            <div className="upload-news-tip">
+              <p className="upload-news-tip-text">
+                💡 <strong>Tip:</strong> Ingresa un título y haz clic en "Generar Clipping" para crear tu clipping
               </p>
-              <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-white/80 mb-2">
-                      <span className="font-semibold">Evento/Tema:</span> {getEventoTemaById(eventoTemaSeleccionado)?.nombre}
-                    </p>
-                    <p className="text-white/80">
-                      <span className="font-semibold">Noticias seleccionadas:</span> {noticiasSeleccionadas.size} de {noticiasFiltradas.length}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleGenerarClipping}
-                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    Descargar Excel
-                  </button>
-                </div>
-              </div>
             </div>
-          )}
-
-          {/* Paso 4: Generar Métricas e Informe */}
-          {eventoTemaSeleccionado && noticiasSeleccionadas.size > 0 && (
-            <div className="mt-16 mb-40">
-              <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">
-                Paso 4: Generar Métricas e Informe
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Card: Generar Métricas */}
-                <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="flex flex-col items-center text-center mb-4">
-                    <div className="w-12 h-12 bg-green-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-green-300/20 mb-3">
-                      <svg className="w-6 h-6 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-bold text-white">Generar Métricas</h4>
-                  </div>
-                  <p className="text-white/80 text-sm mb-4 text-center">
-                    Genera análisis estadísticos y métricas detalladas de las noticias seleccionadas
-                  </p>
+            <div className="upload-news-section-actions">
                   <button
-                    onClick={handleGenerarMetricas}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    Generar Métricas
+                onClick={generateClipping}
+                disabled={isGenerating}
+                className="h-10 sm:h-11 px-4 sm:px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm sm:text-base"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Generando...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>Generar Clipping</span>
+                  </>
+                )}
                   </button>
-                </div>
-
-                {/* Card: Generar Informe */}
-                <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:bg-black/40 transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="flex flex-col items-center text-center mb-4">
-                    <div className="w-12 h-12 bg-purple-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-purple-300/20 mb-3">
-                      <svg className="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-bold text-white">Generar Informe</h4>
-                  </div>
-                  <p className="text-white/80 text-sm mb-4 text-center">
-                    Crea un informe completo con análisis y conclusiones de las noticias seleccionadas
-                  </p>
-                  <button
-                    onClick={handleGenerarInforme}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    Generar Informe
-                  </button>
-                </div>
-              </div>
-
-              {/* Visualización de Métricas */}
-              {metricas && (
-                <div className="mt-8">
-                  <h4 className="text-lg font-bold text-white mb-4 drop-shadow-md">
-                    📊 Métricas Calculadas
-                  </h4>
-                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
-                    <MetricsCharts metricas={metricas} />
-                    
-                    {/* Botón para descargar PDF */}
-                    <div className="flex justify-center mt-6">
-                      <button
-                        onClick={() => {
-                          // TODO: Implementar descarga de PDF
-                          alert('Funcionalidad de descarga de PDF próximamente disponible');
-                        }}
-                        className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl font-semibold hover:from-red-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                      >
-                        📄 Descargar PDF con Métricas
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Loading state para métricas */}
-              {isLoadingMetricas && (
-                <div className="mt-8 flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                  <span className="ml-3 text-white/80">Calculando métricas...</span>
-                </div>
-              )}
             </div>
-          )}
-
-          {/* Resumen */}
-          {eventoTemaSeleccionado && (
-            <div className="bg-black/20 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
-              <h4 className="text-lg font-bold text-white mb-4">Resumen</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-white/80">
-                <div>
-                  <p className="font-semibold">Evento/Tema seleccionado:</p>
-                  <p>{getEventoTemaById(eventoTemaSeleccionado)?.nombre || 'Ninguno'}</p>
-                </div>
-                <div>
-                  <p className="font-semibold">Total de noticias disponibles:</p>
-                  <p>{noticiasFiltradas.length}</p>
-                </div>
-                <div>
-                  <p className="font-semibold">Noticias seleccionadas:</p>
-                  <p>{noticiasSeleccionadas.size}</p>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
+
+      <div>
+        {/* Campo de título */}
+        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
+          <h4 className="text-base sm:text-lg font-semibold text-white flex items-center justify-center gap-2 mb-4">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Título del clipping <span className="text-red-400">*</span>
+          </h4>
+          <p 
+                    style={{ 
+              color: '#FFFFFF', 
+              opacity: 0.6,
+                      fontSize: '14px',
+              marginBottom: '12px'
+            }}
+          >
+            Este título identificará tu clipping en el sistema
+          </p>
+          <input
+            ref={titleInputRef}
+            type="text"
+            placeholder="Ej: Clipping Política - Enero 2024"
+            className="w-full bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-xl p-3 text-white placeholder-white/50 focus:outline-none focus:border-blue-400"
+            autoComplete="off"
+            spellCheck="false"
+          />
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg" style={{ display: titleError ? 'block' : 'none' }}>
+            <p className="text-red-400 text-sm flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {titleError}
+            </p>
+          </div>
+        </div>
+
+        {/* Espaciado personalizado */}
+        <div style={{ height: '60px' }}></div>
+
+        {/* Resumen de configuración */}
+        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-white/80">
+            <div>
+              <p className="font-semibold">Tema seleccionado:</p>
+              <p>{enabledTopics.find(t => t.id === selectedTopic)?.name || 'Ninguno'}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Período:</p>
+              <p>{dateFrom && dateTo ? `${new Date(dateFrom).toLocaleDateString()} - ${new Date(dateTo).toLocaleDateString()}` : 'No definido'}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Noticias seleccionadas:</p>
+              <p>{selectedNewsIds.size}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="upload-news-container">
+      {/* Contenido principal */}
+      <div className="upload-news-main-content">
+        <div className="upload-news-content-wrapper">
+          <div className="upload-news-sections">
+              
+            {/* Navegación por pestañas con flujo secuencial */}
+            <div className="upload-news-navigation">
+              
+              {/* Dropdown para móviles */}
+              <div className="upload-news-mobile-dropdown" ref={dropdownRef}>
+                  <button
+                  onClick={handleDropdownToggle}
+                  className={`upload-news-dropdown-button ${activeSection === 'topic' ? 'active' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                      {activeSection === 'topic' ? '1' : activeSection === 'news' ? '2' : '3'}
+                    </div>
+                    <span>{getCurrentStepText()}</span>
+                    <div className="flex items-center gap-2">
+                      {activeSection === 'topic' && selectedTopic && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">
+                          ✓
+                        </span>
+                      )}
+                      {activeSection === 'news' && selectedNewsIds.size > 0 && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white">
+                          {selectedNewsIds.size}
+                        </span>
+                      )}
+                      {activeSection === 'generate' && isGenerateStepValid && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <svg 
+                    className={`w-5 h-5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                  </button>
+                
+                {isDropdownOpen && (
+                  <div className="upload-news-dropdown-content">
+                    <div
+                      onClick={() => handleSectionChange('topic')}
+                      className={`upload-news-dropdown-item ${activeSection === 'topic' ? 'active' : ''}`}
+                    >
+                      <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                        1
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Paso 1: Tema</div>
+                        <div className="text-xs text-white/50">Selecciona el tema a analizar</div>
+                      </div>
+                      {isTopicStepValid && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div
+                      onClick={() => isTopicStepValid ? handleSectionChange('news') : undefined}
+                      className={`upload-news-dropdown-item ${activeSection === 'news' ? 'active' : ''} ${!isTopicStepValid ? 'disabled' : ''}`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                        !isTopicStepValid ? 'bg-white/10' : 'bg-purple-500/20'
+                      }`}>
+                        {!isTopicStepValid ? '🔒' : '2'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Paso 2: Noticias</div>
+                        <div className="text-xs text-white/50">
+                          {!isTopicStepValid ? 'Completa el paso anterior primero' : 'Selecciona fechas y noticias'}
+                        </div>
+                      </div>
+                      {selectedNewsIds.size > 0 && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white">
+                          {selectedNewsIds.size}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div
+                      onClick={() => isNewsStepValid ? handleSectionChange('generate') : undefined}
+                      className={`upload-news-dropdown-item ${activeSection === 'generate' ? 'active' : ''} ${!isNewsStepValid ? 'disabled' : ''}`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                        !isNewsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
+                      }`}>
+                        {!isNewsStepValid ? '🔒' : '3'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Paso 3: Generar</div>
+                        <div className="text-xs text-white/50">
+                          {!isNewsStepValid ? 'Completa el paso anterior primero' : 'Genera el clipping'}
+                        </div>
+                      </div>
+                      {isGenerateStepValid && (
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                </div>
+                )}
+              </div>
+
+              {/* Indicador de progreso secuencial */}
+              <div className="upload-news-step-indicators">
+                <div className="upload-news-step-item">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                    isTopicStepValid 
+                      ? 'bg-green-500 text-white' 
+                      : activeSection === 'topic'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white/20 text-white/50'
+                  }`}>
+                    {isTopicStepValid ? '✓' : '1'}
+                  </div>
+                  <div className={`upload-news-step-connector ${
+                    isTopicStepValid ? 'bg-green-500' : 'bg-white/20'
+                  }`}></div>
+                </div>
+                
+                <div className="upload-news-step-item">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                    isNewsStepValid 
+                      ? 'bg-green-500 text-white' 
+                      : activeSection === 'news'
+                      ? 'bg-purple-500 text-white'
+                      : isTopicStepValid
+                      ? 'bg-white/30 text-white/70'
+                      : 'bg-white/10 text-white/30'
+                  }`}>
+                    {isNewsStepValid ? '✓' : '2'}
+                 </div>
+                  <div className={`upload-news-step-connector ${
+                    isNewsStepValid ? 'bg-green-500' : 'bg-white/20'
+                  }`}></div>
+            </div>
+                
+                <div className="upload-news-step-item">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                    isGenerateStepValid 
+                      ? 'bg-green-500 text-white' 
+                      : activeSection === 'generate'
+                      ? 'bg-orange-500 text-white'
+                      : isNewsStepValid
+                      ? 'bg-white/30 text-white/70'
+                      : 'bg-white/10 text-white/30'
+                  }`}>
+                    {isGenerateStepValid ? '✓' : '3'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Pestañas con numeración */}
+              <div className="upload-news-tabs">
+                <button
+                  onClick={() => setActiveSection('topic')}
+                  disabled={false}
+                  className={`upload-news-tab ${activeSection === 'topic' ? 'active' : ''}`}
+                >
+                  <div className="flex flex-col items-center justify-center gap-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                        1
+            </div>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      <span className="text-base">Tema</span>
+                      {selectedTopic && (
+                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      )}
+                    </div>
+                    <span className="text-xs text-white/60">Selecciona el tema a analizar</span>
+                  </div>
+                </button>
+                
+                  <button
+                  onClick={() => setActiveSection('news')}
+                  disabled={!isTopicStepValid}
+                  className={`upload-news-tab ${activeSection === 'news' ? 'active' : ''} ${!isTopicStepValid ? 'disabled' : ''}`}
+                >
+                  <div className="flex flex-col items-center justify-center gap-1">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        !isTopicStepValid ? 'bg-white/10' : 'bg-purple-500/20'
+                      }`}>
+                        {!isTopicStepValid ? '🔒' : '2'}
+                </div>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>Noticias</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        selectedNewsIds.size > 0 
+                          ? 'bg-purple-500 text-white' 
+                          : 'bg-white/20 text-white/70'
+                      }`}>
+                        {selectedNewsIds.size}
+                      </span>
+                      {isNewsStepValid && (
+                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      )}
+                    </div>
+                    <span className="text-xs text-white/60">
+                      {!isTopicStepValid ? 'Completa el paso anterior primero' : 'Selecciona fechas y noticias'}
+                    </span>
+                  </div>
+                  </button>
+                
+                      <button
+                  onClick={() => setActiveSection('generate')}
+                  disabled={!isNewsStepValid}
+                  className={`upload-news-tab ${activeSection === 'generate' ? 'active' : ''} ${!isNewsStepValid ? 'disabled' : ''}`}
+                >
+                  <div className="flex flex-col items-center justify-center gap-1">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        !isNewsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
+                      }`}>
+                        {!isNewsStepValid ? '🔒' : '3'}
+                      </div>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span>Generar</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        isGenerateStepValid 
+                          ? 'bg-orange-500 text-white' 
+                          : 'bg-white/20 text-white/70'
+                      }`}>
+                        {isGenerateStepValid ? '✓' : '0'}
+                      </span>
+                      {isGenerateStepValid && (
+                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      )}
+                    </div>
+                    <span className="text-xs text-white/60">
+                      {!isNewsStepValid ? 'Completa el paso anterior primero' : 'Genera el clipping'}
+                    </span>
+                  </div>
+                </button>
+                </div>
+                </div>
+
+            {/* Contenido de la sección activa */}
+            <div className="upload-news-panel">
+              {activeSection === 'topic' && <TopicSection />}
+              {activeSection === 'news' && <NewsSection />}
+              {activeSection === 'generate' && <GenerateSection />}
+            </div>
+            
+          </div>
+                </div>
+                </div>
+
+      {/* Overlay de procesamiento mejorado */}
+      {isGenerating && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="generating-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300"
+        >
+          <div className="w-auto max-w-sm mx-4 rounded-3xl border border-white/20 bg-gradient-to-br from-slate-900/95 to-slate-800/95 shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300 min-h-[400px] flex flex-col justify-center">
+            {/* Spinner principal centrado */}
+            <div className="flex justify-center py-6">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/20 to-emerald-500/20 animate-pulse"></div>
+                <div className="absolute inset-2 rounded-full bg-gradient-to-r from-blue-500/30 to-emerald-500/30 animate-ping"></div>
+                <div className="relative w-full h-full rounded-full bg-gradient-to-r from-blue-500/40 to-emerald-500/40 border border-blue-400/50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            {/* Contenido del modal centrado */}
+            <div className="text-center">
+              <h3 id="generating-title" className="text-xl font-bold text-white py-6">
+                {generatingStatus || 'Generando clipping…'}
+              </h3>
+              <p className="text-white/70 text-sm py-6">
+                Procesando noticias seleccionadas
+              </p>
+              <p className="text-white/60 text-xs py-4">
+                Esto puede tardar unos segundos. Por favor, no cierres esta ventana.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Snackbars para mensajes */}
+      <Snackbar
+        message={errorMessage}
+        isOpen={!!errorMessage}
+        onClose={() => setErrorMessage('')}
+        variant="error"
+      />
+      
+      <Snackbar
+        message={successMessage}
+        isOpen={!!successMessage}
+        onClose={() => setSuccessMessage('')}
+        variant="success"
+      />
     </div>
   );
 } 
