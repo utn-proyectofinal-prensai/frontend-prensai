@@ -8,6 +8,7 @@ import SettingsPage from '../pages/SettingsPage';
 import UsersPage from '../pages/UsersPage';
 import AiConfigurationsPage from '../pages/AiConfigurationsPage';
 import CreateClippingPage from '../pages/CreateClippingPage';
+import ClippingsHistoryPage from '../pages/ClippingsHistoryPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
@@ -83,6 +84,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <CreateClippingPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'clippings-history',
+        element: (
+          <ProtectedRoute>
+            <ClippingsHistoryPage />
           </ProtectedRoute>
         ),
       },

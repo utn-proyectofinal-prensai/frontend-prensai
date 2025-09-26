@@ -52,6 +52,11 @@ const routeConfig: Record<string, RouteConfig> = {
     showBackButton: true,
     backTo: '/dashboard'
   },
+  '/clippings-history': { 
+    title: 'Historial de Clippings - Explora todos los clippings generados',
+    showBackButton: true,
+    backTo: '/dashboard'
+  },
   '/settings': { 
     title: 'Configuración del Sistema',
     showBackButton: true,
