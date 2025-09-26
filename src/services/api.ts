@@ -163,6 +163,35 @@ export interface User {
   sign_in_count?: number;
 }
 
+export interface AiOption {
+  label: string;
+  value: string | number;
+}
+
+export interface AiConfiguration {
+  key: string;
+  value: string | string[] | number | null;
+  value_type: 'string' | 'array' | 'reference';
+  display_name: string;
+  description: string;
+  enabled: boolean;
+  reference_type?: string;
+  options?: AiOption[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AiConfigurationListResponse {
+  ai_configurations: AiConfiguration[];
+}
+
+export interface UpdateAiConfigurationRequest {
+  ai_configuration: {
+    value: string | string[] | null;
+    enabled?: boolean;
+  };
+}
+
 export interface CreateUserData {
   username: string;
   email: string;
@@ -286,7 +315,7 @@ async function apiRequest<T>(
       return {} as T;
     } catch (error) {
       console.error('Error en API request:', error);
-      throw error;
+      throw error as Error;
     }
 }
 
@@ -361,7 +390,7 @@ export const apiService = {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
       return await apiRequest<DashboardStats>('/news/stats');
-    } catch (error) {
+    } catch {
       console.warn('Endpoint /news/stats no disponible, devolviendo datos por defecto');
       // Devolver datos por defecto si el endpoint no existe
       return {
@@ -636,6 +665,18 @@ export const apiService = {
     return apiRequest<{ message: string; metricas: ClippingMetrics }>('/news/metrics', {
       method: 'POST',
       body: JSON.stringify({ newsIds }),
+    });
+  },
+
+  // Configuraciones de IA
+  async getAiConfigurations(): Promise<AiConfigurationListResponse> {
+    return apiRequest<AiConfigurationListResponse>('/ai_configurations');
+  },
+
+  async updateAiConfiguration(key: string, data: UpdateAiConfigurationRequest): Promise<AiConfiguration> {
+    return apiRequest<AiConfiguration>(`/ai_configurations/${key}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
     });
   },
 

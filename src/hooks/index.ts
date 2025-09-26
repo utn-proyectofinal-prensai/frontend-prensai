@@ -26,3 +26,6 @@ export { useTopics, useEnabledTopics } from './useTopics';
 
 // Hook para manejo de menciones
 export { useMentions, useEnabledMentions } from './useMentions';
+
+// Hook para configuraciones de IA
+export { useAiConfigurations } from './useAiConfigurations';
