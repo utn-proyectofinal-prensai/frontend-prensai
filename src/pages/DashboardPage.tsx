@@ -148,71 +148,55 @@ export default function DashboardPage() {
              remover el cálculo local de estadísticas y usar directamente apiService.getDashboardStats() */}
         <div className="stats-section mb-32">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer" style={{ padding: '0.75rem', minHeight: 'auto' }}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-green-300/30 group-hover:from-green-500/30 group-hover:to-emerald-500/30 transition-all duration-300 mr-2">
-                      <svg className="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="upload-news-panel" style={{ padding: '1rem', minHeight: 'auto' }}>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-blue-300/30 mb-5">
+                  <svg className="w-7 h-7 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                    </div>
-                    <p className="text-xs font-medium text-white/80">Noticias Hoy</p>
-                  </div>
-                  <p className="text-2xl font-bold text-white mb-1">{stats.noticiasHoy || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
-                  <p className="text-xs text-green-300 font-medium">{stats.noticiasHoy ? '+12% vs ayer' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
                 </div>
+                <p className="text-base font-medium text-white/80 mb-2">Noticias Hoy</p>
+                <p className="text-3xl font-bold text-white mb-1">{stats.noticiasHoy || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
+                <p className="text-xs text-blue-300 font-medium">{stats.noticiasHoy ? '+12% vs ayer' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
               </div>
             </div>
 
-            <div className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer" style={{ padding: '0.75rem', minHeight: 'auto' }}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-blue-300/30 group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 mr-2">
-                      <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="upload-news-panel" style={{ padding: '1rem', minHeight: 'auto' }}>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-green-300/30 mb-5">
+                  <svg className="w-7 h-7 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                    </div>
-                    <p className="text-xs font-medium text-white/80">Esta Semana</p>
-                  </div>
-                  <p className="text-2xl font-bold text-white mb-1">{stats.noticiasEstaSemana || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
-                  <p className="text-xs text-blue-300 font-medium">{stats.noticiasEstaSemana ? '+8% vs semana pasada' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
                 </div>
+                <p className="text-base font-medium text-white/80 mb-2">Esta Semana</p>
+                <p className="text-3xl font-bold text-white mb-1">{stats.noticiasEstaSemana || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
+                <p className="text-xs text-green-300 font-medium">{stats.noticiasEstaSemana ? '+8% vs semana pasada' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
               </div>
             </div>
 
-            <div className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer" style={{ padding: '0.75rem', minHeight: 'auto' }}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500/20 to-violet-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-purple-300/30 group-hover:from-purple-500/30 group-hover:to-violet-500/30 transition-all duration-300 mr-2">
-                      <svg className="w-4 h-4 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="upload-news-panel" style={{ padding: '1rem', minHeight: 'auto' }}>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-violet-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-purple-300/30 mb-5">
+                  <svg className="w-7 h-7 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                    </div>
-                    <p className="text-xs font-medium text-white/80">Total Noticias</p>
-                  </div>
-                  <p className="text-2xl font-bold text-white mb-1">{stats.totalNoticias || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
-                  <p className="text-xs text-purple-300 font-medium">{stats.totalNoticias ? '+15% este mes' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
                 </div>
+                <p className="text-base font-medium text-white/80 mb-2">Total Noticias</p>
+                <p className="text-3xl font-bold text-white mb-1">{stats.totalNoticias || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
+                <p className="text-xs text-purple-300 font-medium">{stats.totalNoticias ? '+15% este mes' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
               </div>
             </div>
 
-            <div className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer" style={{ padding: '0.75rem', minHeight: 'auto' }}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-orange-500/20 to-amber-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-orange-300/30 group-hover:from-orange-500/30 group-hover:to-amber-500/30 transition-all duration-300 mr-2">
-                      <svg className="w-4 h-4 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="upload-news-panel" style={{ padding: '1rem', minHeight: 'auto' }}>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-orange-500/20 to-amber-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-orange-300/30 mb-5">
+                  <svg className="w-7 h-7 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
-                    </div>
-                    <p className="text-xs font-medium text-white/80">Temas Analizados</p>
-                  </div>
-                  <p className="text-2xl font-bold text-white mb-1">{stats.noticiasPorTema.length || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
-                  <p className="text-xs text-orange-300 font-medium">{stats.noticiasPorTema.length ? '+3 nuevos' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
                 </div>
+                <p className="text-base font-medium text-white/80 mb-2">Temas Analizados</p>
+                <p className="text-3xl font-bold text-white mb-1">{stats.noticiasPorTema.length || DASHBOARD_MESSAGES.COMMON.DATA_PLACEHOLDER}</p>
+                <p className="text-xs text-orange-300 font-medium">{stats.noticiasPorTema.length ? '+3 nuevos' : DASHBOARD_MESSAGES.COMMON.NO_DATA}</p>
               </div>
             </div>
           </div>
