@@ -116,6 +116,20 @@ export interface ClippingData {
   news_ids: number[];
 }
 
+export interface ClippingItem {
+  id: number;
+  title: string;
+  topic_id: number;
+  topic_name?: string;
+  start_date: string;
+  end_date: string;
+  news_count: number;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
 export interface SoporteMetric {
   soporte: string;
   cantidad: number;
@@ -658,6 +672,53 @@ export const apiService = {
     }>('/clippings', {
       method: 'POST',
       body: JSON.stringify({ clipping: data }),
+    });
+  },
+
+  // Obtener clippings con paginación
+  async getClippings(filters?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    topic_id?: number;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<{
+    clippings: ClippingItem[];
+    pagination: {
+      page: number;
+      limit: number;
+      count: number;
+      total_pages: number;
+    };
+  }> {
+    const params = new URLSearchParams();
+    
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.topic_id) params.append('topic_id', filters.topic_id.toString());
+    if (filters?.start_date) params.append('start_date', filters.start_date);
+    if (filters?.end_date) params.append('end_date', filters.end_date);
+
+    const queryString = params.toString();
+    const endpoint = `/clippings${queryString ? `?${queryString}` : ''}`;
+    
+    return apiRequest<{
+      clippings: ClippingItem[];
+      pagination: {
+        page: number;
+        limit: number;
+        count: number;
+        total_pages: number;
+      };
+    }>(endpoint);
+  },
+
+  // Eliminar clipping
+  async deleteClipping(id: number): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>(`/clippings/${id}`, {
+      method: 'DELETE',
     });
   },
 };
