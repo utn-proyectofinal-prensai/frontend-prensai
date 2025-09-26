@@ -113,9 +113,9 @@ export default function CreateClippingPage() {
     setIsLoadingNews(true);
     try {
       const response = await apiService.getNews({
-        topic: enabledTopics.find(t => t.id === selectedTopic)?.name,
-        date_from: dateFrom || undefined,
-        date_to: dateTo,
+        topic_id: selectedTopic,
+        start_date: dateFrom || undefined,
+        end_date: dateTo,
         limit: 1000
       });
       setFilteredNews(response.news);
