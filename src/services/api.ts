@@ -108,6 +108,14 @@ export interface Topic {
   updated_at: string;
 }
 
+export interface ClippingData {
+  title: string;
+  topic_id: number;
+  start_date: string;
+  end_date: string;
+  news_ids: number[];
+}
+
 export interface SoporteMetric {
   soporte: string;
   cantidad: number;
@@ -288,10 +296,10 @@ export const apiService = {
   async getNews(filters?: {
     page?: number;
     limit?: number;
-    topic?: string;
+    topic_id?: number;
     media?: string;
-    date_from?: string;
-    date_to?: string;
+    start_date?: string;
+    end_date?: string;
     search?: string;
     status?: string;
   }): Promise<NewsListResponse> {
@@ -299,10 +307,10 @@ export const apiService = {
     
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
-    if (filters?.topic) params.append('topic', filters.topic);
+    if (filters?.topic_id) params.append('topic_id', filters.topic_id.toString());
     if (filters?.media) params.append('media', filters.media);
-    if (filters?.date_from) params.append('date_from', filters.date_from);
-    if (filters?.date_to) params.append('date_to', filters.date_to);
+    if (filters?.start_date) params.append('start_date', filters.start_date);
+    if (filters?.end_date) params.append('end_date', filters.end_date);
     if (filters?.search) params.append('search', filters.search);
     if (filters?.status) params.append('status', filters.status);
 
@@ -628,6 +636,28 @@ export const apiService = {
     return apiRequest<{ message: string; metricas: ClippingMetrics }>('/news/metrics', {
       method: 'POST',
       body: JSON.stringify({ newsIds }),
+    });
+  },
+
+  // Crear clipping
+  async createClipping(data: ClippingData): Promise<{
+    message: string;
+    clipping: {
+      id: number;
+      title: string;
+      created_at: string;
+    };
+  }> {
+    return apiRequest<{
+      message: string;
+      clipping: {
+        id: number;
+        title: string;
+        created_at: string;
+      };
+    }>('/clippings', {
+      method: 'POST',
+      body: JSON.stringify({ clipping: data }),
     });
   },
 };

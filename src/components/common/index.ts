@@ -39,3 +39,6 @@ export { default as CenteredCardSelection } from './CenteredCardSelection';
 // Componentes de workflow
 export { default as WorkflowStepper } from './WorkflowStepper';
 export { default as SimpleWorkflowStepper } from './SimpleWorkflowStepper';
+
+// Componentes de tabla
+export { default as NewsTable } from './NewsTable';
