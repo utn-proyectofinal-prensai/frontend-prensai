@@ -108,6 +108,14 @@ export interface Topic {
   updated_at: string;
 }
 
+export interface ClippingData {
+  title: string;
+  topic_id: number;
+  start_date: string;
+  end_date: string;
+  news_ids: number[];
+}
+
 export interface SoporteMetric {
   soporte: string;
   cantidad: number;
@@ -628,6 +636,28 @@ export const apiService = {
     return apiRequest<{ message: string; metricas: ClippingMetrics }>('/news/metrics', {
       method: 'POST',
       body: JSON.stringify({ newsIds }),
+    });
+  },
+
+  // Crear clipping
+  async createClipping(data: ClippingData): Promise<{
+    message: string;
+    clipping: {
+      id: number;
+      title: string;
+      created_at: string;
+    };
+  }> {
+    return apiRequest<{
+      message: string;
+      clipping: {
+        id: number;
+        title: string;
+        created_at: string;
+      };
+    }>('/clippings', {
+      method: 'POST',
+      body: JSON.stringify({ clipping: data }),
     });
   },
 };
