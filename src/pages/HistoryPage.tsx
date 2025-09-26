@@ -143,8 +143,8 @@ export default function HistoryPage() {
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="history-filter-input"
-              />
-            </div>
+                  />
+                </div>
 
             {/* Botón de filtros (TODO: implementar filtros avanzados) */}
             <div className="history-filter-group flex-shrink-0">
@@ -173,44 +173,44 @@ export default function HistoryPage() {
               {newsHistory.filter(n => n.valuation === 'positive').length}
             </div>
             <div className="history-stat-label">Positivas</div>
-          </div>
+                </div>
           <div className="history-stat-item">
             <div className="history-stat-value">
               {newsHistory.filter(n => n.crisis).length}
-            </div>
+                </div>
             <div className="history-stat-label">Crisis</div>
-          </div>
-        </div>
-      </div>
+                </div>
+              </div>
+            </div>
 
       {/* Tabla de noticias mejorada */}
       <div className="history-table-container">
-        {isLoading ? (
+              {isLoading ? (
           <div className="history-loading">
             <div className="history-loading-spinner"></div>
             <p>Cargando historial de noticias...</p>
-          </div>
-        ) : (
+                </div>
+              ) : (
           <NewsTable 
             news={filteredNews} 
             showEditButton={true}
             onEditNews={handleEditNews}
           />
-        )}
+              )}
 
-        {filteredNews.length === 0 && !isLoading && (
+              {filteredNews.length === 0 && !isLoading && (
           <div className="history-empty">
             <div className="history-empty-icon">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-            </div>
+                  </div>
             <h3 className="text-xl font-semibold text-white mb-2">No se encontraron noticias</h3>
             <p className="text-white/70">
               {searchTerm ? `No hay noticias que coincidan con "${searchTerm}"` : 'No hay noticias procesadas aún'}
             </p>
-          </div>
-        )}
+                </div>
+              )}
 
         {/* Controles de paginación */}
         {(pagination || newsHistory.length > 0) && (
@@ -229,7 +229,7 @@ export default function HistoryPage() {
                   <option value={50}>50</option>
                 </select>
                 <span className="text-sm text-white font-medium">por página</span>
-              </div>
+            </div>
 
               {/* Información de paginación */}
               <div className="flex items-center gap-4">
@@ -249,7 +249,7 @@ export default function HistoryPage() {
                     className="history-pagination-button"
                   >
                     ‹
-                  </button>
+                    </button>
                   
                   <span className="text-sm text-white px-3">
                     {pagination ? (
@@ -265,7 +265,7 @@ export default function HistoryPage() {
                     className="history-pagination-button"
                   >
                     ›
-                  </button>
+                    </button>
                 </div>
               </div>
             </div>
@@ -301,4 +301,4 @@ export default function HistoryPage() {
       />
     </div>
   );
-}
+} 
