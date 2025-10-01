@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiService, type ClippingData } from '../services/api';
 import { useEnabledTopics } from '../hooks';
 import { NewsTable, Snackbar } from '../components/common';
+import { Button } from '../components/ui/button';
 import '../styles/upload-news.css';
 
 
@@ -309,16 +310,15 @@ export default function CreateClippingPage() {
                   className="h-10 bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-lg px-3 text-white text-sm focus:outline-none focus:border-blue-400"
                 />
               </div>
-              <button
+              <Button
                 onClick={loadFilteredNews}
                 disabled={!isDatesStepValid}
-                className="h-10 px-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm"
+                variant="primary"
+                size="default"
+                icon="Search"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>Filtrar</span>
-              </button>
+                Filtrar
+              </Button>
               </div>
             </div>
           </div>
@@ -336,20 +336,22 @@ export default function CreateClippingPage() {
               {filteredNews.length} noticias encontradas • {selectedNewsIds.size} seleccionadas
             </p>
             <div className="flex gap-3">
-              <button
+              <Button
                 onClick={handleSelectAllNews}
-                className="h-10 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm"
+                variant="success"
+                size="default"
+                icon="Check"
               >
-                <span className="text-white font-bold mr-1">✓</span>
-                <span>Seleccionar todo</span>
-              </button>
-              <button
+                Seleccionar todo
+              </Button>
+              <Button
                 onClick={handleDeselectAllNews}
-                className="h-10 px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm"
+                variant="secondary"
+                size="default"
+                icon="Refresh"
               >
-                <span>✨</span>
-                <span>Limpiar</span>
-              </button>
+                Limpiar
+              </Button>
             </div>
           </div>
 
@@ -389,25 +391,22 @@ export default function CreateClippingPage() {
               </p>
             </div>
             <div className="upload-news-section-actions">
-                  <button
+                  <Button
                 onClick={generateClipping}
                 disabled={isGenerating}
-                className="h-10 sm:h-11 px-4 sm:px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm sm:text-base"
+                variant="success"
+                size="lg"
+                icon="Generate"
               >
                 {isGenerating ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     <span>Generando...</span>
                   </>
                 ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <span>Generar Clipping</span>
-                  </>
+                  <span>Generar Clipping</span>
                 )}
-                  </button>
+                  </Button>
             </div>
           </div>
         </div>

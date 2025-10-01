@@ -1,5 +1,5 @@
 import React from 'react';
-import ActionButton from './ActionButton';
+import { Button } from '../ui/button';
 
 interface InputWithButtonProps {
   value: string;
@@ -32,13 +32,14 @@ const InputWithButton: React.FC<InputWithButtonProps> = ({
         placeholder={placeholder}
         className="flex-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-blue-400 transition-all"
       />
-      <ActionButton
+      <Button
         onClick={onButtonClick}
         disabled={buttonDisabled}
         variant="primary"
+        icon="Plus"
       >
         {buttonText}
-      </ActionButton>
+      </Button>
     </div>
   );
 };

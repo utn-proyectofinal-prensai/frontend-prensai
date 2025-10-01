@@ -3,6 +3,7 @@ import { useBlocker } from 'react-router-dom';
 import AiConfigurationField from '../components/admin/AiConfigurationField';
 import Snackbar from '../components/common/Snackbar';
 import { useAiConfigurations } from '../hooks/useAiConfigurations';
+import { Button } from '../components/ui/button';
 import {
   type DraftValue,
   normalizeValue,
@@ -297,21 +298,16 @@ export default function AiConfigurationsPage() {
                 )}
               </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={handleSave}
                 disabled={!hasDirtyFields || isSaving}
-                className={`inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:cursor-not-allowed disabled:hover:shadow-sm ${
-                  hasDirtyFields
-                    ? 'bg-amber-600 text-white hover:bg-amber-700 hover:shadow-md focus:ring-amber-500'
-                    : 'bg-slate-600 text-slate-400'
-                }`}
+                variant="primary"
+                size="default"
+                icon="Save"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
                 Guardar cambios
-              </button>
+              </Button>
             </div>
           </div>
         </div>

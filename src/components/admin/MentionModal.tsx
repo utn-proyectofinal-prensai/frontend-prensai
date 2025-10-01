@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Mention } from '../../services/api';
+import { Button } from '../ui/button';
 
 interface MentionModalProps {
   mention: Mention | null;
@@ -135,15 +136,13 @@ export const MentionModal: React.FC<MentionModalProps> = ({
               <h2 className="text-lg font-semibold text-white/90">
                 {isCreateMode ? 'Crear Nueva Mención' : 'Detalles de la Mención'}
               </h2>
-              <button
+              <Button
                 onClick={onClose}
-                className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:scale-105 border border-white/20 flex-shrink-0"
+                variant="ghost"
+                size="icon"
+                icon="X"
                 title="Cerrar"
-              >
-                <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              />
             </div>
           </div>
 
@@ -377,15 +376,7 @@ export const MentionModal: React.FC<MentionModalProps> = ({
                     columnGap: '16px'
                   }}
                 >
-                  <button
-                    onClick={handleEdit}
-                    className="px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-green-400/30 text-sm"
-                    title={isCreateMode ? "Crear Mención" : "Guardar Cambios"}
-                  >
-                    <span className="text-lg">{isCreateMode ? '➕' : '💾'}</span>
-                    <span>{isCreateMode ? 'Crear' : 'Guardar'}</span>
-                  </button>
-                  <button
+                  <Button
                     onClick={() => {
                       if (isCreateMode) {
                         onClose();
@@ -394,12 +385,21 @@ export const MentionModal: React.FC<MentionModalProps> = ({
                         onClose();
                       }
                     }}
-                    className="px-4 py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-400/30 text-sm"
+                    variant="secondary"
+                    size="default"
                     title={isCreateMode ? "Cancelar Creación" : "Cancelar Edición"}
                   >
-                    <span className="text-lg">❌</span>
-                    <span>Cancelar</span>
-                  </button>
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleEdit}
+                    variant="success"
+                    size="default"
+                    icon={isCreateMode ? "Plus" : "Save"}
+                    title={isCreateMode ? "Crear Mención" : "Guardar Cambios"}
+                  >
+                    {isCreateMode ? 'Crear' : 'Guardar'}
+                  </Button>
                 </div>
               ) : !isCreateMode ? (
                 <div 
@@ -409,22 +409,24 @@ export const MentionModal: React.FC<MentionModalProps> = ({
                     columnGap: '24px'
                   }}
                 >
-                  <button
-                    onClick={handleEdit}
-                    className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/30 text-sm"
-                    title="Editar Mención"
-                  >
-                    <span className="text-lg">✏️</span>
-                    <span>Editar</span>
-                  </button>
-                  <button
+                  <Button
                     onClick={handleDelete}
-                    className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-red-400/30 text-sm"
+                    variant="danger"
+                    size="default"
+                    icon="Delete"
                     title="Eliminar Mención"
                   >
-                    <span className="text-lg">🗑️</span>
-                    <span>Eliminar</span>
-                  </button>
+                    Eliminar
+                  </Button>
+                  <Button
+                    onClick={handleEdit}
+                    variant="primary"
+                    size="default"
+                    icon="Edit"
+                    title="Editar Mención"
+                  >
+                    Editar
+                  </Button>
                 </div>
               ) : null}
             </div>

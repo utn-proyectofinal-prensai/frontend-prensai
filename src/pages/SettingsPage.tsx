@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiService, type Topic, type Mention } from '../services/api';
 import { Snackbar, TopicCard, MentionCard, ConfirmationModal } from '../components/common';
 import { TopicModal, MentionModal } from '../components/admin';
+import { Button } from '../components/ui/button';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'eventos' | 'menciones'>('eventos');
@@ -331,12 +332,14 @@ export default function AdminPage() {
               <div className="text-center py-12">
                 <div className="text-red-400 mb-4">⚠️</div>
                 <p className="text-white/80 mb-4">{eventosError}</p>
-                <button 
+                <Button 
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  variant="primary"
+                  size="default"
+                  icon="Refresh"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : (
               /* Lista de eventos/temas con cards mejoradas */
@@ -386,12 +389,14 @@ export default function AdminPage() {
               <div className="text-center py-12">
                 <div className="text-red-400 mb-4">⚠️</div>
                 <p className="text-white/80 mb-4">{error}</p>
-                <button 
+                <Button 
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  variant="primary"
+                  size="default"
+                  icon="Refresh"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : (
               /* Lista de menciones con cards mejoradas */

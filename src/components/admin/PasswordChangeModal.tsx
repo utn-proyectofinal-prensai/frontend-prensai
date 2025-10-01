@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { validatePassword } from '../../utils/validation';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 import type { User } from '../../types/auth';
+import { Button } from '../ui/button';
 
 interface PasswordChangeModalProps {
   isOpen: boolean;
@@ -165,16 +166,14 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
               <h2 className="text-lg font-semibold text-white/90">
                 Cambiar Contraseña
               </h2>
-              <button
+              <Button
                 onClick={onClose}
-                className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:scale-105 border border-white/20 flex-shrink-0"
+                variant="ghost"
+                size="icon"
+                icon="X"
                 title="Cerrar"
                 disabled={isLoading}
-              >
-                <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              />
             </div>
           </div>
 
@@ -268,36 +267,17 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
                       placeholder="Contraseña actual"
                       disabled={isLoading}
                     />
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        padding: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1000,
-                        minWidth: '24px',
-                        minHeight: '24px',
-                        color: '#ffffff',
-                        fontSize: '18px',
-                        fontFamily: 'monospace',
-                        fontWeight: 'bold',
-                        textShadow: '0 0 2px rgba(0,0,0,0.8)'
-                      }}
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 p-0 text-white/80 hover:text-white"
                       title={showCurrentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                       disabled={isLoading}
                     >
                       {showCurrentPassword ? '⚫' : '👁'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -352,36 +332,17 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
                     placeholder="Nueva contraseña"
                     disabled={isLoading}
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      padding: '6px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: 1000,
-                      minWidth: '24px',
-                      minHeight: '24px',
-                      color: '#ffffff',
-                      fontSize: '18px',
-                      fontFamily: 'monospace',
-                      fontWeight: 'bold',
-                      textShadow: '0 0 2px rgba(0,0,0,0.8)'
-                    }}
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 p-0 text-white/80 hover:text-white"
                     title={showNewPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     disabled={isLoading}
                   >
                     {showNewPassword ? '⚫' : '👁'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -435,36 +396,17 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
                     placeholder="Repetir contraseña"
                     disabled={isLoading}
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      padding: '6px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: 1000,
-                      minWidth: '24px',
-                      minHeight: '24px',
-                      color: '#ffffff',
-                      fontSize: '18px',
-                      fontFamily: 'monospace',
-                      fontWeight: 'bold',
-                      textShadow: '0 0 2px rgba(0,0,0,0.8)'
-                    }}
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 p-0 text-white/80 hover:text-white"
                     title={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     disabled={isLoading}
                   >
                     {showConfirmPassword ? '⚫' : '👁'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -514,7 +456,16 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
                 rowGap: '24px'
               }}
             >
-              <button
+              <Button
+                onClick={onClose}
+                disabled={isLoading}
+                variant="secondary"
+                size="lg"
+                title="Cancelar"
+              >
+                Cancelar
+              </Button>
+              <Button
                 onClick={handleSubmit}
                 disabled={
                   isLoading || 
@@ -523,30 +474,20 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
                   newPassword !== confirmPassword ||
                   (requireCurrentPassword && !currentPassword)
                 }
-                className="px-6 py-4 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:via-green-600 hover:to-teal-600 disabled:from-gray-600 disabled:via-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-emerald-500/25 transform hover:scale-110 disabled:transform-none border-2 border-emerald-400/40 disabled:border-gray-500/40 text-base"
+                variant="success"
+                size="lg"
+                icon="Save"
                 title="Cambiar Contraseña"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                     <span>Cambiando...</span>
                   </>
                 ) : (
-                  <>
-                    <span className="text-xl">✅</span>
-                    <span>Cambiar Contraseña</span>
-                  </>
+                  <span>Cambiar Contraseña</span>
                 )}
-              </button>
-              <button
-                onClick={onClose}
-                disabled={isLoading}
-                className="px-6 py-4 bg-gradient-to-r from-red-500 via-pink-500 to-rose-500 hover:from-red-600 hover:via-pink-600 hover:to-rose-600 disabled:from-gray-600 disabled:via-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl hover:shadow-red-500/25 transform hover:scale-110 disabled:transform-none border-2 border-red-400/40 disabled:border-gray-500/40 text-base"
-                title="Cancelar"
-              >
-                <span className="text-xl">❌</span>
-                <span>Cancelar</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

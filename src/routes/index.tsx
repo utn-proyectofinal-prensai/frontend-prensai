@@ -102,7 +102,7 @@ export const router = createBrowserRouter([
             <ProfilePage />
           </ProtectedRoute>
         ),
-      }
+      },
     ],
   },
   {

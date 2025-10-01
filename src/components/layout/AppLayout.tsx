@@ -4,6 +4,7 @@ import { useAuth } from '../../context/useAuth';
 import { useRef, useState } from 'react';
 import UserDropdown from '../common/UserDropdown';
 import PageBackground from '../common/PageBackground';
+import { Button } from '../ui/button';
 
 interface AppLayoutProps {
   children?: React.ReactNode;
@@ -126,10 +127,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               {config.showBackButton && (
                 <button 
                   onClick={handleBackClick}
-                  className="text-white/80 hover:text-blue-300 transition-all duration-300 p-3 rounded-xl hover:bg-white/10 hover:shadow-lg"
+                  className="w-16 h-16 text-white/80 hover:text-blue-300 transition-all duration-300 p-3 rounded-xl hover:bg-white/10 hover:shadow-lg flex items-center justify-center"
                   title={`Volver ${config.backTo === '/settings' ? 'a Configuración' : 'al Dashboard'}`}
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
@@ -170,14 +171,16 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 )}
               </div>
               <div className="relative" ref={userButtonRef}>
-                <button 
+                <Button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-14 h-14 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-full flex items-center justify-center shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group border-2 border-white/20"
+                  variant="ghost"
+                  size="icon"
+                  className="w-14 h-14 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-full flex items-center justify-center shadow-xl hover:scale-105 hover:shadow-2xl border-2 border-white/20"
                 >
                   <span className="text-white text-xl font-bold drop-shadow-lg">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
-                </button>
+                </Button>
                 <svg 
                   className={`absolute -bottom-2 -right-2 w-6 h-6 text-white bg-gray-800 rounded-full p-1.5 transition-all duration-300 shadow-lg border border-gray-700 ${isDropdownOpen ? 'rotate-180 scale-110' : 'hover:scale-110'}`} 
                   fill="none" 

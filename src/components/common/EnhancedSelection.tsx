@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { TEXT_STYLES, STATUS_STYLES } from '../../constants/styles';
-import ActionButton from './ActionButton';
+import { Button } from '../ui/button';
 
 interface SelectionItem {
   id: string;
@@ -109,22 +109,24 @@ const EnhancedSelection: React.FC<EnhancedSelectionProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
-          <ActionButton
+          <Button
             onClick={onSelectAll}
             variant="secondary"
             size="sm"
             disabled={loading}
+            icon="Check"
           >
             Seleccionar todo
-          </ActionButton>
-          <ActionButton
+          </Button>
+          <Button
             onClick={onClearAll}
             variant="secondary"
             size="sm"
             disabled={loading || !hasSelections}
+            icon="X"
           >
             Limpiar
-          </ActionButton>
+          </Button>
         </div>
       </div>
 
@@ -156,16 +158,13 @@ const EnhancedSelection: React.FC<EnhancedSelectionProps> = ({
           </select>
 
           {/* Filtro de solo seleccionados */}
-          <button
+          <Button
             onClick={() => setShowSelectedOnly(!showSelectedOnly)}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              showSelectedOnly
-                ? 'bg-blue-600 text-white'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
-            }`}
+            variant={showSelectedOnly ? "primary" : "outline"}
+            size="sm"
           >
             Solo seleccionados
-          </button>
+          </Button>
         </div>
       </div>
 

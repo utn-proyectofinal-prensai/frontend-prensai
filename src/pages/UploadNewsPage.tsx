@@ -6,6 +6,7 @@ import { type BatchProcessRequest, parseApiError } from '../services/api';
 import { 
   Snackbar
 } from '../components/common';
+import { Button } from '../components/ui/button';
 import '../styles/upload-news.css';
 
 export default function UploadNewsPage() {
@@ -174,20 +175,22 @@ export default function UploadNewsPage() {
               </p>
             </div>
             <div className="upload-news-section-actions">
-          <button
+          <Button
             onClick={handleSelectAllTopics}
-                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+            variant="success"
+            size="default"
+            icon="Check"
           >
-                <span className="text-white font-bold mr-1">✓</span>
-                <span>Seleccionar todo</span>
-          </button>
-          <button
+            Seleccionar todo
+          </Button>
+          <Button
             onClick={clearTopics}
-                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+            variant="secondary"
+            size="default"
+            icon="Refresh"
           >
-                <span>✨</span>
-                <span>Limpiar</span>
-          </button>
+            Limpiar
+          </Button>
             </div>
           </div>
         </div>
@@ -247,20 +250,22 @@ export default function UploadNewsPage() {
               </p>
             </div>
             <div className="upload-news-section-actions">
-          <button
+          <Button
             onClick={handleSelectAllMentions}
-                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+            variant="success"
+            size="default"
+            icon="Check"
           >
-                <span className="text-white font-bold mr-1">✓</span>
-                <span>Seleccionar todo</span>
-          </button>
-          <button
+            Seleccionar todo
+          </Button>
+          <Button
             onClick={clearMentions}
-                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+            variant="secondary"
+            size="default"
+            icon="Refresh"
           >
-                <span>✨</span>
-                <span>Limpiar</span>
-          </button>
+            Limpiar
+          </Button>
             </div>
           </div>
         </div>
@@ -403,21 +408,23 @@ export default function UploadNewsPage() {
               </p>
             </div>
           <div className="upload-news-section-actions">
-          <button
+          <Button
               onClick={handleAddUrls}
               disabled={validCount === 0}
-              className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm sm:text-base"
+              variant="success"
+              size="default"
+              icon="Plus"
           >
-              <span>+</span>
-              <span>Agregar {validCount} links</span>
-          </button>
-          <button
+              Agregar {validCount} links
+          </Button>
+          <Button
             onClick={clearUrls}
-              className="h-11 px-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+            variant="secondary"
+            size="default"
+            icon="Refresh"
           >
-              <span>✨</span>
-              <span>Limpiar todo</span>
-          </button>
+              Limpiar todo
+          </Button>
           </div>
         </div>
         </div>
@@ -550,25 +557,22 @@ export default function UploadNewsPage() {
             </p>
           </div>
           <div className="upload-news-section-actions">
-            <button
+            <Button
               onClick={processNews}
               disabled={!isReadyToProcess || isProcessing}
-              className="h-10 sm:h-11 px-4 sm:px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm sm:text-base"
+              variant="success"
+              size="lg"
+              icon="Generate"
             >
               {isProcessing ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   <span>Procesando...</span>
                 </>
               ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <span>Procesar {workflowState.urls.filter(url => url.isValid).length} noticias</span>
-                </>
+                <span>Procesar {workflowState.urls.filter(url => url.isValid).length} noticias</span>
               )}
-            </button>
+            </Button>
           </div>
         </div>
         </div>

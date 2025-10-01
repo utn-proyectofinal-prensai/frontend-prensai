@@ -1,5 +1,6 @@
 import React from 'react';
 import type { User } from '../../types/auth';
+import { Button } from '../ui/button';
 
 interface UserFormModalProps {
   isOpen: boolean;
@@ -42,14 +43,16 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
               </p>
             </div>
           </div>
-          <button
+          <Button
             onClick={onClose}
-            className="text-white/60 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-xl"
+            variant="ghost"
+            size="icon"
+            className="text-white/60 hover:text-white"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Formulario */}
@@ -162,19 +165,24 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
           {/* Botones de acción */}
           <div className="flex space-x-4 pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors"
+              variant="outline"
+              size="default"
+              className="flex-1"
             >
-              ❌ Cancelar
-            </button>
-            <button
+              Cancelar
+            </Button>
+            <Button
               type="submit"
-              className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              variant="success"
+              size="default"
+              icon={editingUser ? "Save" : "Plus"}
+              className="flex-1"
             >
-              {editingUser ? '💾 Actualizar' : '➕ Agregar'}
-            </button>
+              {editingUser ? 'Actualizar' : 'Agregar'}
+            </Button>
           </div>
         </form>
       </div>

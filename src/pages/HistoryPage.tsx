@@ -6,6 +6,7 @@ import { apiService, type NewsItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
 import { EditNewsModal } from '../components/common/EditNewsModal';
 import NewsTable from '../components/common/NewsTable';
+import { Button } from '../components/ui/button';
 import '../styles/history.css';
 import '../styles/upload-news.css';
 
@@ -148,12 +149,14 @@ export default function HistoryPage() {
 
             {/* Botón de filtros (TODO: implementar filtros avanzados) */}
             <div className="history-filter-group flex-shrink-0">
-              <button
-                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+              <Button
+                variant="primary"
+                size="default"
+                icon="Search"
                 onClick={() => alert('TODO: Implementar filtros avanzados (fecha, medio, tema, etc.)')}
               >
-                🔍 Filtrar
-              </button>
+                Filtrar
+              </Button>
             </div>
           </div>
         </div>
@@ -243,13 +246,15 @@ export default function HistoryPage() {
                 
                 {/* Navegación de páginas */}
                 <div className="flex items-center gap-2">
-                  <button 
+                  <Button 
                     onClick={() => handlePageChange((pagination?.page || 1) - 1)}
                     disabled={!pagination || pagination.page <= 1}
-                    className="history-pagination-button"
+                    variant="outline"
+                    size="icon"
+                    title="Página anterior"
                   >
                     ‹
-                    </button>
+                  </Button>
                   
                   <span className="text-sm text-white px-3">
                     {pagination ? (
@@ -259,13 +264,15 @@ export default function HistoryPage() {
                     )}
                   </span>
                   
-                  <button 
+                  <Button 
                     onClick={() => handlePageChange((pagination?.page || 1) + 1)}
                     disabled={!pagination || pagination.page >= pagination.pages}
-                    className="history-pagination-button"
+                    variant="outline"
+                    size="icon"
+                    title="Página siguiente"
                   >
                     ›
-                    </button>
+                  </Button>
                 </div>
               </div>
             </div>

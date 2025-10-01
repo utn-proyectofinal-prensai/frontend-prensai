@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type NewsItem, type Topic, type Mention } from '../../services/api';
+import { Button } from '../ui/button';
 
 interface EditNewsModalProps {
   newsItem: NewsItem;
@@ -150,15 +151,13 @@ export function EditNewsModal({
                 </svg>
                 Editar Noticia
               </h2>
-              <button
+              <Button
                 onClick={onClose}
-                className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white hover:text-white transition-all duration-300 rounded-lg hover:scale-105 border border-white/20 flex-shrink-0"
+                variant="ghost"
+                size="icon"
+                icon="X"
                 title="Cerrar"
-              >
-                <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              />
             </div>
           </div>
 
@@ -442,33 +441,26 @@ export function EditNewsModal({
           {/* Footer con botones de acción fijos */}
           <div className="bg-slate-800/30 border-t border-white/10" style={{ padding: '20px 32px' }}>
             <div className="flex justify-end gap-4">
-              <button
+              <Button
                 type="button"
                 onClick={onClose}
-                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+                variant="secondary"
+                size="default"
+                title="Cancelar"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 disabled={isSaving}
                 onClick={handleSubmit}
-                className="h-10 sm:h-11 px-4 sm:px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100 text-sm sm:text-base"
+                variant="success"
+                size="default"
+                icon="Save"
+                title="Guardar Cambios"
               >
-                {isSaving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Guardar Cambios</span>
-                  </>
-                )}
-              </button>
+                {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+              </Button>
             </div>
           </div>
         </div>

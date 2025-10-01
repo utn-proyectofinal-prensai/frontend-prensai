@@ -15,7 +15,6 @@ export { default as ConfirmationModal } from './ConfirmationModal';
 export { default as UserDropdown } from './UserDropdown';
 
 // Componentes de layout
-export { default as PageHeader } from './PageHeader';
 export { default as PageBackground } from './PageBackground';
 
 // Cards reutilizables
@@ -25,7 +24,6 @@ export { MentionCard } from './MentionCard';
 // Componentes de UI reutilizables
 export { default as PanelCard } from './PanelCard';
 export { default as CheckboxList } from './CheckboxList';
-export { default as ActionButton } from './ActionButton';
 export { default as TabSelector } from './TabSelector';
 export { default as InputWithButton } from './InputWithButton';
 
@@ -42,3 +40,6 @@ export { default as SimpleWorkflowStepper } from './SimpleWorkflowStepper';
 
 // Componentes de tabla
 export { default as NewsTable } from './NewsTable';
+
+// Componentes de métricas
+export { default as MetricsCharts } from './MetricsCharts';

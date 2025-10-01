@@ -3,6 +3,7 @@ import type { User } from '../../types/auth';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 import { validatePassword } from '../../utils/validation';
+import { Button } from '../ui/button';
 
 interface UserModalProps {
   usuario: User | null;
@@ -192,15 +193,13 @@ export const UserModal: React.FC<UserModalProps> = ({
                 <h2 className="text-lg font-semibold text-white/90">
                   {isCreateMode ? 'Crear Nuevo Usuario' : 'Detalles del Usuario'}
                 </h2>
-          <button
+          <Button
             onClick={onClose}
-                className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-300 rounded-lg hover:scale-105 border border-white/20 flex-shrink-0"
+            variant="ghost"
+            size="icon"
+            icon="X"
             title="Cerrar"
-          >
-                <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          />
             </div>
         </div>
 
@@ -593,35 +592,16 @@ export const UserModal: React.FC<UserModalProps> = ({
                             }}
                             placeholder="Contraseña"
                           />
-                          <button
+                          <Button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            style={{
-                              position: 'absolute',
-                              right: '12px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              background: 'none',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              padding: '6px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              zIndex: 1000,
-                              minWidth: '24px',
-                              minHeight: '24px',
-                              color: '#ffffff',
-                              fontSize: '18px',
-                              fontFamily: 'monospace',
-                              fontWeight: 'bold',
-                              textShadow: '0 0 2px rgba(0,0,0,0.8)'
-                            }}
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 p-0 text-white/80 hover:text-white"
                             title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                           >
                             {showPassword ? '⚫' : '👁'}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -726,15 +706,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                     columnGap: '16px'
                   }}
                 >
-                  <button
-                    onClick={handleEdit}
-                    className="px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-green-400/30 text-sm"
-                    title={isCreateMode ? "Crear Usuario" : "Guardar Cambios"}
-                  >
-                    <span className="text-lg">{isCreateMode ? '➕' : '💾'}</span>
-                    <span>{isCreateMode ? 'Crear' : 'Guardar'}</span>
-                  </button>
-                  <button
+                  <Button
                     onClick={() => {
                       if (isCreateMode) {
                         onClose();
@@ -743,12 +715,21 @@ export const UserModal: React.FC<UserModalProps> = ({
                         onClose();
                       }
                     }}
-                    className="px-4 py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-400/30 text-sm"
+                    variant="secondary"
+                    size="default"
                     title={isCreateMode ? "Cancelar Creación" : "Cancelar Edición"}
                   >
-                    <span className="text-lg">❌</span>
-                    <span>Cancelar</span>
-                  </button>
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleEdit}
+                    variant="success"
+                    size="default"
+                    icon={isCreateMode ? "Plus" : "Save"}
+                    title={isCreateMode ? "Crear Usuario" : "Guardar Cambios"}
+                  >
+                    {isCreateMode ? 'Crear' : 'Guardar'}
+                  </Button>
                 </div>
               ) : !isCreateMode ? (
                 <div 
@@ -758,22 +739,24 @@ export const UserModal: React.FC<UserModalProps> = ({
                     columnGap: '24px'
                   }}
                 >
-              <button
-                onClick={handleEdit}
-                    className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/30 text-sm"
-                    title="Editar Usuario"
-              >
-                    <span className="text-lg">✏️</span>
-                    <span>Editar</span>
-              </button>
-              <button
+              <Button
                 onClick={handleDelete}
-                    className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-red-400/30 text-sm"
+                variant="danger"
+                size="default"
+                icon="Delete"
                 title="Eliminar Usuario"
               >
-                <span className="text-lg">🗑️</span>
-                <span>Eliminar</span>
-              </button>
+                Eliminar
+              </Button>
+              <Button
+                onClick={handleEdit}
+                variant="primary"
+                size="default"
+                icon="Edit"
+                title="Editar Usuario"
+              >
+                Editar
+              </Button>
                 </div>
               ) : null}
             </div>
