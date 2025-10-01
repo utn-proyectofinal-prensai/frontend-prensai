@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService, type ClippingItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
+import { Button } from '../components/ui/button';
 import '../styles/history.css';
 import '../styles/upload-news.css';
 
@@ -147,12 +148,14 @@ export default function ClippingsHistoryPage() {
 
             {/* Botón de filtros (TODO: implementar filtros avanzados) */}
             <div className="history-filter-group flex-shrink-0">
-              <button
-                className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+              <Button
+                variant="outline"
+                size="default"
+                icon="Search"
                 onClick={() => alert('TODO: Implementar filtros avanzados (fecha, tema, etc.)')}
               >
-                🔍 Filtrar
-              </button>
+                Filtrar
+              </Button>
             </div>
           </div>
         </div>
@@ -227,40 +230,31 @@ export default function ClippingsHistoryPage() {
                       </td>
                       <td>
                         <div className="history-actions" style={{ display: 'flex', gap: '2px', flexWrap: 'nowrap' }}>
-                          <button
+                          <Button
                             onClick={() => {
                               // TODO: Implementar edición
                               console.log('Editar:', clipping.id);
                             }}
-                            className="history-action-button history-action-edit"
+                            variant="ghost"
+                            size="icon"
+                            icon="Edit"
                             title="Editar"
-                            style={{ padding: '4px', minWidth: '28px', height: '28px' }}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button
+                          />
+                          <Button
                             onClick={() => deleteClipping(clipping.id)}
-                            className="history-action-button history-action-delete"
+                            variant="ghost"
+                            size="icon"
+                            icon="Delete"
                             title="Eliminar"
-                            style={{ padding: '4px', minWidth: '28px', height: '28px' }}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
+                          />
                           <div className="relative" ref={dropdownRef}>
-                            <button
+                            <Button
                               onClick={() => toggleDropdown(clipping.id)}
-                              className="history-action-button history-action-generate"
+                              variant="ghost"
+                              size="icon"
+                              icon="Generate"
                               title="Generar informe y métricas"
-                              style={{ padding: '4px', minWidth: '28px', height: '28px' }}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                              </svg>
-                            </button>
+                            />
                             
                             {openDropdown === clipping.id && (
                               <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
@@ -309,15 +303,14 @@ export default function ClippingsHistoryPage() {
                 <p className="text-white/70 mb-6">
                   {searchTerm ? `No hay clippings que coincidan con "${searchTerm}"` : 'No hay clippings generados aún'}
                 </p>
-                <button
+                <Button
                   onClick={() => navigate('/create-clipping')}
-                  className="h-10 sm:h-11 px-3 sm:px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
+                  variant="primary"
+                  size="default"
+                  icon="Plus"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
                   Crear Primer Clipping
-                </button>
+                </Button>
               </div>
             )}
 
@@ -352,29 +345,29 @@ export default function ClippingsHistoryPage() {
                     
                     {/* Navegación de páginas */}
                     <div className="flex items-center gap-2">
-                      <button 
+                      <Button 
                         onClick={() => handlePageChange((pagination?.page || 1) - 1)}
                         disabled={!pagination || pagination.page <= 1}
-                        className="history-pagination-button"
+                        variant="outline"
+                        size="icon"
+                        title="Página anterior"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
+                        ←
+                      </Button>
                       
                       <span className="text-sm text-white font-medium px-2">
                         Página {pagination?.page || 1} de {pagination?.total_pages || 1}
                       </span>
                       
-                      <button 
+                      <Button 
                         onClick={() => handlePageChange((pagination?.page || 1) + 1)}
                         disabled={!pagination || pagination.page >= pagination.total_pages}
-                        className="history-pagination-button"
+                        variant="outline"
+                        size="icon"
+                        title="Página siguiente"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
+                        →
+                      </Button>
                     </div>
                   </div>
                 </div>

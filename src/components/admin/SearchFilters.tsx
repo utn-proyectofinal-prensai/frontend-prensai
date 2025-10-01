@@ -1,6 +1,7 @@
 import React from 'react';
 import { UsersTable } from './UsersTable';
 import type { User } from '../../types/auth';
+import { Button } from '../ui/button';
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -85,23 +86,27 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
             </div>
             {/* Botón limpiar - 2 columnas */}
             <div className="col-span-2 px-4 py-2">
-              <button
+              <Button
                 onClick={onClearFilters}
-                className="w-full h-11 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                variant="secondary"
+                size="lg"
+                icon="Refresh"
+                className="w-full"
               >
-                <span>✨</span>
-                <span>Limpiar</span>
-              </button>
+                Limpiar
+              </Button>
             </div>
             {/* Botón agregar - 2 columnas */}
             <div className="col-span-2 px-4 py-2">
-              <button
+              <Button
                 onClick={onAddUser}
-                className="w-full h-11 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                variant="success"
+                size="lg"
+                icon="Plus"
+                className="w-full"
               >
-                <span className="text-white font-bold mr-1">+</span>
-                <span>Agregar</span>
-              </button>
+                Agregar
+              </Button>
             </div>
           </div>
 
@@ -143,20 +148,22 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
 
             {/* Botones en fila */}
             <div className="grid grid-cols-2 gap-3">
-              <button
+              <Button
                 onClick={onClearFilters}
-                className="h-12 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                variant="secondary"
+                size="lg"
+                icon="Refresh"
               >
-                <span>✨</span>
                 <span className="hidden sm:inline">Limpiar</span>
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={onAddUser}
-                className="h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                variant="success"
+                size="lg"
+                icon="Plus"
               >
-                <span className="text-white font-bold">+</span>
                 <span className="hidden sm:inline">Agregar</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

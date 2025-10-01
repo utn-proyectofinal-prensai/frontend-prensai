@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Topic } from '../../services/api';
+import { Button } from '../ui/button';
 
 interface TopicCardProps {
   topic: Topic;
@@ -129,26 +130,26 @@ export const TopicCard: React.FC<TopicCardProps> = ({
           
           {showActions && (
             <div className="flex space-x-2 flex-shrink-0">
-              <button
+              <Button
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit?.(topic);
                 }}
-                className="text-blue-400 hover:text-blue-300 transition-all duration-300 p-2 hover:bg-blue-500/20 rounded-lg hover:scale-110"
+                variant="ghost"
+                size="icon"
+                icon="Edit"
                 title="Editar tema"
-              >
-                ✏️
-              </button>
-              <button
+              />
+              <Button
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete?.(topic.id);
                 }}
-                className="text-red-400 hover:text-red-300 transition-all duration-300 p-2 hover:bg-red-500/20 rounded-lg hover:scale-110"
+                variant="ghost"
+                size="icon"
+                icon="Delete"
                 title="Eliminar tema"
-              >
-                🗑️
-              </button>
+              />
             </div>
           )}
         </div>

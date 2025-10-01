@@ -3,6 +3,7 @@ import {
   useCallback, useId, useMemo, useRef, useState,
   type ClipboardEvent, type KeyboardEvent,
 } from "react";
+import { Button } from "../ui/button";
 
 interface TagInputProps {
   value: string[];
@@ -127,15 +128,17 @@ export default function TagInput({
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${styles.chip}`}
           >
             <span className="truncate max-w-[300px]">{tag}</span>
-            <button
+            <Button
               type="button"
               onClick={() => handleRemove(tag)}
-              className={styles.closeBtn}
+              variant="ghost"
+              size="icon"
               disabled={disabled}
               aria-label={`Eliminar ${tag}`}
+              className="h-6 w-6 p-0 hover:bg-red-500/20 hover:text-red-400"
             >
               ×
-            </button>
+            </Button>
           </span>
         ))}
 

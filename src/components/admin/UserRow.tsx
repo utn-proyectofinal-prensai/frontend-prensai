@@ -1,5 +1,6 @@
 import React from 'react';
 import type { User } from '../../types/auth';
+import { Button } from '../ui/button';
 interface UserRowProps {
   usuario: User;
   onView: (usuario: User) => void;
@@ -67,27 +68,27 @@ export const UserRow: React.FC<UserRowProps> = ({
       {/* Acciones */}
       <td className="px-6 py-4">
         <div className="flex items-center justify-center space-x-2">
-          <button
+          <Button
             onClick={handleEditClick}
-            className="text-blue-400 hover:text-blue-300 transition-all duration-300 p-2 hover:bg-blue-500/20 rounded-lg hover:scale-110"
+            variant="ghost"
+            size="icon"
+            icon="Edit"
             title="Editar usuario"
-          >
-            ✏️
-          </button>
-          <button
+          />
+          <Button
             onClick={handleChangePasswordClick}
-            className="text-yellow-400 hover:text-yellow-300 transition-all duration-300 p-2 hover:bg-yellow-500/20 rounded-lg hover:scale-110"
+            variant="ghost"
+            size="icon"
+            icon="Key"
             title="Cambiar contraseña"
-          >
-            🔑
-          </button>
-          <button
+          />
+          <Button
             onClick={handleDeleteClick}
-            className="text-red-400 hover:text-red-300 transition-all duration-300 p-2 hover:bg-red-500/20 rounded-lg hover:scale-110"
+            variant="ghost"
+            size="icon"
+            icon="Delete"
             title="Eliminar usuario"
-          >
-            🗑️
-          </button>
+          />
         </div>
       </td>
     </tr>

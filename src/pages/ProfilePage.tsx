@@ -6,6 +6,7 @@ import { getRoleInfo } from '../constants/admin/userRoles';
 import { useAuth } from '../hooks/useAuth';
 import Snackbar from '../components/common/Snackbar';
 import PasswordChangeModal from '../components/admin/PasswordChangeModal';
+import { Button } from '../components/ui/button';
 
 const ProfilePage: React.FC = () => {
   const { updateUser } = useAuth();
@@ -218,12 +219,14 @@ const ProfilePage: React.FC = () => {
           </div>
           <h3 className="text-2xl font-bold text-white mb-4">Error al cargar el perfil</h3>
           <p className="text-white/70 mb-8 max-w-md">{error}</p>
-          <button 
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+          <Button 
+            variant="primary"
+            size="lg"
+            icon="Refresh"
             onClick={fetchUserProfile}
           >
             Intentar de nuevo
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -458,43 +461,46 @@ const ProfilePage: React.FC = () => {
             >
               {isEditing ? (
                 <>
-                  <button
-                    onClick={handleSaveEdit}
-                    disabled={loading}
-                    className="px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-500 disabled:to-gray-600 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-green-400/30 text-sm disabled:cursor-not-allowed disabled:transform-none"
-                    title="Guardar Cambios"
-                  >
-                    <span className="text-lg">💾</span>
-                    <span>{loading ? 'Guardando...' : 'Guardar'}</span>
-                  </button>
-                  <button
+                  <Button
                     onClick={handleCancelEdit}
                     disabled={loading}
-                    className="px-4 py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-400/30 text-sm disabled:cursor-not-allowed disabled:transform-none"
+                    variant="secondary"
+                    size="lg"
                     title="Cancelar Edición"
                   >
-                    <span className="text-lg">❌</span>
-                    <span>Cancelar</span>
-                  </button>
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    disabled={loading}
+                    variant="success"
+                    size="lg"
+                    icon="Save"
+                    title="Guardar Cambios"
+                  >
+                    {loading ? 'Guardando...' : 'Guardar'}
+                  </Button>
                 </>
               ) : (
                 <>
-                  <button
+                  <Button
                     onClick={handleEditClick}
-                    className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-400/30 text-sm"
+                    variant="primary"
+                    size="lg"
+                    icon="Edit"
                     title="Editar Perfil"
                   >
-                    <span className="text-lg">✏️</span>
-                    <span>Editar Perfil</span>
-                  </button>
-                  <button
+                    Editar Perfil
+                  </Button>
+                  <Button
                     onClick={handlePasswordChangeClick}
-                    className="px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 border border-purple-400/30 text-sm"
+                    variant="primary"
+                    size="lg"
+                    icon="Key"
                     title="Cambiar Contraseña"
                   >
-                    <span className="text-lg">🔒</span>
-                    <span>Cambiar Contraseña</span>
-                  </button>
+                    Cambiar Contraseña
+                  </Button>
                 </>
               )}
             </div>

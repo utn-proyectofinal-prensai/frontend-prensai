@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { FormField } from '../common';
+import { Button } from '../ui/button';
 import { useAnimationControl } from '../../hooks';
 import { AUTH_CONFIG } from '../../constants';
 import { SYSTEM_MESSAGES } from '../../constants/messages';
@@ -161,10 +162,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       {/* Botón principal */}
       <div className="px-4 button-spacing">
-        <button
+        <Button
           type="submit"
+          variant="login"
+          size="login"
           disabled={isLoading}
-          className="w-full btn-primary text-white py-5 px-8 rounded-xl font-bold text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-xl animate-pulse-glow"
+          className="w-full"
         >
           {isLoading ? (
             <div className="flex items-center justify-center">
@@ -174,7 +177,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           ) : (
             <span>Iniciar sesión</span>
           )}
-        </button>
+        </Button>
       </div>
     </form>
   );
