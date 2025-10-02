@@ -485,9 +485,10 @@ export default function CreateClippingPage() {
               
               {/* Dropdown para móviles */}
               <div className="upload-news-mobile-dropdown" ref={dropdownRef}>
-                  <button
+                  <Button
                   onClick={handleDropdownToggle}
-                  className={`upload-news-dropdown-button ${activeSection === 'topic' ? 'active' : ''}`}
+                  variant="stepper-dropdown"
+                  active={activeSection === 'topic'}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
@@ -520,7 +521,7 @@ export default function CreateClippingPage() {
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
-                  </button>
+                  </Button>
                 
                 {isDropdownOpen && (
                   <div className="upload-news-dropdown-content">
@@ -640,93 +641,93 @@ export default function CreateClippingPage() {
 
               {/* Pestañas con numeración */}
               <div className="upload-news-tabs">
-                <button
+                <Button
                   onClick={() => setActiveSection('topic')}
                   disabled={false}
-                  className={`upload-news-tab ${activeSection === 'topic' ? 'active' : ''}`}
+                  variant="stepper"
+                  size="stepper"
+                  active={activeSection === 'topic'}
                 >
-                  <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
-                        1
-            </div>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                      <span className="text-base">Tema</span>
-                      {selectedTopic && (
-                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                      )}
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                      1
                     </div>
-                    <span className="text-xs text-white/60">Selecciona el tema a analizar</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <span className="text-base">Tema</span>
+                    {selectedTopic && (
+                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                    )}
                   </div>
-                </button>
+                  <span className="text-xs text-white/60">Selecciona el tema a analizar</span>
+                </Button>
                 
-                  <button
+                <Button
                   onClick={() => setActiveSection('news')}
                   disabled={!isTopicStepValid}
-                  className={`upload-news-tab ${activeSection === 'news' ? 'active' : ''} ${!isTopicStepValid ? 'disabled' : ''}`}
+                  variant="stepper"
+                  size="stepper"
+                  active={activeSection === 'news'}
                 >
-                  <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        !isTopicStepValid ? 'bg-white/10' : 'bg-purple-500/20'
-                      }`}>
-                        {!isTopicStepValid ? '🔒' : '2'}
-                </div>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <span>Noticias</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        selectedNewsIds.size > 0 
-                          ? 'bg-purple-500 text-white' 
-                          : 'bg-white/20 text-white/70'
-                      }`}>
-                        {selectedNewsIds.size}
-                      </span>
-                      {isNewsStepValid && (
-                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                      )}
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      !isTopicStepValid ? 'bg-white/10' : 'bg-purple-500/20'
+                    }`}>
+                      {!isTopicStepValid ? '🔒' : '2'}
                     </div>
-                    <span className="text-xs text-white/60">
-                      {!isTopicStepValid ? 'Completa el paso anterior primero' : 'Selecciona fechas y noticias'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Noticias</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      selectedNewsIds.size > 0 
+                        ? 'bg-purple-500 text-white' 
+                        : 'bg-white/20 text-white/70'
+                    }`}>
+                      {selectedNewsIds.size}
                     </span>
+                    {isNewsStepValid && (
+                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                    )}
                   </div>
-                  </button>
+                  <span className="text-xs text-white/60">
+                    {!isTopicStepValid ? 'Completa el paso anterior primero' : 'Selecciona fechas y noticias'}
+                  </span>
+                </Button>
                 
-                      <button
+                <Button
                   onClick={() => setActiveSection('generate')}
                   disabled={!isNewsStepValid}
-                  className={`upload-news-tab ${activeSection === 'generate' ? 'active' : ''} ${!isNewsStepValid ? 'disabled' : ''}`}
+                  variant="stepper"
+                  size="stepper"
+                  active={activeSection === 'generate'}
                 >
-                  <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        !isNewsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
-                      }`}>
-                        {!isNewsStepValid ? '🔒' : '3'}
-                      </div>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      <span>Generar</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        isGenerateStepValid 
-                          ? 'bg-orange-500 text-white' 
-                          : 'bg-white/20 text-white/70'
-                      }`}>
-                        {isGenerateStepValid ? '✓' : '0'}
-                      </span>
-                      {isGenerateStepValid && (
-                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                      )}
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      !isNewsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
+                    }`}>
+                      {!isNewsStepValid ? '🔒' : '3'}
                     </div>
-                    <span className="text-xs text-white/60">
-                      {!isNewsStepValid ? 'Completa el paso anterior primero' : 'Genera el clipping'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>Generar</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      isGenerateStepValid 
+                        ? 'bg-orange-500 text-white' 
+                        : 'bg-white/20 text-white/70'
+                    }`}>
+                      {isGenerateStepValid ? '✓' : '0'}
                     </span>
+                    {isGenerateStepValid && (
+                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                    )}
                   </div>
-                </button>
+                  <span className="text-xs text-white/60">
+                    {!isNewsStepValid ? 'Completa el paso anterior primero' : 'Genera el clipping'}
+                  </span>
+                </Button>
                 </div>
                 </div>
 

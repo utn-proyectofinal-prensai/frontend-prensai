@@ -15,7 +15,11 @@ import {
   Save, 
   RefreshCw,
   Key,
-  ArrowLeft
+  ArrowLeft,
+  ChevronDown,
+  Tag,
+  FileText,
+  Sparkles
 } from "lucide-react"
 
 // Mapeo de iconos disponibles
@@ -33,6 +37,10 @@ const iconMap = {
   Refresh: RefreshCw,
   Key,
   ArrowLeft,
+  ChevronDown,
+  Tag,
+  FileText,
+  Sparkles,
 } as const;
 
 export type IconName = keyof typeof iconMap;
@@ -62,6 +70,12 @@ const buttonVariants = cva(
           
           // 7. LOGIN - Botón de inicio de sesión (gradiente sutil pero prominente)
           login: "bg-gradient-to-r from-blue-500/90 to-blue-600/90 hover:from-blue-600/90 hover:to-blue-700/90 text-white shadow-lg hover:shadow-xl font-semibold",
+          
+          // 8. STEPPER - Pestañas de stepper/wizard
+          stepper: "flex-1 min-h-14 min-w-48 flex-shrink-0 bg-transparent text-white/70 hover:text-white hover:bg-white/10 data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:shadow-lg disabled:text-white/30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-white/30 flex-col gap-1",
+          
+          // 9. STEPPER DROPDOWN - Botón dropdown para stepper móvil
+          "stepper-dropdown": "w-full p-4 bg-white/5 border border-white/20 rounded-xl text-white font-medium hover:bg-white/10 hover:border-white/30 data-[active=true]:bg-blue-600 data-[active=true]:border-blue-600 transition-all duration-300 justify-between",
         },
         size: {
           // Tamaño normal para botones principales
@@ -74,6 +88,8 @@ const buttonVariants = cva(
           icon: "!h-9 !w-9 !min-w-9 !min-h-9",
           // Tamaño especial para botón de login
           login: "h-12 px-6 py-3 text-lg font-semibold",
+          // Tamaño para steppers
+          stepper: "px-3 py-4",
         },
     },
     defaultVariants: {
@@ -89,10 +105,11 @@ export interface ButtonProps
   asChild?: boolean
   icon?: IconName
   iconPosition?: 'left' | 'right'
+  active?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, icon, iconPosition = 'left', children, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, icon, iconPosition = 'left', active, children, ...props }, ref) => {
     const IconComponent = icon ? iconMap[icon] : null;
     
     const renderIcon = () => {
@@ -127,6 +144,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       return (
         <Slot
           className={cn(buttonVariants({ variant, size, className }))}
+          data-active={active}
           ref={ref}
           {...props}
         >
@@ -138,6 +156,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }))}
+        data-active={active}
         ref={ref}
         {...props}
       >
