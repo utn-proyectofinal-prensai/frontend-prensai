@@ -309,17 +309,18 @@ export default function AdminPage() {
             {/* Header con botón agregar */}
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold text-white">Temas</h2>
-              <button
+              <Button
                 onClick={() => {
                   setSelectedTopic(null);
                   setIsCreatingTopic(true);
                   setShowTopicModal(true);
                 }}
-                className="h-11 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 px-6"
+                variant="success"
+                size="default"
+                icon="Plus"
               >
-                <span className="text-white font-bold">+</span>
-                <span>Agregar Tema</span>
-              </button>
+                Agregar Tema
+              </Button>
             </div>
 
             {/* Loading y Error states */}
@@ -366,17 +367,18 @@ export default function AdminPage() {
             {/* Header con botón agregar */}
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold text-white">Menciones de Personas</h2>
-              <button
+              <Button
                 onClick={() => {
                   setSelectedMention(null);
                   setIsCreatingMention(true);
                   setShowMentionModal(true);
                 }}
-                className="h-11 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 px-6"
+                variant="success"
+                size="default"
+                icon="Plus"
               >
-                <span className="text-white font-bold">+</span>
-                <span>Agregar Mención</span>
-              </button>
+                Agregar Mención
+              </Button>
             </div>
 
             {/* Lista de Menciones */}
