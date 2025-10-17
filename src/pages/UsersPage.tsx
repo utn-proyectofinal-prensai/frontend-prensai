@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
-import type { User, CreateUserData, UpdateUserData } from '../types/auth';
+import type { User, UpdateUserData } from '../types/auth';
 import {
   AdminUsersHeader,
   SearchFilters,
-  UserFormModal,
   UserModal,
   PasswordChangeModal
 } from '../components/admin';
@@ -24,8 +23,6 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Estados para formularios
-  const [showUserForm, setShowUserForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [editModeActive, setEditModeActive] = useState(false);
   const [createModeActive, setCreateModeActive] = useState(false);
@@ -88,50 +85,6 @@ export default function AdminUsersPage() {
   }, []);
 
   // Funciones para Usuarios
-  const handleUserSubmit = async (formData: FormData) => {
-    
-    try {
-      if (editingUser) {
-        // Actualizar usuario existente
-        const updateData: UpdateUserData = {
-          username: formData.get('username') as string,
-          email: formData.get('email') as string,
-          first_name: formData.get('first_name') as string,
-          last_name: formData.get('last_name') as string,
-          role: (formData.get('role') as 'admin' | 'user') || 'user'
-        };
-
-        const { user: updatedUser } = await apiService.updateUser(editingUser.id.toString(), updateData);
-        
-        // Actualizar estado local
-        setUsuarios(usuarios.map(u => 
-          u.id === editingUser.id ? updatedUser : u
-        ));
-      } else {
-        // Crear nuevo usuario
-        const createData: CreateUserData = {
-          username: formData.get('username') as string,
-          email: formData.get('email') as string,
-          first_name: formData.get('first_name') as string,
-          last_name: formData.get('last_name') as string,
-          role: (formData.get('role') as 'admin' | 'user') || 'user',
-          password: formData.get('password') as string,
-          password_confirmation: formData.get('password_confirmation') as string
-        };
-
-        const { user: newUser } = await apiService.createUser(createData);
-        
-        // Agregar nuevo usuario al estado local
-        setUsuarios([...usuarios, newUser]);
-      }
-      
-      setShowUserForm(false);
-      setEditingUser(null);
-    } catch (error) {
-      console.error('Error guardando usuario:', error);
-      alert('Error al guardar el usuario. Intenta nuevamente.');
-    }
-  };
 
   const handleUserDelete = (id: number) => {
     const user = usuarios.find(u => u.id === id);
@@ -381,16 +334,6 @@ export default function AdminUsersPage() {
         isCreateMode={createModeActive}
       />
 
-      {/* Modal para Usuario */}
-      <UserFormModal
-        isOpen={showUserForm}
-        editingUser={editingUser}
-        onClose={() => {
-          setShowUserForm(false);
-          setEditingUser(null);
-        }}
-        onSubmit={handleUserSubmit}
-      />
 
       {/* Modal de cambio de contraseña */}
       <PasswordChangeModal

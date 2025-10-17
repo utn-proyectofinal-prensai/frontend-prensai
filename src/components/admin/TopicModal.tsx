@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Topic } from '../../services/api';
-import { Button } from '../ui/button';
+import { Button, Modal, ModalFooter, Input, Select } from '../ui';
 
 interface TopicModalProps {
   topic: Topic | null;
@@ -101,370 +101,130 @@ export const TopicModal: React.FC<TopicModalProps> = ({
     }));
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const statusOptions = [
+    { value: 'true', label: '✅ Activo' },
+    { value: 'false', label: '❌ Inactivo' }
+  ];
+
+  const modalIcon = (
+    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+    </svg>
+  );
+
+
+  const footer = (
+    <ModalFooter>
+      {(isEditing || isCreateMode) ? (
+        <>
+          <Button
+            onClick={onClose}
+            variant="secondary"
+            size="lg"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleEdit}
+            variant="success"
+            size="lg"
+            icon={isCreateMode ? "Plus" : "Save"}
+          >
+            {isCreateMode ? 'Crear' : 'Guardar'}
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button
+            onClick={handleDelete}
+            variant="danger"
+            size="lg"
+            icon="Delete"
+          >
+            Eliminar
+          </Button>
+          <Button
+            onClick={handleEdit}
+            variant="primary"
+            size="lg"
+            icon="Edit"
+          >
+            Editar
+          </Button>
+        </>
+      )}
+    </ModalFooter>
+  );
 
   return (
-    <>
-      {/* Overlay de fondo semi-transparente */}
-      <div 
-        className="fixed inset-0 z-50 backdrop-blur-[2px]"
-        style={{
-          background: `
-            radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1), transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1), transparent 50%),
-            radial-gradient(circle at 40% 80%, rgba(255, 204, 112, 0.1), transparent 50%),
-            linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(59, 130, 246, 0.3) 25%, rgba(30, 64, 175, 0.3) 50%, rgba(30, 58, 138, 0.3) 75%, rgba(30, 64, 175, 0.3) 100%),
-            rgba(0, 0, 0, 0.2)
-          `,
-        }}
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
-        <div 
-          className="w-[600px] max-w-[90vw] max-h-[85vh] overflow-hidden bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl transform transition-all duration-300 scale-100"
-        >
-          
-          {/* Header del modal */}
-          <div className="bg-black/30 border-b border-white/10" style={{ padding: '16px 24px' }}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white/90">
-                {isCreateMode ? 'Crear Nuevo Tema' : 'Detalles del Tema'}
-              </h2>
-              <Button
-                onClick={onClose}
-                variant="ghost"
-                size="icon"
-                icon="X"
-                title="Cerrar"
-              />
-            </div>
-          </div>
-
-          {!isCreateMode && (
-            <>
-              {/* Header del tema - Avatar y información básica */}
-              <div className="flex items-center justify-center" style={{ padding: '12px 24px' }}>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-500 rounded-lg flex items-center justify-center shadow-xl border-2 border-white/20">
-                    <span className="text-white text-lg font-bold drop-shadow-lg">
-                      📋
-                    </span>
-                  </div>
-                  
-                  <div className="flex flex-col" style={{ marginLeft: '32px' }}>
-                    <h3 className="text-lg font-bold text-white/90 drop-shadow-lg mb-2">
-                      {displayTopic.name || 'Sin nombre'}
-                    </h3>
-                    <span 
-                      className={`inline-flex items-center text-xs font-bold rounded-full border ${
-                        displayTopic.enabled 
-                          ? 'text-green-400 border-green-400/30 bg-green-500/20' 
-                          : 'text-red-400 border-red-400/30 bg-red-500/20'
-                      }`}
-                      style={{ padding: '4px 16px' }}
-                    >
-                      <span style={{ marginRight: '8px' }}>{displayTopic.enabled ? '✅' : '❌'}</span>
-                      {displayTopic.enabled ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Contenido del modal */}
-          <div 
-            className="overflow-y-auto max-h-[calc(85vh-280px)]" 
-            style={{ 
-              padding: '32px', 
-              paddingTop: '16px', 
-              paddingBottom: '24px', 
-              paddingLeft: '32px', 
-              paddingRight: '32px' 
-            }}
-          >
-            <div 
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '24px',
-                rowGap: '24px'
-              }}
-            >
-
-              {/* Nombre del tema */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                      <span className="text-base">📝</span>
-                    </div>
-                  </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Nombre</div>
-                  </div>
-                  <div className="col-span-8 flex items-center">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isCreateMode ? 'Crear Nuevo Tema' : 'Detalles del Tema'}
+      icon={modalIcon}
+      size="default"
+      footer={footer}
+    >
+      <div className="space-y-6">
                     {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
-                        className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500"
-                        placeholder="Nombre del tema"
-                      />
-                    ) : (
-                      <div className="text-white/90 font-semibold text-sm">{displayTopic.name || 'Sin nombre'}</div>
-                    )}
-                  </div>
-                </div>
-              </div>
+          <>
+            {/* Nombre */}
+            <Input
+              label="Nombre"
+              type="text"
+              value={editForm.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Nombre del tema"
+              required
+            />
 
-              {/* Descripción */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-start min-h-[48px]">
-                  <div className="col-span-1 flex justify-center pt-2">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                      <span className="text-base">📄</span>
-                    </div>
-                  </div>
-                  <div className="col-span-3 pt-2" style={{ display: 'flex !important', alignItems: 'flex-start !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Descripción</div>
-                  </div>
-                  <div className="col-span-8 flex items-start">
-                    {isEditing ? (
-                      <textarea
-                        value={editForm.description}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-500 resize-none"
-                        placeholder="Descripción del tema"
-                      />
-                    ) : (
-                      <div className="text-white/90 font-semibold text-sm">{displayTopic.description || 'Sin descripción'}</div>
-                    )}
-                  </div>
-                </div>
-              </div>
+            {/* Descripción */}
+            <Input
+              label="Descripción"
+              type="text"
+              value={editForm.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Descripción del tema"
+            />
 
-              {/* Estado */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                      <span className="text-base">⚡</span>
-                    </div>
-                  </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Estado</div>
-                  </div>
-                  <div className="col-span-8 flex items-center">
-                    {isEditing ? (
-                      <div style={{ position: 'relative', width: '100%' }}>
-                        <select
-                          value={editForm.enabled ? 'true' : 'false'}
-                          onChange={(e) => handleInputChange('enabled', e.target.value === 'true')}
-                          style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            paddingRight: '40px',
-                            borderRadius: '12px',
-                            outline: 'none',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                            backgroundImage: 'none',
-                            backdropFilter: 'blur(10px)',
-                            color: '#ffffff',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            transition: 'all 0.3s ease',
-                            boxSizing: 'border-box',
-                            appearance: 'none',
-                            WebkitAppearance: 'none',
-                            MozAppearance: 'none'
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = 'rgba(59, 130, 246, 0.6)';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                            e.target.style.boxShadow = 'none';
-                          }}
-                        >
-                          <option value="true" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>
-                            ✅ Activo
-                          </option>
-                          <option value="false" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>
-                            ❌ Inactivo
-                          </option>
-                        </select>
-                        <div
-                          style={{
-                            position: 'absolute',
-                            right: '12px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            pointerEvents: 'none',
-                            color: '#ffffff',
-                            fontSize: '12px',
-                            fontWeight: 'bold'
-                          }}
-                        >
-                          ▼
+            {/* Estado */}
+            <Select
+              label="Estado"
+              value={editForm.enabled ? 'true' : 'false'}
+              onChange={(e) => handleInputChange('enabled', e.target.value === 'true')}
+              options={statusOptions}
+            />
+          </>
+        ) : (
+          <>
+            {/* Nombre */}
+            <div style={{ marginBottom: '16px' }}>
+              <div className="text-sm font-medium text-white mb-2">Nombre</div>
+              <p className="text-white/80 text-sm">{displayTopic.name || 'Sin nombre'}</p>
                         </div>
+            
+            {/* Descripción */}
+            <div style={{ marginBottom: '16px' }}>
+              <div className="text-sm font-medium text-white mb-2">Descripción</div>
+              <p className="text-white/80 text-sm">{displayTopic.description || 'Sin descripción'}</p>
                       </div>
-                    ) : (
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${
+            
+            {/* Estado */}
+            <div style={{ marginBottom: '16px' }}>
+              <div className="text-sm font-medium text-white mb-2">Estado</div>
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         displayTopic.enabled 
-                          ? 'bg-green-500/20 text-green-400 border-green-400/30' 
-                          : 'bg-red-500/20 text-red-400 border-red-400/30'
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
                       }`}>
                         {displayTopic.enabled ? '✅ Activo' : '❌ Inactivo'}
                       </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {!isCreateMode && (
-                <>
-                  {/* Fecha de creación */}
-                  <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                    <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                      <div className="col-span-1 flex justify-center">
-                        <div className="w-8 h-8 flex items-center justify-center">
-                          <span className="text-base">📅</span>
-                        </div>
-                      </div>
-                      <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                        <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Creado</div>
-                      </div>
-                      <div className="col-span-8 flex items-center">
-                        <div className="text-white/90 font-semibold text-sm">{formatDate(displayTopic.created_at)}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Fecha de modificación */}
-                  <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                    <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                      <div className="col-span-1 flex justify-center">
-                        <div className="w-8 h-8 flex items-center justify-center">
-                          <span className="text-base">✏️</span>
-                        </div>
-                      </div>
-                      <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                        <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Modificado</div>
-                      </div>
-                      <div className="col-span-8 flex items-center">
-                        <div className="text-white/90 font-semibold text-sm">{formatDate(displayTopic.updated_at)}</div>
-                      </div>
                     </div>
                   </div>
                 </>
               )}
-
-            </div>
-          </div>
-
-          {/* Footer con botones de acción */}
-          <div 
-            className="bg-black/30 border-t border-white/10" 
-            style={{ 
-              padding: '32px',
-              paddingTop: '24px', 
-              paddingBottom: '24px', 
-              paddingLeft: '32px', 
-              paddingRight: '32px',
-              flexShrink: 0
-            }}
-          >
-            <div 
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '16px',
-                rowGap: '16px'
-              }}
-            >
-
-              {/* Botones de editar/guardar y eliminar */}
-              {(isEditing || isCreateMode) ? (
-                <div 
-                  className="grid grid-cols-2" 
-                  style={{ 
-                    gap: '16px',
-                    columnGap: '16px'
-                  }}
-                >
-                  <Button
-                    onClick={() => {
-                      if (isCreateMode) {
-                        onClose();
-                      } else {
-                        // En modo edición, cerrar el modal completamente
-                        onClose();
-                      }
-                    }}
-                    variant="secondary"
-                    size="default"
-                    title={isCreateMode ? "Cancelar Creación" : "Cancelar Edición"}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleEdit}
-                    variant="success"
-                    size="default"
-                    icon={isCreateMode ? "Plus" : "Save"}
-                    title={isCreateMode ? "Crear Tema" : "Guardar Cambios"}
-                  >
-                    {isCreateMode ? 'Crear' : 'Guardar'}
-                  </Button>
-                </div>
-              ) : !isCreateMode ? (
-                <div 
-                  className="grid grid-cols-2" 
-                  style={{ 
-                    gap: '24px',
-                    columnGap: '24px'
-                  }}
-                >
-                  <Button
-                    onClick={handleDelete}
-                    variant="danger"
-                    size="default"
-                    icon="Delete"
-                    title="Eliminar Tema"
-                  >
-                    Eliminar
-                  </Button>
-                  <Button
-                    onClick={handleEdit}
-                    variant="primary"
-                    size="default"
-                    icon="Edit"
-                    title="Editar Tema"
-                  >
-                    Editar
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
       </div>
-    </>
+    </Modal>
   );
 };

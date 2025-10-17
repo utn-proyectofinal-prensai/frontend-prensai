@@ -94,7 +94,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     <form
       ref={formRef}
       onSubmit={onSubmit}
-      className={`space-y-6 ${formHasAnimated ? 'animation-completed' : 'animate-form-fade-in'}`}
+      className={`auth-form space-y-6 ${formHasAnimated ? 'animation-completed' : 'animate-form-fade-in'}`}
     >
       {/* Campo Email */}
       <div ref={emailRef} className="form-field">

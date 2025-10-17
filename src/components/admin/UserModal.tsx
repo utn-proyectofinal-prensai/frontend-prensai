@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import type { User } from '../../types/auth';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
-import { getRoleInfo } from '../../constants/admin/userRoles';
 import { validatePassword } from '../../utils/validation';
 import { Button } from '../ui/button';
+import { Modal, ModalFooter } from '../ui/modal';
+import { Input, Select } from '../ui/input';
 
 interface UserModalProps {
   usuario: User | null;
@@ -162,449 +163,187 @@ export const UserModal: React.FC<UserModalProps> = ({
     });
   };
 
-  const roleInfo = getRoleInfo(displayUser.role);
+
+  // Icono del modal
+  const modalIcon = (
+    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  );
+
+  // Footer del modal
+  const footer = (
+    <ModalFooter>
+      {(isEditing || isCreateMode) ? (
+        <>
+          <Button
+            onClick={() => {
+              if (isCreateMode) {
+                onClose();
+              } else {
+                onClose();
+              }
+            }}
+            variant="secondary"
+            size="lg"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleEdit}
+            variant="success"
+            size="lg"
+            icon={isCreateMode ? "Plus" : "Save"}
+          >
+            {isCreateMode ? 'Crear' : 'Guardar'}
+          </Button>
+        </>
+      ) : !isCreateMode ? (
+        <>
+          <Button
+            onClick={handleDelete}
+            variant="danger"
+            size="lg"
+            icon="Delete"
+          >
+            Eliminar
+          </Button>
+          <Button
+            onClick={handleEdit}
+            variant="primary"
+            size="lg"
+            icon="Edit"
+          >
+            Editar
+          </Button>
+        </>
+      ) : null}
+    </ModalFooter>
+  );
 
   return (
-    <>
-      {/* Overlay de fondo semi-transparente */}
-      <div 
-        className="fixed inset-0 z-50 backdrop-blur-[2px]"
-        style={{
-          background: `
-            radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1), transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1), transparent 50%),
-            radial-gradient(circle at 40% 80%, rgba(255, 204, 112, 0.1), transparent 50%),
-            linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(59, 130, 246, 0.3) 25%, rgba(30, 64, 175, 0.3) 50%, rgba(30, 58, 138, 0.3) 75%, rgba(30, 64, 175, 0.3) 100%),
-            rgba(0, 0, 0, 0.2)
-          `,
-        }}
-          onClick={onClose}
-        />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isCreateMode ? 'Crear Nuevo Usuario' : 'Detalles del Usuario'}
+      icon={modalIcon}
+      footer={footer}
+      size="lg"
+    >
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
-        <div 
-          className="w-[600px] max-w-[90vw] max-h-[85vh] overflow-hidden bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl transform transition-all duration-300 scale-100"
-        >
-          
-          {/* Header del modal */}
-          <div className="bg-black/30 border-b border-white/10" style={{ padding: '16px 24px' }}>
-                          <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white/90">
-                  {isCreateMode ? 'Crear Nuevo Usuario' : 'Detalles del Usuario'}
-                </h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            icon="X"
-            title="Cerrar"
-          />
-            </div>
-        </div>
-
-          {!isCreateMode && (
-            <>
-              {/* Header del usuario - Avatar y información básica */}
-              <div className="flex items-center justify-center" style={{ padding: '12px 24px' }}>
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-lg flex items-center justify-center shadow-xl border-2 border-white/20">
-                <span className="text-white text-lg font-bold drop-shadow-lg">
-                                  {displayUser.first_name?.charAt(0) || displayUser.username?.charAt(0) || '?'}
-              </span>
-            </div>
-            
-              <div className="flex flex-col" style={{ marginLeft: '32px' }}>
-                <h3 className="text-lg font-bold text-white/90 drop-shadow-lg mb-2">
-                                {displayUser.first_name || 'Sin nombre'} {displayUser.last_name || 'Sin apellido'}
-            </h3>
-                <span 
-                  className={`inline-flex items-center text-xs font-bold rounded-full border ${roleInfo.color} ${roleInfo.color.includes('bg-') ? '' : 'bg-white/10'}`}
-                  style={{ padding: '4px 16px' }}
-                >
-                  <span style={{ marginRight: '8px' }}>{roleInfo.icon}</span>
-              {roleInfo.label}
-            </span>
-          </div>
+            <div className="space-y-6">
+              {/* Username */}
+              {isEditing ? (
+                <Input
+                  label="Username"
+                  type="text"
+                  value={editForm.username}
+                  onChange={(e) => setEditForm({...editForm, username: e.target.value})}
+                  placeholder="Username"
+                  required
+                />
+              ) : (
+                <div style={{ marginBottom: '16px' }}>
+                  <div className="text-sm font-medium text-white mb-2">Username</div>
+                  <div className="text-white/90 font-semibold text-sm">@{displayUser.username}</div>
                 </div>
-              </div>
-            </>
-          )}
+              )}
 
-          {/* Contenido del modal */}
-          <div 
-            className="overflow-y-auto max-h-[calc(85vh-280px)]" 
-            style={{ 
-              padding: '32px', 
-              paddingTop: '16px', 
-              paddingBottom: '24px', 
-              paddingLeft: '32px', 
-              paddingRight: '32px' 
-            }}
-          >
-            <div 
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '4px',
-                rowGap: '4px'
-              }}
-            >
+              {/* Nombre */}
+              {isEditing ? (
+                <Input
+                  label="Nombre"
+                  type="text"
+                  value={editForm.first_name}
+                  onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
+                  placeholder="Nombre"
+                />
+              ) : (
+                <div style={{ marginBottom: '16px' }}>
+                  <div className="text-sm font-medium text-white mb-2">Nombre</div>
+                  <div className="text-white/90 font-semibold text-sm">{displayUser.first_name || 'No especificado'}</div>
+                </div>
+              )}
 
-              {/* Username (solo lectura) */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                      <span className="text-base">👤</span>
-                    </div>
-                  </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Username</div>
-                  </div>
-                  <div className="col-span-8 flex items-center">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.username}
-                        onChange={(e) => setEditForm({...editForm, username: e.target.value})}
-                        style={{
-                          width: '100%',
-                          padding: '12px 16px',
-                          borderRadius: '12px',
-                          outline: 'none',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                     backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                           backgroundImage: 'none',
-                          backdropFilter: 'blur(10px)',
-                          color: '#ffffff',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          transition: 'all 0.3s ease',
-                          boxSizing: 'border-box',
-                          WebkitAppearance: 'none',
-                          MozAppearance: 'none',
-                          appearance: 'none'
-                        }}
-                                                 onFocus={(e) => {
-                           e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
-                           e.target.style.backgroundImage = 'none';
-                           e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
-                         }}
-                         onBlur={(e) => {
-                           e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-                           e.target.style.backgroundImage = 'none';
-                           e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-                         }}
-                        placeholder="Username"
-                      />
-                    ) : (
-                      <div className="text-white/90 font-semibold text-sm">@{displayUser.username}</div>
-                    )}
+              {/* Apellido */}
+              {isEditing ? (
+                <Input
+                  label="Apellido"
+                  type="text"
+                  value={editForm.last_name}
+                  onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
+                  placeholder="Apellido"
+                />
+              ) : (
+                <div style={{ marginBottom: '16px' }}>
+                  <div className="text-sm font-medium text-white mb-2">Apellido</div>
+                  <div className="text-white/90 font-semibold text-sm">{displayUser.last_name || 'No especificado'}</div>
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* Nombre */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                  <span className="text-base">📝</span>
-                </div>
-                  </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Nombre</div>
-                  </div>
-                  <div className="col-span-8 flex items-center">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editForm.first_name}
-                      onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
-                        style={{
-                          width: '100%',
-                          padding: '12px 16px',
-                          borderRadius: '12px',
-                          outline: 'none',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                     backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                           backgroundImage: 'none',
-                          backdropFilter: 'blur(10px)',
-                          color: '#ffffff',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          transition: 'all 0.3s ease',
-                          boxSizing: 'border-box',
-                          WebkitAppearance: 'none',
-                          MozAppearance: 'none',
-                          appearance: 'none'
-                        }}
-                                                 onFocus={(e) => {
-                           e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
-                           e.target.style.backgroundImage = 'none';
-                           e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
-                         }}
-                         onBlur={(e) => {
-                           e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-                           e.target.style.backgroundImage = 'none';
-                           e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-                         }}
-                      placeholder="Nombre"
-                    />
-                  ) : (
-                      <div className="text-white/90 font-semibold text-sm">{displayUser.first_name || 'No especificado'}</div>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* Apellido */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                  <span className="text-base">📝</span>
+
+
+              {/* Email */}
+              {isEditing ? (
+                <Input
+                  label="Email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                  placeholder="Email"
+                />
+              ) : (
+                <div style={{ marginBottom: '16px' }}>
+                  <div className="text-sm font-medium text-white mb-2">Email</div>
+                  <div className="text-white/90 font-semibold text-sm break-all">{displayUser.email}</div>
                 </div>
-                  </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Apellido</div>
-                  </div>
-                  <div className="col-span-8 flex items-center">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editForm.last_name}
-                      onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
-                        style={{
-                          width: '100%',
-                          padding: '12px 16px',
-                          borderRadius: '12px',
-                          outline: 'none',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                     backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                           backgroundImage: 'none',
-                          backdropFilter: 'blur(10px)',
-                          color: '#ffffff',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          transition: 'all 0.3s ease',
-                          boxSizing: 'border-box',
-                          WebkitAppearance: 'none',
-                          MozAppearance: 'none',
-                          appearance: 'none'
-                        }}
-                                                 onFocus={(e) => {
-                           e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
-                           e.target.style.backgroundImage = 'none';
-                           e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
-                         }}
-                         onBlur={(e) => {
-                           e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-                           e.target.style.backgroundImage = 'none';
-                           e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-                         }}
-                      placeholder="Apellido"
-                    />
-                  ) : (
-                      <div className="text-white/90 font-semibold text-sm">{displayUser.last_name || 'No especificado'}</div>
-                  )}
+              )}
+
+
+              {/* Rol */}
+              {isEditing ? (
+                <Select
+                  label="Rol"
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({...editForm, role: e.target.value as 'admin' | 'user'})}
+                  options={[
+                    { value: 'admin', label: 'Administrador' },
+                    { value: 'user', label: 'Usuario' }
+                  ]}
+                />
+              ) : (
+                <div style={{ marginBottom: '16px' }}>
+                  <div className="text-sm font-medium text-white mb-2">Rol</div>
+                  <div className="text-white/90 font-semibold text-sm capitalize">
+                    {displayUser.role === 'admin' ? 'Administrador' : 'Usuario'}
                   </div>
                 </div>
-              </div>
-
-
-
-
-            {/* Email */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                  <span className="text-base">📧</span>
-                </div>
-                  </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Email</div>
-                  </div>
-                  <div className="col-span-8 flex items-center">
-                  {isEditing ? (
-                    <input
-                      type="email"
-                      value={editForm.email}
-                      onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                        style={{
-                          width: '100%',
-                          padding: '12px 16px',
-                          borderRadius: '12px',
-                          outline: 'none',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                     backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                           backgroundImage: 'none',
-                          backdropFilter: 'blur(10px)',
-                          color: '#ffffff',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          transition: 'all 0.3s ease',
-                          boxSizing: 'border-box',
-                          WebkitAppearance: 'none',
-                          MozAppearance: 'none',
-                          appearance: 'none'
-                        }}
-                                                 onFocus={(e) => {
-                           e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
-                           e.target.style.backgroundImage = 'none';
-                           e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
-                         }}
-                         onBlur={(e) => {
-                           e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-                           e.target.style.backgroundImage = 'none';
-                           e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-                         }}
-                      placeholder="Email"
-                    />
-                  ) : (
-                      <div className="text-white/90 font-semibold text-sm break-all">{displayUser.email}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-
-              {/* Campo Rol */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                      <span className="text-base">👑</span>
-                    </div>
-                  </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Rol</div>
-                  </div>
-                  <div className="col-span-8 flex items-center">
-                    {isEditing ? (
-                      <div style={{ position: 'relative', width: '100%' }}>
-                        <select
-                          value={editForm.role}
-                          onChange={(e) => setEditForm({...editForm, role: e.target.value as 'admin' | 'user'})}
-                          style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            paddingRight: '40px',
-                            borderRadius: '12px',
-                            outline: 'none',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                            backgroundImage: 'none',
-                            backdropFilter: 'blur(10px)',
-                            color: '#ffffff',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            transition: 'all 0.3s ease',
-                            boxSizing: 'border-box',
-                            WebkitAppearance: 'none',
-                            MozAppearance: 'none',
-                            appearance: 'none'
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
-                            e.target.style.backgroundImage = 'none';
-                            e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-                            e.target.style.backgroundImage = 'none';
-                            e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-                          }}
-                        >
-                          <option value="admin" style={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', color: '#ffffff' }}>Administrador</option>
-                          <option value="user" style={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', color: '#ffffff' }}>Usuario</option>
-                        </select>
-                        <div style={{
-                          position: 'absolute',
-                          right: '12px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          pointerEvents: 'none',
-                          color: 'rgba(255, 255, 255, 0.7)'
-                        }}>
-                          ▼
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-white/90 font-semibold text-sm capitalize">
-                        {displayUser.role === 'admin' ? 'Administrador' : 'Usuario'}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              )}
 
 
               {/* Campos de contraseña (solo en modo creación) */}
               {isCreateMode && (
                 <>
                   {/* Contraseña */}
-                  <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                    <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                      <div className="col-span-1 flex justify-center">
-                        <div className="w-8 h-8 flex items-center justify-center">
-                          <span className="text-base">🔒</span>
-              </div>
-            </div>
-                      <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                        <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Contraseña</div>
-                </div>
-                      <div className="col-span-8 flex items-center">
-                        <div className="relative w-full">
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            value={editForm.password}
-                            onChange={(e) => setEditForm({...editForm, password: e.target.value})}
-                            style={{
-                              width: '100%',
-                              padding: '12px 50px 12px 16px',
-                              borderRadius: '12px',
-                              outline: 'none',
-                              border: '1px solid rgba(255, 255, 255, 0.2)',
-                              backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                              backgroundImage: 'none',
-                              backdropFilter: 'blur(10px)',
-                              color: '#ffffff',
-                              fontSize: '14px',
-                              fontWeight: '600',
-                              transition: 'all 0.3s ease',
-                              boxSizing: 'border-box',
-                              WebkitAppearance: 'none',
-                              MozAppearance: 'none',
-                              appearance: 'none'
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
-                              e.target.style.backgroundImage = 'none';
-                              e.target.style.border = '1px solid rgba(147, 51, 234, 0.4)';
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-                              e.target.style.backgroundImage = 'none';
-                              e.target.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-                            }}
-                            placeholder="Contraseña"
-                          />
-                          <Button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 p-0 text-white/80 hover:text-white"
-                            title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                          >
-                            {showPassword ? '⚫' : '👁'}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="relative">
+                    <Input
+                      label="Contraseña"
+                      type={showPassword ? "text" : "password"}
+                      value={editForm.password}
+                      onChange={(e) => setEditForm({...editForm, password: e.target.value})}
+                      placeholder="Contraseña"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-3 top-8 w-6 h-6 p-0 text-white/80 hover:text-white"
+                      title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                      {showPassword ? '⚫' : '👁'}
+                    </Button>
                   </div>
 
 
@@ -629,40 +368,17 @@ export const UserModal: React.FC<UserModalProps> = ({
 
               {!isCreateMode && (
                 <>
-            {/* Fecha de creación */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                  <span className="text-base">📅</span>
-                </div>
-                  </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Creado</div>
+              {/* Fecha de creación */}
+              <div style={{ marginBottom: '16px' }}>
+                <div className="text-sm font-medium text-white mb-2">Creado</div>
+                <div className="text-white/90 font-semibold text-sm">{formatDate(displayUser.created_at)}</div>
               </div>
-                  <div className="col-span-8 flex items-center">
-                    <div className="text-white/90 font-semibold text-sm">{formatDate(displayUser.created_at)}</div>
-                </div>
-              </div>
-            </div>
 
-            {/* Fecha de modificación */}
-              <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-                <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                  <span className="text-base">✏️</span>
-                </div>
-                </div>
-                  <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                    <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Modificado</div>
+              {/* Fecha de modificación */}
+              <div style={{ marginBottom: '16px' }}>
+                <div className="text-sm font-medium text-white mb-2">Modificado</div>
+                <div className="text-white/90 font-semibold text-sm">{formatDate(displayUser.updated_at)}</div>
               </div>
-                  <div className="col-span-8 flex items-center">
-                    <div className="text-white/90 font-semibold text-sm">{formatDate(displayUser.updated_at)}</div>
-            </div>
-                </div>
-                  </div>
-
                 </>
               )}
 
@@ -672,97 +388,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                   {passwordError}
                 </div>
               )}
-
             </div>
-          </div>
-
-          {/* Footer con botones de acción */}
-          <div 
-            className="bg-black/30 border-t border-white/10" 
-            style={{ 
-              padding: '32px',
-              paddingTop: '24px', 
-              paddingBottom: '24px', 
-              paddingLeft: '32px', 
-              paddingRight: '32px',
-              flexShrink: 0
-            }}
-          >
-            <div 
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '16px',
-                rowGap: '16px'
-              }}
-            >
-
-            {/* Botones de editar/guardar y eliminar */}
-              {(isEditing || isCreateMode) ? (
-                <div 
-                  className="grid grid-cols-2" 
-                  style={{ 
-                    gap: '16px',
-                    columnGap: '16px'
-                  }}
-                >
-                  <Button
-                    onClick={() => {
-                      if (isCreateMode) {
-                        onClose();
-                      } else {
-                        // En modo edición, cerrar el modal completamente
-                        onClose();
-                      }
-                    }}
-                    variant="secondary"
-                    size="default"
-                    title={isCreateMode ? "Cancelar Creación" : "Cancelar Edición"}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleEdit}
-                    variant="success"
-                    size="default"
-                    icon={isCreateMode ? "Plus" : "Save"}
-                    title={isCreateMode ? "Crear Usuario" : "Guardar Cambios"}
-                  >
-                    {isCreateMode ? 'Crear' : 'Guardar'}
-                  </Button>
-                </div>
-              ) : !isCreateMode ? (
-                <div 
-                  className="grid grid-cols-2" 
-                  style={{ 
-                    gap: '24px',
-                    columnGap: '24px'
-                  }}
-                >
-              <Button
-                onClick={handleDelete}
-                variant="danger"
-                size="default"
-                icon="Delete"
-                title="Eliminar Usuario"
-              >
-                Eliminar
-              </Button>
-              <Button
-                onClick={handleEdit}
-                variant="primary"
-                size="default"
-                icon="Edit"
-                title="Editar Usuario"
-              >
-                Editar
-              </Button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    </Modal>
   );
 };
