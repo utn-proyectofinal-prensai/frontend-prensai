@@ -1,7 +1,6 @@
 export { AdminUsersHeader } from './AdminUsersHeader';
 export { default as AiConfigurationField } from './AiConfigurationField';
 export { SearchFilters } from './SearchFilters';
-export { UserFormModal } from './UserFormModal';
 export { UserModal } from './UserModal';
 export { UserRow } from './UserRow';
 export { UsersTable } from './UsersTable';

@@ -377,9 +377,10 @@
   color: #10b981 !important; /* text-green-500 */
 }
 
-input[type="email"],
-input[type="password"],
-input[type="text"] {
+/* Solo aplicar a formularios de autenticación */
+.auth-form input[type="email"],
+.auth-form input[type="password"],
+.auth-form input[type="text"] {
   color: #111827 !important; /* text-gray-900 */
   background-color: #ffffff !important;
   border: 2px solid #e5e7eb !important; /* border-gray-200 */
@@ -390,9 +391,9 @@ input[type="text"] {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="text"]:focus {
+.auth-form input[type="email"]:focus,
+.auth-form input[type="password"]:focus,
+.auth-form input[type="text"]:focus {
   outline: none;
   border-color: #3b82f6 !important; /* border-blue-500 */
   box-shadow: 
@@ -402,9 +403,9 @@ input[type="text"]:focus {
   transform: scale(1.02);
 }
 
-input[type="email"]::placeholder,
-input[type="password"]::placeholder,
-input[type="text"]::placeholder {
+.auth-form input[type="email"]::placeholder,
+.auth-form input[type="password"]::placeholder,
+.auth-form input[type="text"]::placeholder {
   color: #6b7280 !important; /* text-gray-500 */
   opacity: 1;
 }

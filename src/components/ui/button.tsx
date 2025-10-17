@@ -19,7 +19,8 @@ import {
   ChevronDown,
   Tag,
   FileText,
-  Sparkles
+  Sparkles,
+  Info
 } from "lucide-react"
 
 // Mapeo de iconos disponibles
@@ -28,6 +29,8 @@ const iconMap = {
   Delete: Trash2,
   Generate: Zap,
   Warning: AlertTriangle,
+  AlertTriangle,
+  Info,
   Search,
   Plus,
   Check,
@@ -90,6 +93,8 @@ const buttonVariants = cva(
           login: "h-12 px-6 py-3 text-lg font-semibold",
           // Tamaño para steppers
           stepper: "px-3 py-4",
+          // Tamaño para botones de footer de modales
+          "modal-footer": "h-11 px-6 py-2.5 min-w-[120px]",
         },
     },
     defaultVariants: {
