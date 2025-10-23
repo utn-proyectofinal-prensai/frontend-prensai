@@ -18,6 +18,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
+      - run: echo "La URL de la API es: ${{ secrets.VITE_API_BASE_URL }}"      
       - run: npm run build
         env: 
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
