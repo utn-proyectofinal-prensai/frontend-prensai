@@ -19,12 +19,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
 
-      - name: Debug API URL
-        env:
-          API_BASE: ${{ secrets.VITE_API_BASE_URL }}
-        run: |
-          echo "::debug::Longitud API_BASE=${#API_BASE}"
-
       - run: npm run build
         env: 
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
