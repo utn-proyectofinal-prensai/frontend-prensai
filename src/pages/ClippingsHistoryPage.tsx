@@ -190,7 +190,7 @@ export default function ClippingsHistoryPage() {
                   {clippings.map((clipping) => (
                     <tr key={clipping.id}>
                       <td>
-                        <div className="history-news-title">{clipping.title}</div>
+                        <div className="history-news-title">{clipping.name}</div>
                       </td>
                       <td>
                         <span className="history-topic-badge">

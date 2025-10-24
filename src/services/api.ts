@@ -109,7 +109,7 @@ export interface Topic {
 }
 
 export interface ClippingData {
-  title: string;
+  name: string;
   topic_id: number;
   start_date: string;
   end_date: string;
@@ -118,7 +118,7 @@ export interface ClippingData {
 
 export interface ClippingItem {
   id: number;
-  title: string;
+  name: string;
   topic_id: number;
   topic_name?: string;
   start_date: string;
