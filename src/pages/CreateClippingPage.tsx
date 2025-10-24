@@ -176,7 +176,7 @@ export default function CreateClippingPage() {
 
     try {
       const clippingData: ClippingData = {
-        title: currentTitle.trim(),
+        name: currentTitle.trim(),
         topic_id: selectedTopic!,
         start_date: dateFrom,
         end_date: dateTo,
