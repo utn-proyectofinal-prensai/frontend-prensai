@@ -194,7 +194,7 @@ export default function ClippingsHistoryPage() {
                       </td>
                       <td>
                         <span className="history-topic-badge">
-                          {clipping.topic_name || `Tema ${clipping.topic_id}`}
+                          {clipping.topic.name}
                         </span>
                       </td>
                       <td>
@@ -205,17 +205,17 @@ export default function ClippingsHistoryPage() {
                       </td>
                       <td>
                         <div className="history-news-count">
-                          {clipping.news_count} noticias
+                          {clipping.news_ids.length} noticias
                         </div>
                       </td>
                       <td>
                         <div className="history-table-cell-content">
-                          {clipping.created_by || '-'}
+                          {clipping.creator?.name || '-'}
                         </div>
                       </td>
                       <td>
                         <div className="history-table-cell-content">
-                          {clipping.updated_by || '-'}
+                          {clipping.reviewer?.name || '-'}
                         </div>
                       </td>
                       <td>
