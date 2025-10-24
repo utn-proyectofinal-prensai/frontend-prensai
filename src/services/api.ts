@@ -119,15 +119,14 @@ export interface ClippingData {
 export interface ClippingItem {
   id: number;
   name: string;
-  topic_id: number;
-  topic_name?: string;
+  topic: EntityRef;
   start_date: string;
   end_date: string;
-  news_count: number;
+  news_ids: number[];
   created_at: string;
   updated_at: string;
-  created_by?: string;
-  updated_by?: string;
+  creator: EntityRef | null;
+  reviewer: EntityRef | null;
 }
 
 export interface SoporteMetric {
