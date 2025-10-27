@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService, type ClippingItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
+import ConfirmationModal from '../components/common/ConfirmationModal';
 import { Button } from '../components/ui/button';
 import '../styles/history.css';
 import '../styles/upload-news.css';
@@ -25,7 +26,13 @@ export default function ClippingsHistoryPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [dropdownDirection, setDropdownDirection] = useState<'down' | 'up'>('down');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Estados para modal de confirmación de eliminación
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [clippingToDelete, setClippingToDelete] = useState<ClippingItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Función para cargar clippings
   const loadClippings = async () => {
@@ -73,13 +80,100 @@ export default function ClippingsHistoryPage() {
 
   // Manejar dropdown
   const toggleDropdown = (clippingId: number) => {
-    setOpenDropdown(openDropdown === clippingId ? null : clippingId);
+    if (openDropdown === clippingId) {
+      setOpenDropdown(null);
+    } else {
+      // Lógica simplificada: si hay pocas filas (menos de 3), mostrar hacia arriba
+      if (clippings.length <= 2) {
+        setDropdownDirection('up');
+      } else {
+        // Para más filas, detectar espacio disponible
+        const buttonElement = document.querySelector(`[data-clipping-id="${clippingId}"]`) as HTMLElement;
+        if (buttonElement) {
+          const rect = buttonElement.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          const spaceBelow = viewportHeight - rect.bottom;
+          
+          // Si hay menos de 200px de espacio abajo, mostrar hacia arriba
+          if (spaceBelow < 200) {
+            setDropdownDirection('up');
+          } else {
+            setDropdownDirection('down');
+          }
+        } else {
+          setDropdownDirection('down');
+        }
+      }
+      setOpenDropdown(clippingId);
+    }
   };
 
-  const handleGenerateReport = (clippingId: number, type: 'informe' | 'metricas') => {
-    console.log(`Generar ${type} para clipping:`, clippingId);
+  // Manejar eliminación de clipping
+  const handleDeleteClipping = (clipping: ClippingItem) => {
+    setClippingToDelete(clipping);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteClipping = async () => {
+    if (!clippingToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await apiService.deleteClipping(clippingToDelete.id);
+      
+      // Remover el clipping de la lista local
+      setClippings(prevClippings => 
+        prevClippings.filter(clipping => clipping.id !== clippingToDelete.id)
+      );
+      
+      // Actualizar la paginación
+      if (pagination) {
+        setPagination(prev => prev ? {
+          ...prev,
+          count: prev.count - 1
+        } : null);
+      }
+      
+      setSuccessMessage(`Clipping "${clippingToDelete.name}" eliminado exitosamente`);
+      setShowDeleteModal(false);
+      setClippingToDelete(null);
+      
+    } catch (error) {
+      console.error('Error eliminando clipping:', error);
+      setErrorMessage('Error al eliminar el clipping. Por favor, intenta nuevamente.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const cancelDeleteClipping = () => {
+    setShowDeleteModal(false);
+    setClippingToDelete(null);
+  };
+
+  const handleGenerateReport = async (clippingId: number, type: 'informe' | 'metricas') => {
     setOpenDropdown(null);
-    // TODO: Implementar generación de informe o métricas
+    
+    try {
+      if (type === 'informe') {
+        // Generar o obtener reporte
+        const report = await apiService.generateClippingReport(clippingId);
+        console.log('Reporte generado:', report);
+        
+        // TODO: Mostrar el reporte en un modal o nueva página
+        setSuccessMessage('Reporte generado exitosamente');
+      } else if (type === 'metricas') {
+        // Obtener métricas detalladas
+        const metrics = await apiService.getClippingMetrics(clippingId);
+        console.log('Métricas obtenidas:', metrics);
+        
+        // TODO: Mostrar las métricas en un modal o nueva página
+        setSuccessMessage('Métricas obtenidas exitosamente');
+      }
+    } catch (error) {
+      console.error(`Error generando ${type}:`, error);
+      setErrorMessage(`Error al generar ${type}. Por favor, intenta nuevamente.`);
+    }
   };
 
   // Manejar cambios de tamaño de página
@@ -103,21 +197,6 @@ export default function ClippingsHistoryPage() {
     });
   };
 
-  // Función para eliminar clipping
-  const deleteClipping = async (id: number) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este clipping?')) {
-      return;
-    }
-
-    try {
-      await apiService.deleteClipping(id);
-      setClippings(clippings.filter(c => c.id !== id));
-      setSuccessMessage('Clipping eliminado exitosamente');
-    } catch (error) {
-      console.error('Error eliminando clipping:', error);
-      setErrorMessage('Error al eliminar el clipping');
-    }
-  };
 
   return (
     <div className="history-container px-6">
@@ -241,7 +320,7 @@ export default function ClippingsHistoryPage() {
                             title="Editar"
                           />
                           <Button
-                            onClick={() => deleteClipping(clipping.id)}
+                            onClick={() => handleDeleteClipping(clipping)}
                             variant="ghost"
                             size="icon"
                             icon="Delete"
@@ -254,16 +333,25 @@ export default function ClippingsHistoryPage() {
                               size="icon"
                               icon="Generate"
                               title="Generar informe y métricas"
+                              data-clipping-id={clipping.id}
                             />
                             
                             {openDropdown === clipping.id && (
-                              <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
+                              <div className={`absolute right-0 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50 ${
+                                dropdownDirection === 'up' 
+                                  ? 'bottom-full mb-1 dropdown-up' 
+                                  : 'top-full mt-1 dropdown-down'
+                              }`}>
                                 <Button
                                   onClick={() => handleGenerateReport(clipping.id, 'informe')}
                                   variant="ghost"
                                   size="sm"
                                   icon="FileText"
-                                  className="w-full justify-start px-4 py-2 text-sm first:rounded-t-lg"
+                                  className={`w-full justify-start px-4 py-2 text-sm ${
+                                    dropdownDirection === 'up' 
+                                      ? 'last:rounded-t-lg first:rounded-b-lg' 
+                                      : 'first:rounded-t-lg last:rounded-b-lg'
+                                  }`}
                                 >
                                   Ver informe
                                 </Button>
@@ -272,7 +360,11 @@ export default function ClippingsHistoryPage() {
                                   variant="ghost"
                                   size="sm"
                                   icon="Sparkles"
-                                  className="w-full justify-start px-4 py-2 text-sm last:rounded-b-lg"
+                                  className={`w-full justify-start px-4 py-2 text-sm ${
+                                    dropdownDirection === 'up' 
+                                      ? 'first:rounded-t-lg last:rounded-b-lg' 
+                                      : 'last:rounded-t-lg first:rounded-b-lg'
+                                  }`}
                                 >
                                   Ver métricas
                                 </Button>
@@ -382,6 +474,18 @@ export default function ClippingsHistoryPage() {
           setSuccessMessage('');
           setErrorMessage('');
         }}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={cancelDeleteClipping}
+        onConfirm={confirmDeleteClipping}
+        title="Eliminar Clipping"
+        message={`¿Estás seguro de que deseas eliminar el clipping "${clippingToDelete?.name}" y sus reportes?\n\nEsta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        type="danger"
+        isLoading={isDeleting}
       />
     </div>
   );

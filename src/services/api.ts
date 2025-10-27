@@ -761,6 +761,122 @@ export const apiService = {
       method: 'DELETE',
     });
   },
+
+  // Obtener clipping específico
+  async getClipping(id: number): Promise<ClippingItem> {
+    return apiRequest<ClippingItem>(`/clippings/${id}`);
+  },
+
+  // Actualizar clipping
+  async updateClipping(id: number, data: Partial<ClippingData>): Promise<ClippingItem> {
+    return apiRequest<ClippingItem>(`/clippings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ clipping: data }),
+    });
+  },
+
+  // Obtener reporte de clipping
+  async getClippingReport(clippingId: number): Promise<{
+    id: number;
+    content: string;
+    metadata: any;
+    created_at: string;
+    updated_at: string;
+    creator?: { id: number; full_name: string };
+    reviewer?: { id: number; full_name: string };
+  }> {
+    return apiRequest<{
+      id: number;
+      content: string;
+      metadata: any;
+      created_at: string;
+      updated_at: string;
+      creator?: { id: number; full_name: string };
+      reviewer?: { id: number; full_name: string };
+    }>(`/clippings/${clippingId}/report`);
+  },
+
+  // Generar reporte de clipping con IA
+  async generateClippingReport(clippingId: number): Promise<{
+    id: number;
+    content: string;
+    metadata: any;
+    created_at: string;
+    updated_at: string;
+    creator?: { id: number; full_name: string };
+    reviewer?: { id: number; full_name: string };
+  }> {
+    return apiRequest<{
+      id: number;
+      content: string;
+      metadata: any;
+      created_at: string;
+      updated_at: string;
+      creator?: { id: number; full_name: string };
+      reviewer?: { id: number; full_name: string };
+    }>(`/clippings/${clippingId}/report`, {
+      method: 'POST',
+    });
+  },
+
+  // Actualizar reporte de clipping
+  async updateClippingReport(clippingId: number, data: {
+    content?: string;
+    metadata?: any;
+  }): Promise<{
+    id: number;
+    content: string;
+    metadata: any;
+    created_at: string;
+    updated_at: string;
+    creator?: { id: number; full_name: string };
+    reviewer?: { id: number; full_name: string };
+  }> {
+    return apiRequest<{
+      id: number;
+      content: string;
+      metadata: any;
+      created_at: string;
+      updated_at: string;
+      creator?: { id: number; full_name: string };
+      reviewer?: { id: number; full_name: string };
+    }>(`/clippings/${clippingId}/report`, {
+      method: 'PUT',
+      body: JSON.stringify({ clipping_report: data }),
+    });
+  },
+
+  // Exportar reporte a PDF
+  async exportClippingReportPdf(clippingId: number): Promise<Blob> {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/clippings/${clippingId}/report/export_pdf`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al exportar el PDF');
+    }
+
+    return response.blob();
+  },
+
+  // Obtener métricas de clipping
+  async getClippingMetrics(clippingId: number): Promise<ClippingMetrics> {
+    const clipping = await this.getClipping(clippingId);
+    // Las métricas se obtienen del campo metrics del clipping
+    return (clipping as any).metrics || {};
+  },
+
+  // Refrescar métricas de clipping
+  async refreshClippingMetrics(clippingId: number): Promise<ClippingMetrics> {
+    // Actualizar el clipping para refrescar las métricas
+    const clipping = await this.updateClipping(clippingId, {});
+    return (clipping as any).metrics || {};
+  },
 };
 
 export default apiService; 
