@@ -136,13 +136,54 @@ export interface SoporteMetric {
 }
 
 export interface ClippingMetrics {
-  totalNoticias: number;
-  soporte: SoporteMetric[];
-  resumen: {
-    soportesUnicos: number;
-    soporteMasFrecuente: string;
-    porcentajeSoporteMasFrecuente: number;
+  generated_at: string;
+  date_range: {
+    from: string | null;
+    to: string | null;
   };
+  news_count: number;
+  valuation: {
+    positive: { count: number; percentage: number };
+    neutral: { count: number; percentage: number };
+    negative: { count: number; percentage: number };
+    total: number;
+  };
+  media_stats: {
+    total: number;
+    items: Array<{
+      key: string;
+      count: number;
+      percentage: number;
+    }>;
+  };
+  support_stats: {
+    total: number;
+    items: Array<{
+      key: string;
+      count: number;
+      percentage: number;
+    }>;
+  };
+  mention_stats: {
+    total: number;
+    items: Array<{
+      mention_id: number;
+      name: string;
+      count: number;
+      percentage: number;
+    }>;
+  };
+  audience: {
+    total: number | null;
+    average: number | null;
+    max: { news_id: number; value: number } | null;
+  };
+  quotation: {
+    total: number | null;
+    average: number | null;
+    max: { news_id: number; value: number } | null;
+  };
+  crisis: boolean;
 }
 
 export interface PaginationInfo {

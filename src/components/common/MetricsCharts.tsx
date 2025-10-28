@@ -29,11 +29,11 @@ interface MetricsChartsProps {
 export default function MetricsCharts({ metricas }: MetricsChartsProps) {
   // Configuración para el gráfico de barras
   const barChartData = {
-    labels: metricas.soporte.map(item => item.soporte),
+    labels: metricas.support_stats?.items?.map(item => item.key) || [],
     datasets: [
       {
         label: 'Cantidad de noticias',
-        data: metricas.soporte.map(item => item.cantidad),
+        data: metricas.support_stats?.items?.map(item => item.count) || [],
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',   // Blue
           'rgba(16, 185, 129, 0.8)',   // Green
@@ -87,7 +87,7 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
         displayColors: true,
         callbacks: {
           label: function(context: { dataIndex: number; parsed: { y: number } }) {
-            const percentage = metricas.soporte[context.dataIndex]?.porcentaje || 0;
+            const percentage = metricas.support_stats?.items?.[context.dataIndex]?.percentage || 0;
             return `${context.parsed.y} noticias (${percentage}%)`;
           },
         },
@@ -122,10 +122,10 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
 
   // Configuración para el gráfico de dona
   const doughnutChartData = {
-    labels: metricas.soporte.map(item => item.soporte),
+    labels: metricas.support_stats?.items?.map(item => item.key) || [],
     datasets: [
       {
-        data: metricas.soporte.map(item => item.porcentaje),
+        data: metricas.support_stats?.items?.map(item => item.percentage) || [],
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)',
@@ -186,7 +186,7 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
         callbacks: {
           label: function(context: { label: string; parsed: number }) {
             const soporte = context.label;
-            const cantidad = metricas.soporte.find(item => item.soporte === soporte)?.cantidad || 0;
+            const cantidad = metricas.support_stats?.items?.find(item => item.key === soporte)?.count || 0;
             return `${soporte}: ${context.parsed}% (${cantidad} noticias)`;
           },
         },
@@ -199,22 +199,22 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
       {/* Cards de resumen */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 text-white shadow-lg">
-          <div className="text-2xl font-bold">{metricas.totalNoticias}</div>
+          <div className="text-2xl font-bold">{metricas.news_count}</div>
           <div className="text-sm opacity-90">Total Noticias</div>
         </div>
         
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-4 text-white shadow-lg">
-          <div className="text-2xl font-bold">{metricas.resumen.soportesUnicos}</div>
+          <div className="text-2xl font-bold">{metricas.support_stats?.total || 0}</div>
           <div className="text-sm opacity-90">Soportes Únicos</div>
         </div>
         
         <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg p-4 text-white shadow-lg">
-          <div className="text-2xl font-bold">{metricas.resumen.soporteMasFrecuente}</div>
+          <div className="text-2xl font-bold">{metricas.support_stats?.items?.[0]?.key || '-'}</div>
           <div className="text-sm opacity-90">Más Frecuente</div>
         </div>
         
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-4 text-white shadow-lg">
-          <div className="text-2xl font-bold">{metricas.resumen.porcentajeSoporteMasFrecuente}%</div>
+          <div className="text-2xl font-bold">{metricas.support_stats?.items?.[0]?.percentage || 0}%</div>
           <div className="text-sm opacity-90">Porcentaje Principal</div>
         </div>
       </div>
@@ -250,21 +250,21 @@ export default function MetricsCharts({ metricas }: MetricsChartsProps) {
               </tr>
             </thead>
             <tbody>
-              {metricas.soporte.map((item, index) => (
+              {metricas.support_stats?.items?.map((item, index) => (
                 <tr key={index} className="border-b border-white/10">
-                  <td className="py-3 px-4 font-medium">{item.soporte}</td>
-                  <td className="py-3 px-4">{item.cantidad}</td>
-                  <td className="py-3 px-4">{item.porcentaje}%</td>
+                  <td className="py-3 px-4 font-medium">{item.key}</td>
+                  <td className="py-3 px-4">{item.count}</td>
+                  <td className="py-3 px-4">{item.percentage}%</td>
                   <td className="py-3 px-4">
                     <div className="w-full bg-white/20 rounded-full h-2">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${item.porcentaje}%` }}
+                        style={{ width: `${item.percentage}%` }}
                       ></div>
                     </div>
                   </td>
                 </tr>
-              ))}
+              )) || []}
             </tbody>
           </table>
         </div>

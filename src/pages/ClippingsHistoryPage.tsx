@@ -192,12 +192,8 @@ export default function ClippingsHistoryPage() {
         // TODO: Mostrar el reporte en un modal o nueva página
         setSuccessMessage('Reporte generado exitosamente');
       } else if (type === 'metricas') {
-        // Obtener métricas detalladas
-        const metrics = await apiService.getClippingMetrics(clippingId);
-        console.log('Métricas obtenidas:', metrics);
-        
-        // TODO: Mostrar las métricas en un modal o nueva página
-        setSuccessMessage('Métricas obtenidas exitosamente');
+        // Navegar a la página de detalle del clipping
+        navigate(`/clipping/${clippingId}`);
       }
     } catch (error) {
       console.error(`Error generando ${type}:`, error);
