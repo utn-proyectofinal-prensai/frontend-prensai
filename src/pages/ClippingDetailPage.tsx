@@ -32,14 +32,11 @@ export default function ClippingDetailPage() {
     try {
       const clippingId = parseInt(id);
       
-      // Cargar datos del clipping y métricas en paralelo
-      const [clippingData, metricsData] = await Promise.all([
-        apiService.getClipping(clippingId),
-        apiService.getClippingMetrics(clippingId)
-      ]);
+      // Cargar solo el clipping (las métricas están incluidas)
+      const clippingData = await apiService.getClipping(clippingId);
       
       setClipping(clippingData);
-      setMetrics(metricsData);
+      setMetrics((clippingData as any).metrics || {});
       
     } catch (error) {
       console.error('Error cargando detalle del clipping:', error);
@@ -104,14 +101,6 @@ export default function ClippingDetailPage() {
           <p className="upload-news-subtitle text-sm mt-2">
             {formatDate(clipping.start_date)} - {formatDate(clipping.end_date)}
           </p>
-          
-          {metrics?.crisis && (
-            <div className="flex items-center justify-center mt-3">
-              <span className="px-3 py-1 bg-red-500/20 text-red-300 rounded-full text-sm border border-red-300/30">
-                Crisis
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -178,16 +167,32 @@ export default function ClippingDetailPage() {
           {/* Gráficos de Valoración y Soporte */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Gráfico de Valoración */}
-            <div className="upload-news-panel">
-              <h3 className="upload-news-section-title mb-6">Valoración de Noticias</h3>
-              <AdvancedMetricsCharts metricas={metrics} chartType="valuation" />
+            <div className="upload-news-panel flex flex-col">
+              <div className="flex items-center justify-between mb-6" style={{ minHeight: '48px' }}>
+                <h3 className="upload-news-section-title mb-0">Valoración de Noticias</h3>
+                {metrics?.crisis && (
+                  <span className="bg-red-500/20 text-red-400 rounded-full text-base border border-red-400/30 font-semibold flex items-center gap-2" style={{ padding: '12px 24px' }}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    Crisis
+                  </span>
+                )}
+              </div>
+              <div className="flex-1">
+                <AdvancedMetricsCharts metricas={metrics} chartType="valuation" />
+              </div>
             </div>
 
             {/* Gráfico de Soporte */}
             {metrics?.support_stats?.items && metrics.support_stats.items.length > 0 && (
-              <div className="upload-news-panel">
-                <h3 className="upload-news-section-title mb-6">Distribución por Soporte</h3>
-                <AdvancedMetricsCharts metricas={metrics} chartType="support" />
+              <div className="upload-news-panel flex flex-col">
+                <div className="mb-6" style={{ minHeight: '48px' }}>
+                  <h3 className="upload-news-section-title mb-0">Distribución por Soporte</h3>
+                </div>
+                <div className="flex-1">
+                  <AdvancedMetricsCharts metricas={metrics} chartType="support" />
+                </div>
               </div>
             )}
           </div>

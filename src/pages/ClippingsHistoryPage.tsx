@@ -65,19 +65,32 @@ export default function ClippingsHistoryPage() {
     loadClippings();
   }, [currentPage, pageSize, searchTerm]);
 
-  // Cerrar dropdown al hacer clic fuera
+  // Efecto para cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      // Solo cerrar si el click no es en un botón del dropdown
+      const target = event.target as HTMLElement;
+      const isDropdownButton = target.closest('[data-dropdown-button]');
+      const isDropdownContent = target.closest('[data-dropdown-content]');
+      
+      if (!isDropdownButton && !isDropdownContent && openDropdown) {
         setOpenDropdown(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    if (openDropdown) {
+      // Usar un pequeño delay para evitar cerrar inmediatamente
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
+
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [openDropdown]);
+
 
   // Manejar cambios de página
   const handlePageChange = (page: number) => {
@@ -89,28 +102,34 @@ export default function ClippingsHistoryPage() {
     if (openDropdown === clippingId) {
       setOpenDropdown(null);
     } else {
-      // Lógica simplificada: si hay pocas filas (menos de 3), mostrar hacia arriba
-      if (clippings.length <= 2) {
-        setDropdownDirection('up');
-      } else {
-        // Para más filas, detectar espacio disponible
-        const buttonElement = document.querySelector(`[data-clipping-id="${clippingId}"]`) as HTMLElement;
-        if (buttonElement) {
-          const rect = buttonElement.getBoundingClientRect();
-          const viewportHeight = window.innerHeight;
-          const spaceBelow = viewportHeight - rect.bottom;
-          
-          // Si hay menos de 200px de espacio abajo, mostrar hacia arriba
-          if (spaceBelow < 200) {
-            setDropdownDirection('up');
+      // Cerrar cualquier dropdown abierto primero
+      setOpenDropdown(null);
+      
+      // Usar setTimeout para asegurar que el estado se actualice correctamente
+      setTimeout(() => {
+        // Lógica simplificada: si hay pocas filas (menos de 3), mostrar hacia arriba
+        if (clippings.length <= 2) {
+          setDropdownDirection('up');
+        } else {
+          // Para más filas, detectar espacio disponible
+          const buttonElement = document.querySelector(`[data-clipping-id="${clippingId}"]`) as HTMLElement;
+          if (buttonElement) {
+            const rect = buttonElement.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const spaceBelow = viewportHeight - rect.bottom;
+            
+            // Si hay menos de 200px de espacio abajo, mostrar hacia arriba
+            if (spaceBelow < 200) {
+              setDropdownDirection('up');
+            } else {
+              setDropdownDirection('down');
+            }
           } else {
             setDropdownDirection('down');
           }
-        } else {
-          setDropdownDirection('down');
         }
-      }
-      setOpenDropdown(clippingId);
+        setOpenDropdown(clippingId);
+      }, 10);
     }
   };
 
@@ -181,6 +200,7 @@ export default function ClippingsHistoryPage() {
   };
 
   const handleGenerateReport = async (clippingId: number, type: 'informe' | 'metricas') => {
+    console.log('handleGenerateReport called:', { clippingId, type });
     setOpenDropdown(null);
     
     try {
@@ -192,6 +212,7 @@ export default function ClippingsHistoryPage() {
         // TODO: Mostrar el reporte en un modal o nueva página
         setSuccessMessage('Reporte generado exitosamente');
       } else if (type === 'metricas') {
+        console.log('Navegando a métricas para clipping:', clippingId);
         // Navegar a la página de detalle del clipping
         navigate(`/clipping/${clippingId}`);
       }
@@ -356,20 +377,28 @@ export default function ClippingsHistoryPage() {
                               icon="Generate"
                               title="Generar informe y métricas"
                               data-clipping-id={clipping.id}
+                              data-dropdown-button={clipping.id}
                             />
                             
                             {openDropdown === clipping.id && (
-                              <div className={`absolute right-0 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50 ${
-                                dropdownDirection === 'up' 
-                                  ? 'bottom-full mb-1 dropdown-up' 
-                                  : 'top-full mt-1 dropdown-down'
-                              }`}>
+                              <div 
+                                className={`absolute right-0 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-[9999] ${
+                                  dropdownDirection === 'up' 
+                                    ? 'bottom-full mb-1 dropdown-up' 
+                                    : 'top-full mt-1 dropdown-down'
+                                }`}
+                                onClick={(e) => e.stopPropagation()}
+                                data-dropdown-content={clipping.id}
+                              >
                                 <Button
-                                  onClick={() => handleGenerateReport(clipping.id, 'informe')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleGenerateReport(clipping.id, 'informe');
+                                  }}
                                   variant="ghost"
                                   size="sm"
                                   icon="FileText"
-                                  className={`w-full justify-start px-4 py-2 text-sm ${
+                                  className={`w-full justify-start px-4 py-2 text-sm hover:bg-gray-700 ${
                                     dropdownDirection === 'up' 
                                       ? 'last:rounded-t-lg first:rounded-b-lg' 
                                       : 'first:rounded-t-lg last:rounded-b-lg'
@@ -378,11 +407,14 @@ export default function ClippingsHistoryPage() {
                                   Ver informe
                                 </Button>
                                 <Button
-                                  onClick={() => handleGenerateReport(clipping.id, 'metricas')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleGenerateReport(clipping.id, 'metricas');
+                                  }}
                                   variant="ghost"
                                   size="sm"
                                   icon="Sparkles"
-                                  className={`w-full justify-start px-4 py-2 text-sm ${
+                                  className={`w-full justify-start px-4 py-2 text-sm hover:bg-gray-700 ${
                                     dropdownDirection === 'up' 
                                       ? 'first:rounded-t-lg last:rounded-b-lg' 
                                       : 'last:rounded-t-lg first:rounded-b-lg'

@@ -28,9 +28,9 @@ interface AdvancedMetricsChartsProps {
 }
 
 export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedMetricsChartsProps) {
-  // Paleta de colores optimizada para UX
+  // Paleta de colores original de la aplicación
   const colorPalette = {
-    primary: ['#3B82F6', '#10B981', '#A855F7', '#EF4444', '#8B5CF6', '#F97316', '#06B6D4', '#84CC16'],
+    primary: ['#3B82F6', '#10B981', '#A855F7', '#F97316', '#EF4444', '#F59E0B', '#06B6D4', '#8B5CF6'], // Colores principales
     valuation: ['#10B981', '#F59E0B', '#EF4444'], // Verde, Amarillo, Rojo para valoración
     neutral: ['#6B7280', '#9CA3AF', '#D1D5DB'], // Grises para elementos neutros
   };
@@ -80,6 +80,26 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
 
   const { labels, values, percentages } = getChartData();
 
+  // Paleta de colores inteligente basada en la cantidad de elementos
+  const getSmartColorPalette = () => {
+    if (labels.length <= colorPalette.primary.length) {
+      return colorPalette.primary.slice(0, labels.length);
+    } else {
+      // Para muchos elementos, repetir la paleta con variaciones
+      const extendedPalette = [];
+      for (let i = 0; i < labels.length; i++) {
+        const baseColor = colorPalette.primary[i % colorPalette.primary.length];
+        const opacity = 0.7 + (Math.floor(i / colorPalette.primary.length) * 0.1);
+        const alpha = Math.min(opacity, 1.0);
+        extendedPalette.push(`${baseColor}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`);
+      }
+      return extendedPalette;
+    }
+  };
+
+  const smartColorPalette = getSmartColorPalette();
+
+
   // Configuración común para todos los gráficos
   const commonOptions = {
     responsive: true,
@@ -123,8 +143,8 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
     datasets: [
       {
         data: percentages,
-        backgroundColor: chartType === 'valuation' ? colorPalette.valuation : colorPalette.primary.slice(0, labels.length),
-        borderColor: chartType === 'valuation' ? colorPalette.valuation : colorPalette.primary.slice(0, labels.length),
+        backgroundColor: chartType === 'valuation' ? colorPalette.valuation : smartColorPalette.slice(0, labels.length),
+        borderColor: chartType === 'valuation' ? colorPalette.valuation : smartColorPalette.slice(0, labels.length),
         borderWidth: 3,
       },
     ],
@@ -148,6 +168,7 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
     },
   };
 
+
   // Gráfico Horizontal Bar para Medios/Soporte (más legible)
   const horizontalBarData = {
     labels,
@@ -155,8 +176,8 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
       {
         label: 'Cantidad',
         data: values,
-        backgroundColor: colorPalette.primary.slice(0, labels.length).map(color => `${color}CC`),
-        borderColor: colorPalette.primary.slice(0, labels.length),
+        backgroundColor: smartColorPalette.slice(0, labels.length).map(color => `${color}CC`),
+        borderColor: smartColorPalette.slice(0, labels.length),
         borderWidth: 2,
         borderRadius: 6,
         borderSkipped: false,
@@ -217,15 +238,16 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
     },
   };
 
-  // Gráfico Vertical Bar para Soporte (clásico y efectivo)
-  const verticalBarData = {
+
+  // Gráfico Vertical Bar con Scroll (para muchos datos)
+  const verticalBarScrollData = {
     labels,
     datasets: [
       {
         label: 'Cantidad',
         data: values,
-        backgroundColor: colorPalette.primary.slice(0, labels.length).map(color => `${color}CC`),
-        borderColor: colorPalette.primary.slice(0, labels.length),
+        backgroundColor: smartColorPalette.slice(0, labels.length).map(color => `${color}CC`),
+        borderColor: smartColorPalette.slice(0, labels.length),
         borderWidth: 2,
         borderRadius: 6,
         borderSkipped: false,
@@ -233,7 +255,7 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
     ],
   };
 
-  const verticalBarOptions = {
+  const verticalBarScrollOptions = {
     ...commonOptions,
     plugins: {
       ...commonOptions.plugins,
@@ -268,17 +290,17 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
         ticks: { 
           color: '#ffffff', 
           font: { 
-            size: 11,
+            size: 10,
             family: 'system-ui, Avenir, Helvetica, Arial, sans-serif'
           },
-          maxRotation: 45,
+          maxRotation: 0,
           minRotation: 0,
         },
       },
     },
   };
 
-  // Renderizar el gráfico apropiado según el tipo
+  // Renderizar gráfico según el tipo
   const renderChart = () => {
     if (labels.length === 0) {
       return (
@@ -291,44 +313,63 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
       );
     }
 
+    // Solo para medios mostrar el gráfico vertical
+    if (chartType === 'media') {
+      return <Bar data={verticalBarScrollData} options={verticalBarScrollOptions} />;
+    }
+
+    // Para otros tipos de gráficos, mantener el comportamiento original
     switch (chartType) {
       case 'valuation':
         return <Pie data={pieChartData} options={pieChartOptions} />;
-      case 'media':
+      case 'support':
+        return <Bar data={horizontalBarData} options={horizontalBarOptions} />;
       case 'mention':
         return <Bar data={horizontalBarData} options={horizontalBarOptions} />;
-      case 'support':
-        return <Bar data={verticalBarData} options={verticalBarOptions} />;
       default:
         return <Bar data={horizontalBarData} options={horizontalBarOptions} />;
     }
   };
 
   return (
-    <div className="space-y-4">
+    <div>
       <div className="h-60">
         {renderChart()}
       </div>
       
-      {/* Leyenda con colores */}
+      {/* Leyenda inteligente */}
       {labels.length > 0 && (
-        <div className="flex flex-wrap gap-4 justify-center">
-          {labels.map((label, index) => {
-            const colors = chartType === 'valuation' ? colorPalette.valuation : colorPalette.primary;
-            const color = colors[index % colors.length];
-            
-            return (
-              <div key={index} className="flex items-center" style={{ gap: '12px' }}>
-                <div 
-                  className="w-3 h-3 rounded-sm border border-white/20"
-                  style={{ backgroundColor: color }}
-                ></div>
-                <span className="text-white/80 text-sm">
-                  {label}: {Math.round(values[index])} ({percentages[index].toFixed(1)}%)
-                </span>
-              </div>
-            );
-          })}
+        <div className="flex flex-wrap gap-3 justify-center" style={{ marginTop: '32px' }}>
+          {/* Si todos los valores son iguales, mostrar solo una vez el valor común */}
+          {values.every(v => v === values[0]) && values.length > 3 ? (
+            <div className="flex items-center" style={{ gap: '8px' }}>
+              <div 
+                className="w-2 h-2 rounded-sm"
+                style={{ backgroundColor: smartColorPalette[0] }}
+              ></div>
+              <span className="text-white/70 text-xs">
+                {labels.length} medios • {Math.round(values[0])} noticia{values[0] !== 1 ? 's' : ''} cada uno ({percentages[0].toFixed(1)}%)
+              </span>
+            </div>
+          ) : (
+            /* Leyenda normal para valores diferentes */
+            labels.map((label, index) => {
+              const colors = chartType === 'valuation' ? colorPalette.valuation : smartColorPalette;
+              const color = colors[index % colors.length];
+              
+              return (
+                <div key={index} className="flex items-center" style={{ gap: '8px' }}>
+                  <div 
+                    className="w-2 h-2 rounded-sm"
+                    style={{ backgroundColor: color }}
+                  ></div>
+                  <span className="text-white/70 text-xs">
+                    {label}: {Math.round(values[index])} ({percentages[index].toFixed(1)}%)
+                  </span>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
     </div>
