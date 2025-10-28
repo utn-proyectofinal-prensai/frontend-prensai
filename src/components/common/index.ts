@@ -12,6 +12,9 @@ export type { SnackbarProps } from './Snackbar';
 // Componentes de confirmación
 export { default as ConfirmationModal } from './ConfirmationModal';
 
+// Componentes de edición
+export { EditClippingModal } from './EditClippingModal';
+
 export { default as UserDropdown } from './UserDropdown';
 
 // Componentes de layout
@@ -42,4 +45,4 @@ export { default as SimpleWorkflowStepper } from './SimpleWorkflowStepper';
 export { default as NewsTable } from './NewsTable';
 
 // Componentes de métricas
-export { default as MetricsCharts } from './MetricsCharts';
+export { default as AdvancedMetricsCharts } from './AdvancedMetricsCharts';
