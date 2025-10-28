@@ -116,7 +116,7 @@ export default function ClippingDetailPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="stats-section mb-8">
+      <div className="stats-section" style={{ marginBottom: '-32px !important' }}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="upload-news-panel" style={{ padding: '1rem', minHeight: 'auto' }}>
             <div className="flex flex-col items-center text-center">
@@ -174,7 +174,7 @@ export default function ClippingDetailPage() {
 
       {/* Gráficos Individuales */}
       {metrics && (
-        <div className="space-y-8">
+        <div style={{ marginTop: '-16px !important' }}>
           {/* Gráficos de Valoración y Soporte */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Gráfico de Valoración */}
@@ -194,7 +194,7 @@ export default function ClippingDetailPage() {
 
           {/* Gráfico de Medios */}
           {metrics?.media_stats?.items && metrics.media_stats.items.length > 0 && (
-            <div className="upload-news-panel">
+            <div className="upload-news-panel" style={{ marginTop: '24px' }}>
               <h3 className="upload-news-section-title mb-6">Distribución por Medios</h3>
               <AdvancedMetricsCharts metricas={metrics} chartType="media" />
             </div>
@@ -202,7 +202,7 @@ export default function ClippingDetailPage() {
 
           {/* Gráfico de Menciones */}
           {metrics?.mention_stats?.items && metrics.mention_stats.items.length > 0 && (
-            <div className="upload-news-panel">
+            <div className="upload-news-panel" style={{ marginTop: '24px' }}>
               <h3 className="upload-news-section-title mb-6">Distribución por Menciones</h3>
               <AdvancedMetricsCharts metricas={metrics} chartType="mention" />
             </div>

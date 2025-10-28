@@ -45,4 +45,4 @@ export { default as SimpleWorkflowStepper } from './SimpleWorkflowStepper';
 export { default as NewsTable } from './NewsTable';
 
 // Componentes de métricas
-export { default as MetricsCharts } from './MetricsCharts';
+export { default as AdvancedMetricsCharts } from './AdvancedMetricsCharts';

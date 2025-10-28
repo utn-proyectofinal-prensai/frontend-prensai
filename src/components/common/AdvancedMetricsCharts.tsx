@@ -1,31 +1,9 @@
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-} from 'chart.js';
-import { Bar, Doughnut, PolarArea, Radar, Pie } from 'react-chartjs-2';
+import { Chart as ChartJS } from 'chart.js';
+import { Bar, Pie } from 'react-chartjs-2';
 import type { ClippingMetrics } from '../../services/api';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  RadialLinearScale,
-  PointElement,
-  LineElement
-);
+// Registrar automáticamente todos los elementos necesarios
+ChartJS.register();
 
 interface AdvancedMetricsChartsProps {
   metricas: ClippingMetrics;
@@ -41,7 +19,6 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
   };
 
   const getChartData = () => {
-    let data: any;
     let labels: string[];
     let values: number[];
     let percentages: number[];
@@ -112,7 +89,7 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
         displayColors: true,
         titleFont: { 
           size: 14, 
-          weight: 'bold',
+          weight: 'bold' as const,
           family: 'system-ui, Avenir, Helvetica, Arial, sans-serif'
         },
         bodyFont: { 
