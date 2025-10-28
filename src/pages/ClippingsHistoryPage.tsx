@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiService, type ClippingItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
 import ConfirmationModal from '../components/common/ConfirmationModal';
+import { EditClippingModal } from '../components/common';
 import { Button } from '../components/ui/button';
 import '../styles/history.css';
 import '../styles/upload-news.css';
@@ -33,6 +34,11 @@ export default function ClippingsHistoryPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [clippingToDelete, setClippingToDelete] = useState<ClippingItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Estados para modal de edición
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [clippingToEdit, setClippingToEdit] = useState<ClippingItem | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Función para cargar clippings
   const loadClippings = async () => {
@@ -121,18 +127,8 @@ export default function ClippingsHistoryPage() {
     try {
       await apiService.deleteClipping(clippingToDelete.id);
       
-      // Remover el clipping de la lista local
-      setClippings(prevClippings => 
-        prevClippings.filter(clipping => clipping.id !== clippingToDelete.id)
-      );
-      
-      // Actualizar la paginación
-      if (pagination) {
-        setPagination(prev => prev ? {
-          ...prev,
-          count: prev.count - 1
-        } : null);
-      }
+      // Recargar todo el listado de clippings
+      await loadClippings();
       
       setSuccessMessage(`Clipping "${clippingToDelete.name}" eliminado exitosamente`);
       setShowDeleteModal(false);
@@ -149,6 +145,39 @@ export default function ClippingsHistoryPage() {
   const cancelDeleteClipping = () => {
     setShowDeleteModal(false);
     setClippingToDelete(null);
+  };
+
+  // Manejar edición de clipping
+  const handleEditClipping = (clipping: ClippingItem) => {
+    setClippingToEdit(clipping);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateClipping = async (updatedData: Partial<ClippingItem>) => {
+    if (!clippingToEdit) return;
+
+    setIsUpdating(true);
+    try {
+      await apiService.updateClipping(clippingToEdit.id, updatedData);
+      
+      // Recargar todo el listado de clippings
+      await loadClippings();
+      
+      setSuccessMessage(`Clipping "${updatedData.name || clippingToEdit.name}" actualizado exitosamente`);
+      setShowEditModal(false);
+      setClippingToEdit(null);
+      
+    } catch (error) {
+      console.error('Error actualizando clipping:', error);
+      setErrorMessage('Error al actualizar el clipping. Por favor, intenta nuevamente.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const cancelEditClipping = () => {
+    setShowEditModal(false);
+    setClippingToEdit(null);
   };
 
   const handleGenerateReport = async (clippingId: number, type: 'informe' | 'metricas') => {
@@ -273,7 +302,7 @@ export default function ClippingsHistoryPage() {
                       </td>
                       <td>
                         <span className="history-topic-badge">
-                          {clipping.topic.name}
+                          {clipping.topic?.name || '-'}
                         </span>
                       </td>
                       <td>
@@ -310,10 +339,7 @@ export default function ClippingsHistoryPage() {
                       <td>
                         <div className="history-actions" style={{ display: 'flex', gap: '2px', flexWrap: 'nowrap' }}>
                           <Button
-                            onClick={() => {
-                              // TODO: Implementar edición
-                              console.log('Editar:', clipping.id);
-                            }}
+                            onClick={() => handleEditClipping(clipping)}
                             variant="ghost"
                             size="icon"
                             icon="Edit"
@@ -486,6 +512,15 @@ export default function ClippingsHistoryPage() {
         confirmText="Eliminar"
         type="danger"
         isLoading={isDeleting}
+      />
+
+      {/* Modal de edición de clipping */}
+      <EditClippingModal
+        clipping={clippingToEdit}
+        isOpen={showEditModal}
+        isSaving={isUpdating}
+        onClose={cancelEditClipping}
+        onSave={handleUpdateClipping}
       />
     </div>
   );

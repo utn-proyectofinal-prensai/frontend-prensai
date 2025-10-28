@@ -12,6 +12,9 @@ export type { SnackbarProps } from './Snackbar';
 // Componentes de confirmación
 export { default as ConfirmationModal } from './ConfirmationModal';
 
+// Componentes de edición
+export { EditClippingModal } from './EditClippingModal';
+
 export { default as UserDropdown } from './UserDropdown';
 
 // Componentes de layout
