@@ -1,9 +1,26 @@
-import { Chart as ChartJS } from 'chart.js';
+import { 
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Title
+} from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import type { ClippingMetrics } from '../../services/api';
 
-// Registrar automáticamente todos los elementos necesarios
-ChartJS.register();
+// Registrar los elementos específicos que necesitamos
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Title
+);
 
 interface AdvancedMetricsChartsProps {
   metricas: ClippingMetrics;
