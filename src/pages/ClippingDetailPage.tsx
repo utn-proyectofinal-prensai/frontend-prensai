@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService, type ClippingItem, type ClippingMetrics } from '../services/api';
 import { Button } from '../components/ui/button';
 import AdvancedMetricsCharts from '../components/common/AdvancedMetricsCharts';
+import { ClippingReportButton } from '../components/common';
 import Snackbar from '../components/common/Snackbar';
 import '../styles/history.css';
 import '../styles/upload-news.css';
@@ -97,6 +98,17 @@ export default function ClippingDetailPage() {
       {/* Header de la página */}
       <div className="upload-news-header">
         <div className="text-center mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <Button onClick={handleBack} variant="outline" size="sm">
+              ← Volver
+            </Button>
+            <ClippingReportButton
+              clippingId={clipping.id}
+              hasReport={clipping.has_report}
+              variant="primary"
+              size="sm"
+            />
+          </div>
           <h1 className="upload-news-title text-2xl sm:text-3xl lg:text-4xl">{clipping.name}</h1>
           <p className="upload-news-subtitle text-sm mt-2">
             {formatDate(clipping.start_date)} - {formatDate(clipping.end_date)}

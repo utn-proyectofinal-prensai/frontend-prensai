@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService, type ClippingItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
 import ConfirmationModal from '../components/common/ConfirmationModal';
-import { EditClippingModal } from '../components/common';
+import { EditClippingModal, ClippingReportButton } from '../components/common';
 import { Button } from '../components/ui/button';
 import '../styles/history.css';
 import '../styles/upload-news.css';
@@ -27,8 +27,6 @@ export default function ClippingsHistoryPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-  const [dropdownDirection, setDropdownDirection] = useState<'down' | 'up'>('down');
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Estados para modal de confirmación de eliminación
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -97,41 +95,6 @@ export default function ClippingsHistoryPage() {
     setCurrentPage(page);
   };
 
-  // Manejar dropdown
-  const toggleDropdown = (clippingId: number) => {
-    if (openDropdown === clippingId) {
-      setOpenDropdown(null);
-    } else {
-      // Cerrar cualquier dropdown abierto primero
-      setOpenDropdown(null);
-      
-      // Usar setTimeout para asegurar que el estado se actualice correctamente
-      setTimeout(() => {
-        // Lógica simplificada: si hay pocas filas (menos de 3), mostrar hacia arriba
-        if (clippings.length <= 2) {
-          setDropdownDirection('up');
-        } else {
-          // Para más filas, detectar espacio disponible
-          const buttonElement = document.querySelector(`[data-clipping-id="${clippingId}"]`) as HTMLElement;
-          if (buttonElement) {
-            const rect = buttonElement.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            const spaceBelow = viewportHeight - rect.bottom;
-            
-            // Si hay menos de 200px de espacio abajo, mostrar hacia arriba
-            if (spaceBelow < 200) {
-              setDropdownDirection('up');
-            } else {
-              setDropdownDirection('down');
-            }
-          } else {
-            setDropdownDirection('down');
-          }
-        }
-        setOpenDropdown(clippingId);
-      }, 10);
-    }
-  };
 
   // Manejar eliminación de clipping
   const handleDeleteClipping = (clipping: ClippingItem) => {
@@ -199,28 +162,6 @@ export default function ClippingsHistoryPage() {
     setClippingToEdit(null);
   };
 
-  const handleGenerateReport = async (clippingId: number, type: 'informe' | 'metricas') => {
-    console.log('handleGenerateReport called:', { clippingId, type });
-    setOpenDropdown(null);
-    
-    try {
-      if (type === 'informe') {
-        // Generar o obtener reporte
-        const report = await apiService.generateClippingReport(clippingId);
-        console.log('Reporte generado:', report);
-        
-        // TODO: Mostrar el reporte en un modal o nueva página
-        setSuccessMessage('Reporte generado exitosamente');
-      } else if (type === 'metricas') {
-        console.log('Navegando a métricas para clipping:', clippingId);
-        // Navegar a la página de detalle del clipping
-        navigate(`/clipping/${clippingId}`);
-      }
-    } catch (error) {
-      console.error(`Error generando ${type}:`, error);
-      setErrorMessage(`Error al generar ${type}. Por favor, intenta nuevamente.`);
-    }
-  };
 
   // Manejar cambios de tamaño de página
   const handlePageSizeChange = (newPageSize: number) => {
@@ -369,62 +310,19 @@ export default function ClippingsHistoryPage() {
                             icon="Delete"
                             title="Eliminar"
                           />
-                          <div className="relative" ref={dropdownRef}>
-                            <Button
-                              onClick={() => toggleDropdown(clipping.id)}
-                              variant="ghost"
-                              size="icon"
-                              icon="Generate"
-                              title="Generar informe y métricas"
-                              data-clipping-id={clipping.id}
-                              data-dropdown-button={clipping.id}
-                            />
-                            
-                            {openDropdown === clipping.id && (
-                              <div 
-                                className={`absolute right-0 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-[9999] ${
-                                  dropdownDirection === 'up' 
-                                    ? 'bottom-full mb-1 dropdown-up' 
-                                    : 'top-full mt-1 dropdown-down'
-                                }`}
-                                onClick={(e) => e.stopPropagation()}
-                                data-dropdown-content={clipping.id}
-                              >
-                                <Button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleGenerateReport(clipping.id, 'informe');
-                                  }}
-                                  variant="ghost"
-                                  size="sm"
-                                  icon="FileText"
-                                  className={`w-full justify-start px-4 py-2 text-sm hover:bg-gray-700 ${
-                                    dropdownDirection === 'up' 
-                                      ? 'last:rounded-t-lg first:rounded-b-lg' 
-                                      : 'first:rounded-t-lg last:rounded-b-lg'
-                                  }`}
-                                >
-                                  Ver informe
-                                </Button>
-                                <Button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleGenerateReport(clipping.id, 'metricas');
-                                  }}
-                                  variant="ghost"
-                                  size="sm"
-                                  icon="Sparkles"
-                                  className={`w-full justify-start px-4 py-2 text-sm hover:bg-gray-700 ${
-                                    dropdownDirection === 'up' 
-                                      ? 'first:rounded-t-lg last:rounded-b-lg' 
-                                      : 'last:rounded-t-lg first:rounded-b-lg'
-                                  }`}
-                                >
-                                  Ver métricas
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                          <ClippingReportButton
+                            clippingId={clipping.id}
+                            hasReport={clipping.has_report}
+                            variant="ghost"
+                            size="icon"
+                          />
+                          <Button
+                            onClick={() => navigate(`/clipping/${clipping.id}`)}
+                            variant="ghost"
+                            size="icon"
+                            icon="Eye"
+                            title="Ver métricas"
+                          />
                         </div>
                       </td>
                     </tr>
