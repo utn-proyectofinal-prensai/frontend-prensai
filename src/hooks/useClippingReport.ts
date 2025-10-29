@@ -27,6 +27,7 @@ export interface ClippingReportResponse {
 export const useClippingReport = (clippingId: number) => {
   const [report, setReport] = useState<ClippingReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const generateReport = async (): Promise<ClippingReport | null> => {
@@ -90,7 +91,7 @@ export const useClippingReport = (clippingId: number) => {
   };
 
   const exportPdf = async (): Promise<Blob | null> => {
-    setLoading(true);
+    setDownloading(true);
     setError(null);
     
     try {
@@ -102,7 +103,7 @@ export const useClippingReport = (clippingId: number) => {
       console.error('Error exporting PDF:', err);
       return null;
     } finally {
-      setLoading(false);
+      setDownloading(false);
     }
   };
 
@@ -127,6 +128,7 @@ export const useClippingReport = (clippingId: number) => {
   return {
     report,
     loading,
+    downloading,
     error,
     generateReport,
     getReport,

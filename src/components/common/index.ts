@@ -49,3 +49,4 @@ export { default as AdvancedMetricsCharts } from './AdvancedMetricsCharts';
 
 // Componentes de reportes
 export { ClippingReportButton } from './ClippingReportButton';
+export { default as InfoModal } from './InfoModal';

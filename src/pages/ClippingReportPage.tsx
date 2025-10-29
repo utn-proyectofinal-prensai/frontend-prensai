@@ -4,6 +4,7 @@ import { Button } from '../components/ui/button';
 import { useClippingReport } from '../hooks/useClippingReport';
 import { apiService, type ClippingItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
+import InfoModal from '../components/common/InfoModal';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import '../styles/history.css';
 import '../styles/upload-news.css';
@@ -18,6 +19,7 @@ export default function ClippingReportPage() {
   const [editedContent, setEditedContent] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   const {
     report,
@@ -83,13 +85,16 @@ export default function ClippingReportPage() {
 
   const handleDownloadPdf = async () => {
     try {
+      setShowDownloadModal(true);
       const success = await downloadPdf(`reporte-clipping-${id}.pdf`);
+      setShowDownloadModal(false);
       if (success) {
         setSuccessMessage('PDF descargado exitosamente');
       } else {
         setErrorMessage('Error al descargar el PDF');
       }
     } catch (error) {
+      setShowDownloadModal(false);
       setErrorMessage('Error al descargar el PDF');
     }
   };
@@ -338,6 +343,14 @@ export default function ClippingReportPage() {
           onClose={() => setErrorMessage(null)}
         />
       )}
+
+      {/* Modal de descarga */}
+      <InfoModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        message="La descarga comenzará pronto"
+        autoCloseDelay={2000}
+      />
     </div>
   );
 }
