@@ -29,9 +29,11 @@ export const useClippingReport = (clippingId: number) => {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const generateReport = async (): Promise<ClippingReport | null> => {
     setLoading(true);
+    setIsGenerating(true);
     setError(null);
     
     try {
@@ -47,6 +49,7 @@ export const useClippingReport = (clippingId: number) => {
       return null;
     } finally {
       setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -130,6 +133,7 @@ export const useClippingReport = (clippingId: number) => {
     loading,
     downloading,
     error,
+    isGenerating,
     generateReport,
     getReport,
     updateReport,
