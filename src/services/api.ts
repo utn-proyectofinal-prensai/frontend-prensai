@@ -127,6 +127,7 @@ export interface ClippingItem {
   updated_at: string;
   creator: EntityRef | null;
   reviewer: EntityRef | null;
+  has_report: boolean;
 }
 
 export interface SoporteMetric {
@@ -819,45 +820,89 @@ export const apiService = {
   // Obtener reporte de clipping
   async getClippingReport(clippingId: number): Promise<{
     id: number;
+    clipping_id: number;
     content: string;
-    metadata: any;
+    metadata: {
+      fecha_generacion?: string;
+      tiempo_generacion?: number;
+      total_tokens?: number;
+      modelo_ia?: string;
+      version?: string;
+      manually_edited?: boolean;
+    };
+    manually_edited: boolean;
     created_at: string;
     updated_at: string;
-    creator?: { id: number; full_name: string };
-    reviewer?: { id: number; full_name: string };
+    creator?: { id: number; name: string };
+    reviewer?: { id: number; name: string } | null;
   }> {
-    return apiRequest<{
-      id: number;
-      content: string;
-      metadata: any;
-      created_at: string;
-      updated_at: string;
-      creator?: { id: number; full_name: string };
-      reviewer?: { id: number; full_name: string };
+    const response = await apiRequest<{
+      clipping_report: {
+        id: number;
+        clipping_id: number;
+        content: string;
+        metadata: {
+          fecha_generacion?: string;
+          tiempo_generacion?: number;
+          total_tokens?: number;
+          modelo_ia?: string;
+          version?: string;
+          manually_edited?: boolean;
+        };
+        manually_edited: boolean;
+        created_at: string;
+        updated_at: string;
+        creator?: { id: number; name: string };
+        reviewer?: { id: number; name: string } | null;
+      };
     }>(`/clippings/${clippingId}/report`);
+    
+    return response.clipping_report;
   },
 
   // Generar reporte de clipping con IA
   async generateClippingReport(clippingId: number): Promise<{
     id: number;
+    clipping_id: number;
     content: string;
-    metadata: any;
+    metadata: {
+      fecha_generacion?: string;
+      tiempo_generacion?: number;
+      total_tokens?: number;
+      modelo_ia?: string;
+      version?: string;
+      manually_edited?: boolean;
+    };
+    manually_edited: boolean;
     created_at: string;
     updated_at: string;
-    creator?: { id: number; full_name: string };
-    reviewer?: { id: number; full_name: string };
+    creator?: { id: number; name: string };
+    reviewer?: { id: number; name: string } | null;
   }> {
-    return apiRequest<{
-      id: number;
-      content: string;
-      metadata: any;
-      created_at: string;
-      updated_at: string;
-      creator?: { id: number; full_name: string };
-      reviewer?: { id: number; full_name: string };
+    const response = await apiRequest<{
+      clipping_report: {
+        id: number;
+        clipping_id: number;
+        content: string;
+        metadata: {
+          fecha_generacion?: string;
+          tiempo_generacion?: number;
+          total_tokens?: number;
+          modelo_ia?: string;
+          version?: string;
+          manually_edited?: boolean;
+        };
+        manually_edited: boolean;
+        created_at: string;
+        updated_at: string;
+        creator?: { id: number; name: string };
+        reviewer?: { id: number; name: string } | null;
+      };
     }>(`/clippings/${clippingId}/report`, {
       method: 'POST',
     });
+    
+    return response.clipping_report;
   },
 
   // Actualizar reporte de clipping
@@ -866,30 +911,57 @@ export const apiService = {
     metadata?: any;
   }): Promise<{
     id: number;
+    clipping_id: number;
     content: string;
-    metadata: any;
+    metadata: {
+      fecha_generacion?: string;
+      tiempo_generacion?: number;
+      total_tokens?: number;
+      modelo_ia?: string;
+      version?: string;
+      manually_edited?: boolean;
+    };
+    manually_edited: boolean;
     created_at: string;
     updated_at: string;
-    creator?: { id: number; full_name: string };
-    reviewer?: { id: number; full_name: string };
+    creator?: { id: number; name: string };
+    reviewer?: { id: number; name: string } | null;
   }> {
-    return apiRequest<{
-      id: number;
-      content: string;
-      metadata: any;
-      created_at: string;
-      updated_at: string;
-      creator?: { id: number; full_name: string };
-      reviewer?: { id: number; full_name: string };
+    const response = await apiRequest<{
+      clipping_report: {
+        id: number;
+        clipping_id: number;
+        content: string;
+        metadata: {
+          fecha_generacion?: string;
+          tiempo_generacion?: number;
+          total_tokens?: number;
+          modelo_ia?: string;
+          version?: string;
+          manually_edited?: boolean;
+        };
+        manually_edited: boolean;
+        created_at: string;
+        updated_at: string;
+        creator?: { id: number; name: string };
+        reviewer?: { id: number; name: string } | null;
+      };
     }>(`/clippings/${clippingId}/report`, {
       method: 'PUT',
       body: JSON.stringify({ clipping_report: data }),
     });
+    
+    return response.clipping_report;
   },
 
   // Exportar reporte a PDF
   async exportClippingReportPdf(clippingId: number): Promise<Blob> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('jwt-token');
+    
+    if (!token) {
+      throw new Error('No hay token de autenticación');
+    }
+
     const response = await fetch(`${API_BASE_URL}/clippings/${clippingId}/report/export_pdf`, {
       method: 'GET',
       headers: {
@@ -899,7 +971,13 @@ export const apiService = {
     });
 
     if (!response.ok) {
-      throw new Error('Error al exportar el PDF');
+      if (response.status === 401) {
+        throw new Error('Token de autenticación inválido o expirado');
+      } else if (response.status === 404) {
+        throw new Error('Reporte no encontrado');
+      } else {
+        throw new Error(`Error al exportar el PDF: ${response.status} ${response.statusText}`);
+      }
     }
 
     return response.blob();

@@ -29,3 +29,7 @@ export { useMentions, useEnabledMentions } from './useMentions';
 
 // Hook para configuraciones de IA
 export { useAiConfigurations } from './useAiConfigurations';
+
+// Hook para reportes de clippings
+export { useClippingReport } from './useClippingReport';
+export type { ClippingReport, ClippingReportResponse } from './useClippingReport';

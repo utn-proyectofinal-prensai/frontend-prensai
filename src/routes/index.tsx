@@ -10,6 +10,7 @@ import AiConfigurationsPage from '../pages/AiConfigurationsPage';
 import CreateClippingPage from '../pages/CreateClippingPage';
 import ClippingsHistoryPage from '../pages/ClippingsHistoryPage';
 import ClippingDetailPage from '../pages/ClippingDetailPage';
+import ClippingReportPage from '../pages/ClippingReportPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
@@ -101,6 +102,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ClippingDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'clipping/:id/report',
+        element: (
+          <ProtectedRoute>
+            <ClippingReportPage />
           </ProtectedRoute>
         ),
       },
