@@ -7,6 +7,8 @@ import {
   Snackbar
 } from '../components/common';
 import { Button } from '../components/ui/button';
+import { LoadingSpinner } from '../components/ui/loading-spinner';
+import { LoadingModal } from '../components/ui/loading-modal';
 import '../styles/upload-news.css';
 
 export default function UploadNewsPage() {
@@ -33,7 +35,6 @@ export default function UploadNewsPage() {
 
   // Estados para procesamiento
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState('');
   
   // Estados para mensajes
   const [errorMessage, setErrorMessage] = useState('');
@@ -106,7 +107,6 @@ export default function UploadNewsPage() {
     }
 
     setIsProcessing(true);
-    setProcessingStatus('Iniciando procesamiento...');
 
     try {
       const requestData: BatchProcessRequest = {
@@ -123,7 +123,6 @@ export default function UploadNewsPage() {
 
       if (allOk) {
         setSuccessVariant('success');
-        setProcessingStatus('Procesamiento completado exitosamente');
         setSuccessMessage(`Listo: ${response.persisted}/${response.received} procesadas correctamente.`);
         
         // Redirigir al dashboard de histórico después de 2 segundos
@@ -132,7 +131,6 @@ export default function UploadNewsPage() {
         }, 2000);
       } else if (partial) {
         setSuccessVariant('warning');
-        setProcessingStatus('Procesamiento parcial');
         setSuccessMessage(`Parcial: ${response.persisted}/${response.received} OK. ${response.errors.length} con error.`);
         
         // Redirigir al dashboard de histórico después de 3 segundos (más tiempo para leer el mensaje)
@@ -140,16 +138,13 @@ export default function UploadNewsPage() {
           navigate('/history');
         }, 3000);
       } else if (none) {
-        setProcessingStatus('Error en el procesamiento');
         setErrorMessage('No se pudo procesar ninguna noticia. Revisa los links ingresados.');
       } else {
         setSuccessVariant('warning');
-        setProcessingStatus('Procesamiento finalizado');
         setSuccessMessage(`Resultado: ${response.persisted}/${response.received} procesadas.`);
       }
     } catch (error) {
       console.error('Error procesando noticias:', error);
-      setProcessingStatus('Error en el procesamiento');
       
       const errorMessage = parseApiError(error, 'Error al procesar las noticias');
       setErrorMessage(errorMessage);
@@ -564,7 +559,7 @@ export default function UploadNewsPage() {
             >
               {isProcessing ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <LoadingSpinner size="sm" variant="simple" className="mr-2" />
                   <span>Procesando...</span>
                 </>
               ) : (
@@ -1030,44 +1025,20 @@ export default function UploadNewsPage() {
         </div>
       </div>
 
-      {/* Overlay de procesamiento mejorado */}
-      {isProcessing && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="processing-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300"
-        >
-          <div className="w-auto max-w-sm mx-4 rounded-3xl border border-white/20 bg-gradient-to-br from-slate-900/95 to-slate-800/95 shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300 min-h-[400px] flex flex-col justify-center">
-            {/* Spinner principal centrado */}
-            <div className="flex justify-center py-6">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/20 to-emerald-500/20 animate-pulse"></div>
-                <div className="absolute inset-2 rounded-full bg-gradient-to-r from-blue-500/30 to-emerald-500/30 animate-ping"></div>
-                <div className="relative w-full h-full rounded-full bg-gradient-to-r from-blue-500/40 to-emerald-500/40 border border-blue-400/50 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            {/* Contenido del modal centrado */}
-            <div className="text-center">
-              <h3 id="processing-title" className="text-xl font-bold text-white py-6">
-                {processingStatus || 'Procesando noticias…'}
-              </h3>
-              <p className="text-white/70 text-sm py-6">
-                Analizando contenido y extrayendo información
-              </p>
-              <p className="text-white/60 text-xs py-4">
-                Esto puede tardar unos segundos. Por favor, no cierres esta ventana.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal de procesamiento de noticias */}
+      <LoadingModal
+        isOpen={isProcessing}
+        title="Procesando noticias"
+        description="Analizando contenido y extrayendo información. Esto puede tardar unos segundos..."
+        variant="ai"
+        size="lg"
+        closable={false}
+        icon={
+          <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+          </svg>
+        }
+      />
 
       {/* Snackbars para mensajes */}
       <Snackbar

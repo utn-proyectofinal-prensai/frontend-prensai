@@ -4,6 +4,7 @@ import { apiService, type ClippingData } from '../services/api';
 import { useEnabledTopics } from '../hooks';
 import { NewsTable, Snackbar } from '../components/common';
 import { Button } from '../components/ui/button';
+import { LoadingModal } from '../components/ui/loading-modal';
 import '../styles/upload-news.css';
 
 
@@ -31,7 +32,6 @@ export default function CreateClippingPage() {
 
   // Estados para procesamiento
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatingStatus, setGeneratingStatus] = useState('');
   
   // Estados para mensajes
   const [errorMessage, setErrorMessage] = useState('');
@@ -172,7 +172,6 @@ export default function CreateClippingPage() {
     setTitleError('');
 
     setIsGenerating(true);
-    setGeneratingStatus('Generando clipping...');
 
     try {
       const clippingData: ClippingData = {
@@ -186,11 +185,9 @@ export default function CreateClippingPage() {
       await apiService.createClipping(clippingData);
       
       setSuccessMessage(`Clipping "${currentTitle}" generado exitosamente con ${selectedNewsIds.size} noticias`);
-      
-      // Redirigir al dashboard después de 2 segundos
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+
+      // Redirigir al dashboard de histórico de clippings
+      navigate('/clippings-history');
 
     } catch (error) {
       console.error('Error generando clipping:', error);
@@ -326,7 +323,14 @@ export default function CreateClippingPage() {
 
       {isLoadingNews ? (
         <div className="text-center py-8 text-white/70">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div>
+          <div className="relative inline-flex items-center justify-center mx-auto mb-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-500/30 border-t-blue-500"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
+            </div>
+          </div>
           Cargando noticias...
         </div>
       ) : filteredNews.length > 0 ? (
@@ -742,44 +746,20 @@ export default function CreateClippingPage() {
                 </div>
                 </div>
 
-      {/* Overlay de procesamiento mejorado */}
-      {isGenerating && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="generating-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300"
-        >
-          <div className="w-auto max-w-sm mx-4 rounded-3xl border border-white/20 bg-gradient-to-br from-slate-900/95 to-slate-800/95 shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300 min-h-[400px] flex flex-col justify-center">
-            {/* Spinner principal centrado */}
-            <div className="flex justify-center py-6">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/20 to-emerald-500/20 animate-pulse"></div>
-                <div className="absolute inset-2 rounded-full bg-gradient-to-r from-blue-500/30 to-emerald-500/30 animate-ping"></div>
-                <div className="relative w-full h-full rounded-full bg-gradient-to-r from-blue-500/40 to-emerald-500/40 border border-blue-400/50 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            {/* Contenido del modal centrado */}
-            <div className="text-center">
-              <h3 id="generating-title" className="text-xl font-bold text-white py-6">
-                {generatingStatus || 'Generando clipping…'}
-              </h3>
-              <p className="text-white/70 text-sm py-6">
-                Procesando noticias seleccionadas
-              </p>
-              <p className="text-white/60 text-xs py-4">
-                Esto puede tardar unos segundos. Por favor, no cierres esta ventana.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal de generación de clipping */}
+      <LoadingModal
+        isOpen={isGenerating}
+        title="Generando clipping"
+        description="Estamos procesando las noticias seleccionadas y creando el clipping. Esto puede tomar unos segundos..."
+        variant="ai"
+        size="lg"
+        closable={false}
+        icon={
+          <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        }
+      />
 
       {/* Snackbars para mensajes */}
       <Snackbar

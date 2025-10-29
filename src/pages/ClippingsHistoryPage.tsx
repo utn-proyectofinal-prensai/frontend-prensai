@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService, type ClippingItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
@@ -45,7 +45,7 @@ export default function ClippingsHistoryPage() {
       const response = await apiService.getClippings({
         page: currentPage,
         limit: pageSize,
-        search: searchTerm || undefined
+        // El filtro por texto se realiza en el frontend
       });
       setClippings(response.clippings);
       setPagination(response.pagination);
@@ -61,7 +61,18 @@ export default function ClippingsHistoryPage() {
   // Cargar clippings al montar el componente y cuando cambien los filtros
   useEffect(() => {
     loadClippings();
-  }, [currentPage, pageSize, searchTerm]);
+  }, [currentPage, pageSize]);
+
+  // Filtro de frontend por título o tema
+  const visibleClippings = useMemo(() => {
+    const term = (searchTerm || '').trim().toLowerCase();
+    if (!term) return clippings;
+    return clippings.filter((c) => {
+      const title = (c.name || '').toLowerCase();
+      const topic = (c.topic?.name || '').toLowerCase();
+      return title.includes(term) || topic.includes(term);
+    });
+  }, [clippings, searchTerm]);
 
   // Efecto para cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -215,7 +226,7 @@ export default function ClippingsHistoryPage() {
             {/* Botón de filtros (TODO: implementar filtros avanzados) */}
             <div className="history-filter-group flex-shrink-0">
               <Button
-                variant="outline"
+                variant="primary"
                 size="default"
                 icon="Search"
                 onClick={() => alert('TODO: Implementar filtros avanzados (fecha, tema, etc.)')}
@@ -231,7 +242,22 @@ export default function ClippingsHistoryPage() {
       <div className="upload-news-panel">
         {loading ? (
           <div className="history-loading">
-            <div className="history-loading-spinner"></div>
+            <div className="relative inline-flex items-center justify-center">
+              <div className="history-loading-spinner" style={{ 
+                width: '4rem', 
+                height: '4rem',
+                borderWidth: '4px',
+                borderTopColor: 'rgb(59, 130, 246)',
+                borderRightColor: 'rgba(59, 130, 246, 0.3)',
+                borderBottomColor: 'transparent',
+                borderLeftColor: 'transparent'
+              }}></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
             <p className="text-white/70 mt-4">Cargando clippings...</p>
           </div>
         ) : (
@@ -253,7 +279,7 @@ export default function ClippingsHistoryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clippings.map((clipping) => (
+                  {visibleClippings.map((clipping) => (
                     <tr key={clipping.id}>
                       <td>
                         <div className="history-news-title">{clipping.name}</div>
@@ -332,7 +358,7 @@ export default function ClippingsHistoryPage() {
             </div>
 
             {/* Estado vacío */}
-            {clippings.length === 0 && !loading && (
+            {visibleClippings.length === 0 && !loading && (
               <div className="history-empty">
                 <div className="history-empty-icon">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -355,7 +381,7 @@ export default function ClippingsHistoryPage() {
             )}
 
             {/* Controles de paginación */}
-            {(pagination || clippings.length > 0) && (
+            {(pagination || visibleClippings.length > 0) && (
               <div className="history-pagination">
                 <div className="history-pagination-container">
                   {/* Selector de tamaño de página */}

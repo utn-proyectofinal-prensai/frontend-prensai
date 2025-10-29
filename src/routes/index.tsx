@@ -113,6 +113,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      
       {
         path: 'profile',
         element: (
