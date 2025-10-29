@@ -185,11 +185,9 @@ export default function CreateClippingPage() {
       await apiService.createClipping(clippingData);
       
       setSuccessMessage(`Clipping "${currentTitle}" generado exitosamente con ${selectedNewsIds.size} noticias`);
-      
-      // Redirigir al dashboard después de 2 segundos
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+
+      // Redirigir al dashboard de histórico de clippings
+      navigate('/clippings-history');
 
     } catch (error) {
       console.error('Error generando clipping:', error);

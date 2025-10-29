@@ -11,7 +11,6 @@ import CreateClippingPage from '../pages/CreateClippingPage';
 import ClippingsHistoryPage from '../pages/ClippingsHistoryPage';
 import ClippingDetailPage from '../pages/ClippingDetailPage';
 import ClippingReportPage from '../pages/ClippingReportPage';
-import SpinnerTestPage from '../pages/SpinnerTestPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
@@ -114,14 +113,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: 'spinner-test',
-        element: (
-          <ProtectedRoute>
-            <SpinnerTestPage />
-          </ProtectedRoute>
-        ),
-      },
+      
       {
         path: 'profile',
         element: (
