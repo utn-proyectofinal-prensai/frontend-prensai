@@ -45,6 +45,8 @@ export const ClippingReportButton: React.FC<ClippingReportButtonProps> = ({
       icon={getButtonIcon()}
       title={getButtonTitle()}
       className={className}
-    />
+    >
+      {size !== 'icon' && getButtonTitle()}
+    </Button>
   );
 };

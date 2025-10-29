@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { LoadingState } from '../components/ui/loading-spinner';
+import { LoadingModal } from '../components/ui/loading-modal';
 import { useClippingReport } from '../hooks/useClippingReport';
 import { apiService, type ClippingItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
-import InfoModal from '../components/common/InfoModal';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import '../styles/history.css';
 import '../styles/upload-news.css';
@@ -114,9 +115,11 @@ export default function ClippingReportPage() {
           <h1 className="upload-news-title text-2xl sm:text-3xl lg:text-4xl">Cargando...</h1>
         </div>
         <div className="upload-news-panel">
-          <div className="flex items-center justify-center py-16">
-            <div className="text-white/70">Cargando información del clipping...</div>
-          </div>
+          <LoadingState 
+            title="Cargando información del clipping..."
+            variant="simple"
+            size="lg"
+          />
         </div>
       </div>
     );
@@ -161,15 +164,7 @@ export default function ClippingReportPage() {
 
       {/* Contenido del reporte */}
       <div className="upload-news-panel">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🤖</div>
-              <div className="text-white/70 text-lg mb-2">Generando reporte con IA...</div>
-              <div className="text-white/50 text-sm">Esto puede tomar unos segundos</div>
-            </div>
-          </div>
-        ) : reportError ? (
+        {reportError ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <div className="text-red-400 text-lg mb-4">Error al generar el reporte</div>
@@ -345,11 +340,31 @@ export default function ClippingReportPage() {
       )}
 
       {/* Modal de descarga */}
-      <InfoModal
+      <LoadingModal
         isOpen={showDownloadModal}
-        onClose={() => setShowDownloadModal(false)}
-        message="La descarga comenzará pronto"
-        autoCloseDelay={2000}
+        title="Generando PDF"
+        description="Estamos preparando el archivo PDF para descarga. Esto puede tomar unos segundos..."
+        variant="ai"
+        size="lg"
+        closable={false}
+        icon={
+          <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9h4v4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 13h4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 17h4" />
+          </svg>
+        }
+      />
+
+      {/* Modal de carga del reporte */}
+      <LoadingModal
+        isOpen={loading}
+        title="Generando reporte con IA"
+        description="Estamos analizando las noticias del clipping y creando un informe detallado. Esto puede tomar unos segundos..."
+        variant="ai"
+        size="lg"
+        closable={false}
       />
     </div>
   );
