@@ -85,6 +85,98 @@ export interface DashboardStats {
   noticiasPorMedio: { medio: string; count: number }[];
 }
 
+// Nueva interfaz para el endpoint /api/v1/dashboard
+// La respuesta puede venir en dos formatos:
+// 1. Formato con wrapper: { context, generated_at, data: { meta, news, ... } }
+// 2. Formato directo: { meta, news, topics, ... }
+export interface DashboardData {
+  context?: string;
+  generated_at?: string | null;
+  data?: {
+    meta?: {
+      range: {
+        from: string;
+        to: string;
+      };
+      generated_at: string;
+    };
+    news?: {
+      count: number;
+      valuation: {
+        positive: number;
+        neutral: number;
+        negative: number;
+        unassigned?: number;
+      };
+      trend: Array<{
+        date: string;
+        count: number;
+      }>;
+    };
+    topics?: {
+      count_unique: number;
+      top: Array<{
+        name: string;
+        news_count: number;
+      }>;
+    };
+    mentions?: {
+      count_unique: number;
+      top: Array<{
+        entity: string;
+        count: number;
+      }>;
+    };
+    clippings?: {
+      count: number;
+    };
+    reports?: {
+      count: number;
+    };
+  };
+  // También soportar formato directo (sin wrapper)
+  meta?: {
+    range: {
+      from: string;
+      to: string;
+    };
+    generated_at: string;
+  };
+  news?: {
+    count: number;
+    valuation: {
+      positive: number;
+      neutral: number;
+      negative: number;
+      unassigned?: number;
+    };
+    trend: Array<{
+      date: string;
+      count: number;
+    }>;
+  };
+  topics?: {
+    count_unique: number;
+    top: Array<{
+      name: string;
+      news_count: number;
+    }>;
+  };
+  mentions?: {
+    count_unique: number;
+    top: Array<{
+      entity: string;
+      count: number;
+    }>;
+  };
+  clippings?: {
+    count: number;
+  };
+  reports?: {
+    count: number;
+  };
+}
+
 export interface ActiveMention {
   position: number;
   name: string;
@@ -441,7 +533,7 @@ export const apiService = {
     });
   },
 
-  // Obtener estadísticas del dashboard
+  // Obtener estadísticas del dashboard (método antiguo - mantener para compatibilidad)
   async getDashboardStats(): Promise<DashboardStats> {
     try {
       return await apiRequest<DashboardStats>('/news/stats');
@@ -457,6 +549,18 @@ export const apiService = {
         noticiasPorMedio: []
       };
     }
+  },
+
+  // Obtener datos del dashboard principal
+  async getDashboard(): Promise<DashboardData> {
+    return apiRequest<DashboardData>('/dashboard');
+  },
+
+  // Obtener últimos reportes generados para el dashboard
+  async getRecentReports(limit: number = 3): Promise<ClippingItem[]> {
+    const response = await this.getClippings({ limit, page: 1 });
+    // Filtrar solo los que tienen reporte
+    return response.clippings.filter(clipping => clipping.has_report);
   },
 
   // Importar noticias desde Excel
