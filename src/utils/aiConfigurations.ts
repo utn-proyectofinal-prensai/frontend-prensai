@@ -64,10 +64,13 @@ export function serializeValue(
       if (options && options.length > 0) {
         const match = options.find((option) => String(option.value) === String(value));
         if (match) {
-          return match.value;
+          // El backend espera un Integer para reference
+          return typeof match.value === 'number' ? match.value : Number(match.value);
         }
       }
-      return String(value);
+      // Intentar convertir a número si es posible
+      const numValue = Number(value);
+      return isNaN(numValue) ? null : numValue;
     }
     default:
       return value == null ? '' : String(value);

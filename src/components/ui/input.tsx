@@ -88,7 +88,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const selectVariant = error ? "error" : variant
 
     return (
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: '0px' }}>
         {label && (
           <div className="text-sm font-medium text-white mb-2">
             {label}
@@ -121,10 +121,10 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-red-400 mt-1">{error}</p>
         )}
         {helperText && !error && (
-          <p className="text-sm text-white/60">{helperText}</p>
+          <p className="text-xs text-white/60 mt-1">{helperText}</p>
         )}
       </div>
     )
