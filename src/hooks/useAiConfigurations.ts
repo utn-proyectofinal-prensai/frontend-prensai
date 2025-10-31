@@ -25,7 +25,7 @@ export function useAiConfigurations() {
       try {
         setError(null);
         const updatedConfiguration = await apiService.updateAiConfiguration(key, {
-          ai_configuration: { value: String(value) },
+          ai_configuration: { value: value },
         });
 
         setConfigurations((current) =>

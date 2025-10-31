@@ -125,7 +125,8 @@ export default function TagInput({
         {value.map((tag) => (
           <span
             key={tag}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${styles.chip}`}
+            className={`inline-flex items-center gap-2.5 rounded-full py-2 text-xs font-medium ${styles.chip}`}
+            style={{ paddingLeft: '16px', paddingRight: '12px' }}
           >
             <span className="truncate max-w-[300px]">{tag}</span>
             <Button
@@ -135,7 +136,7 @@ export default function TagInput({
               size="icon"
               disabled={disabled}
               aria-label={`Eliminar ${tag}`}
-              className="h-6 w-6 p-0 hover:bg-red-500/20 hover:text-red-400"
+              className="h-6 w-6 p-0 hover:bg-red-500/20 hover:text-red-400 -mr-1 ml-0.5"
             >
               ×
             </Button>
