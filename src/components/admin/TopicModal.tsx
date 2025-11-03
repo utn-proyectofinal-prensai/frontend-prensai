@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Topic } from '../../services/api';
-import { Button, Modal, ModalFooter, Input, Select } from '../ui';
+import { Button, Modal, ModalFooter, Input } from '../ui';
+import { Check, X } from 'lucide-react';
 
 interface TopicModalProps {
   topic: Topic | null;
@@ -102,8 +103,8 @@ export const TopicModal: React.FC<TopicModalProps> = ({
   };
 
   const statusOptions = [
-    { value: 'true', label: '✅ Activo' },
-    { value: 'false', label: '❌ Inactivo' }
+    { value: 'true', label: 'Activo', icon: Check },
+    { value: 'false', label: 'Inactivo', icon: X }
   ];
 
   const modalIcon = (
@@ -165,7 +166,7 @@ export const TopicModal: React.FC<TopicModalProps> = ({
       size="default"
       footer={footer}
     >
-      <div className="space-y-6">
+      <div className="space-y-6" style={{ paddingBottom: '1rem' }}>
                     {isEditing ? (
           <>
             {/* Nombre */}
@@ -188,12 +189,43 @@ export const TopicModal: React.FC<TopicModalProps> = ({
             />
 
             {/* Estado */}
-            <Select
-              label="Estado"
-              value={editForm.enabled ? 'true' : 'false'}
-              onChange={(e) => handleInputChange('enabled', e.target.value === 'true')}
-              options={statusOptions}
-            />
+            <div style={{ marginBottom: '2rem' }}>
+              <div className="text-sm font-medium text-white mb-2">Estado</div>
+              <div className="relative">
+                <select
+                  value={editForm.enabled ? 'true' : 'false'}
+                  onChange={(e) => handleInputChange('enabled', e.target.value === 'true')}
+                  className="w-full"
+                  style={{
+                    padding: '12px 16px',
+                    paddingLeft: '40px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                    appearance: 'none',
+                    backgroundImage: 'none'
+                  }}
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {/* Icono del diseño del sistema */}
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  {editForm.enabled ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-400" />
+                  )}
+                </div>
+              </div>
+            </div>
           </>
         ) : (
           <>

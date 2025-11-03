@@ -3,6 +3,7 @@ import { apiService, type Topic, type Mention } from '../services/api';
 import { Snackbar, TopicCard, MentionCard, ConfirmationModal } from '../components/common';
 import { TopicModal, MentionModal } from '../components/admin';
 import { Button } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'eventos' | 'menciones'>('eventos');
@@ -277,10 +278,17 @@ export default function AdminPage() {
 
   return (
     <div className="w-full h-full">
+      {/* Header de la página */}
+      <PageHeader
+        title="Temas y Menciones"
+        description="Gestioná los temas y menciones que el sistema monitoreará en las noticias"
+        className="mb-12"
+      />
+
       {/* Contenido principal */}
-      <div className="w-full h-full">
+      <div className="w-full h-full flex flex-col items-center">
         {/* Tabs */}
-        <div className="flex space-x-1 mb-8 bg-black/20 backdrop-blur-sm rounded-lg p-1 w-fit">
+        <div className="flex space-x-1 mb-16 bg-black/20 backdrop-blur-sm rounded-lg p-1 w-fit">
           <button
             onClick={() => setActiveTab('eventos')}
             className={`px-6 py-3 rounded-md font-medium transition-colors ${
@@ -305,9 +313,9 @@ export default function AdminPage() {
 
         {/* Contenido de Temas */}
         {activeTab === 'eventos' && (
-          <div className="space-y-6">
+          <div className="w-full">
             {/* Header con botón agregar */}
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center" style={{ marginBottom: '2rem' }}>
               <h2 className="text-xl font-bold text-white">Temas</h2>
               <Button
                 onClick={() => {
@@ -344,7 +352,7 @@ export default function AdminPage() {
               </div>
             ) : (
               /* Lista de eventos/temas con cards mejoradas */
-              <div className="cards-grid">
+              <div className="cards-grid" style={{ marginTop: '2.5rem', paddingTop: '0' }}>
                 {eventos.map((evento) => (
                   <TopicCard
                     key={evento.id}
@@ -363,9 +371,9 @@ export default function AdminPage() {
 
         {/* Contenido de Menciones */}
         {activeTab === 'menciones' && (
-          <div className="space-y-6">
+          <div className="w-full">
             {/* Header con botón agregar */}
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center" style={{ marginBottom: '2rem' }}>
               <h2 className="text-xl font-bold text-white">Menciones de Personas</h2>
               <Button
                 onClick={() => {
@@ -402,7 +410,7 @@ export default function AdminPage() {
               </div>
             ) : (
               /* Lista de menciones con cards mejoradas */
-              <div className="cards-grid">
+              <div className="cards-grid" style={{ marginTop: '2.5rem', paddingTop: '0' }}>
                 {menciones.map((mencion) => (
                   <MentionCard
                     key={mencion.id}

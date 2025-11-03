@@ -1,6 +1,7 @@
 import React from 'react';
 import type { User } from '../../types/auth';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 interface UserRowProps {
   usuario: User;
   onView: (usuario: User) => void;
@@ -59,10 +60,12 @@ export const UserRow: React.FC<UserRowProps> = ({
       
       {/* Rol */}
       <td className="px-6 py-4 text-left">
-        <span className={`inline-flex items-center px-6 py-3 text-sm font-bold rounded-full border ${getRolInfo(usuario.role).color}`}>
-          <span className="mr-4 flex-shrink-0">{getRolInfo(usuario.role).icon}</span>
-          <span>{getRolInfo(usuario.role).label}</span>
-        </span>
+        <Badge 
+          variant={usuario.role === 'admin' ? 'admin' : 'user'} 
+          size="default"
+        >
+          {getRolInfo(usuario.role).label}
+        </Badge>
       </td>
       
       {/* Acciones */}

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Topic } from '../../services/api';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 interface TopicCardProps {
   topic: Topic;
@@ -50,16 +51,22 @@ export const TopicCard: React.FC<TopicCardProps> = ({
             : 'bg-black/30 border-white/20 hover:bg-black/40 hover:border-white/30'
         }`}
       >
-        <div className="backdrop-blur-sm p-6">
+        <div className="backdrop-blur-sm" style={{ paddingTop: '2rem', paddingBottom: '2rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
           {/* Estado con espaciado apropiado */}
-          <div className="flex items-center justify-between mb-3" style={{ paddingLeft: '16px' }}>
-            <span className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-bold border-2 ${
-              topic.enabled 
-                ? 'bg-green-500/20 text-green-300 border-green-400/40' 
-                : 'bg-red-500/20 text-red-300 border-red-400/40'
-            }`}>
-              {topic.enabled ? '✅ ACTIVO' : '❌ INACTIVO'}
-            </span>
+          <div className="flex items-center justify-between" style={{ paddingLeft: '16px', marginBottom: '1.5rem' }}>
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant={topic.enabled ? 'success' : 'danger'} 
+                size="sm"
+              >
+                {topic.enabled ? 'ACTIVO' : 'INACTIVO'}
+              </Badge>
+              {topic.crisis && (
+                <Badge variant="warning" size="sm">
+                  Crisis
+                </Badge>
+              )}
+            </div>
             {isSelected && (
               <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -69,29 +76,20 @@ export const TopicCard: React.FC<TopicCardProps> = ({
             )}
           </div>
 
-          {/* Indicador de crisis si existe */}
-          {topic.crisis && (
-            <div className="mb-3">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-400/30">
-                ⚠️ Crisis
-              </span>
-            </div>
-          )}
-
           {/* Header con título y descripción */}
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-white truncate group-hover:text-blue-300 transition-colors mb-2">
+            <h3 className="text-lg font-bold text-white truncate group-hover:text-blue-300 transition-colors" style={{ marginBottom: '1rem' }}>
               {topic.name}
             </h3>
             {topic.description && (
-              <p className="text-white/70 text-sm line-clamp-3 mb-4">
+              <p className="text-white/70 text-sm line-clamp-3" style={{ marginBottom: '1.5rem' }}>
                 {topic.description}
               </p>
             )}
           </div>
 
           {/* Barra de estado sutil */}
-          <div className="mt-4">
+          <div style={{ marginTop: '1.25rem' }}>
             <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
               <div 
                 className={`h-full transition-all duration-500 w-full ${
@@ -117,16 +115,22 @@ export const TopicCard: React.FC<TopicCardProps> = ({
     <div 
       onClick={handleClick}
       className={`${baseClasses} topic-card bg-black/30 border-white/20 hover:bg-black/40`}>
-      <div className="backdrop-blur-sm p-6">
+      <div className="backdrop-blur-sm" style={{ paddingTop: '2rem', paddingBottom: '2rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
         {/* Estado con espaciado apropiado */}
-        <div className="flex items-center justify-between mb-3" style={{ paddingLeft: '16px' }}>
-          <span className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-bold border-2 ${
-            topic.enabled 
-              ? 'bg-green-500/20 text-green-300 border-green-400/40' 
-              : 'bg-red-500/20 text-red-300 border-red-400/40'
-          }`}>
-            {topic.enabled ? '✅ ACTIVO' : '❌ INACTIVO'}
-          </span>
+        <div className="flex items-center justify-between" style={{ paddingLeft: '16px', marginBottom: '1.5rem' }}>
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant={topic.enabled ? 'success' : 'danger'} 
+              size="default"
+            >
+              {topic.enabled ? 'ACTIVO' : 'INACTIVO'}
+            </Badge>
+            {topic.crisis && (
+              <Badge variant="warning" size="sm">
+                Crisis
+              </Badge>
+            )}
+          </div>
           
           {showActions && (
             <div className="flex space-x-2 flex-shrink-0">
@@ -154,30 +158,21 @@ export const TopicCard: React.FC<TopicCardProps> = ({
           )}
         </div>
 
-        {/* Indicador de crisis si existe */}
-        {topic.crisis && (
-          <div className="mb-3">
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-400/30">
-              ⚠️ Crisis
-            </span>
-          </div>
-        )}
-
         {/* Título */}
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-white mb-2">
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h3 className="text-lg font-semibold text-white" style={{ marginBottom: '1rem' }}>
             {topic.name}
           </h3>
           {/* Descripción */}
           {topic.description && (
-            <p className="text-white/70 text-sm line-clamp-3 mb-4">
+            <p className="text-white/70 text-sm line-clamp-3" style={{ marginBottom: '1.5rem' }}>
               {topic.description}
             </p>
           )}
         </div>
 
         {/* Barra de estado sutil */}
-        <div className="mt-4">
+        <div style={{ marginTop: '1.25rem' }}>
           <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all duration-500 w-full ${

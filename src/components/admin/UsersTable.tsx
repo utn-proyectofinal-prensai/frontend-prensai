@@ -4,6 +4,7 @@ import type { User } from '../../types/auth';
 import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 interface UsersTableProps {
   usuarios: User[];
@@ -101,10 +102,12 @@ export const UsersTable: React.FC<UsersTableProps> = ({
 
                 {/* Rol */}
                 <div className="flex justify-center">
-                  <span className={`inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-full border ${roleInfo.color}`}>
-                    <span className="mr-2 flex-shrink-0">{roleInfo.icon}</span>
-                    <span>{roleInfo.label}</span>
-                  </span>
+                  <Badge 
+                    variant={usuario.role === 'admin' ? 'admin' : 'user'} 
+                    size="sm"
+                  >
+                    {roleInfo.label}
+                  </Badge>
                 </div>
 
                 {/* Acciones */}
