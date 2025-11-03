@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import type { User } from '../types/auth';
 import { AUTH_MESSAGES } from '../constants/messages';
-import { getRoleInfo } from '../constants/admin/userRoles';
 import { useAuth } from '../hooks/useAuth';
 import Snackbar from '../components/common/Snackbar';
 import PasswordChangeModal from '../components/admin/PasswordChangeModal';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 
 const ProfilePage: React.FC = () => {
   const { updateUser } = useAuth();
@@ -45,8 +45,8 @@ const ProfilePage: React.FC = () => {
         first_name: userInfo.first_name || '',
         last_name: userInfo.last_name || '',
         role: userInfo.role as 'admin' | 'user',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_at: (userInfo as any).created_at || new Date().toISOString(),
+        updated_at: (userInfo as any).updated_at || new Date().toISOString()
       };
       setUser(userWithAllProps);
       // Inicializar el formulario de edición
@@ -69,13 +69,18 @@ const ProfilePage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
+    }
   };
 
 
@@ -242,270 +247,193 @@ const ProfilePage: React.FC = () => {
     );
   }
 
-  const roleInfo = getRoleInfo(user.role);
-
   return (
-    <div className="px-6 py-6 h-full">
-      {/* Contenedor principal del perfil */}
-      <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl">
+    <div className="flex justify-center px-4 py-6 sm:px-6 profile-page-container">
+      <div className="profile-page-content" style={{ maxWidth: '650px', width: '100%' }}>
+        {/* Header de la página */}
+        <div className="text-center" style={{ marginBottom: '1.5rem' }}>
+          <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-3">
+            Mi Perfil
+          </h1>
+          <p className="text-white/70 text-sm">
+            Gestioná tu información personal y configuración de cuenta
+          </p>
+        </div>
+
+        {/* Contenedor principal estilo modal */}
+        <div className="w-full bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
         
-        {/* Header del usuario - Avatar y información básica */}
-        <div className="flex items-center justify-center" style={{ padding: '24px 32px' }}>
-          <div className="flex items-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/20">
+        {/* Header con avatar */}
+        <div className="bg-slate-800/50 border-b border-white/10" style={{ padding: '16px 32px' }}>
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/20 mb-4">
               <span className="text-white text-2xl font-bold drop-shadow-lg">
                 {user.first_name?.charAt(0) || user.username?.charAt(0) || '?'}
               </span>
             </div>
-            
-            <div className="flex flex-col" style={{ marginLeft: '32px' }}>
-              <h2 className="text-2xl font-bold text-white/90 drop-shadow-lg mb-2">
-                {isEditing ? 
-                  `${editForm.first_name || 'Sin nombre'} ${editForm.last_name || 'Sin apellido'}` :
-                  `${user.first_name || 'Sin nombre'} ${user.last_name || 'Sin apellido'}`
-                }
-              </h2>
-              <span 
-                className={`inline-flex items-center text-xs font-bold rounded-full border ${roleInfo.color} ${roleInfo.color.includes('bg-') ? '' : 'bg-white/10'}`}
-                style={{ padding: '4px 16px' }}
-              >
-                <span style={{ marginRight: '8px' }}>{roleInfo.icon}</span>
-                {roleInfo.label}
-              </span>
-            </div>
+            <h2 className="text-2xl font-bold text-white/90 drop-shadow-lg">
+              {isEditing ? 
+                `${editForm.first_name || 'Sin nombre'} ${editForm.last_name || 'Sin apellido'}` :
+                `${user.first_name || 'Sin nombre'} ${user.last_name || 'Sin apellido'}`
+              }
+            </h2>
           </div>
         </div>
 
-        {/* Contenido del perfil */}
+        {/* Contenido estilo modal */}
         <div 
           className="overflow-y-auto" 
           style={{ 
             padding: '32px', 
             paddingTop: '16px', 
-            paddingBottom: '32px', 
+            paddingBottom: '16px', 
             paddingLeft: '32px', 
             paddingRight: '32px' 
           }}
         >
-          <div 
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '24px',
-              rowGap: '24px'
-            }}
-          >
-
+          <div className="space-y-6">
             {/* Nombre completo */}
-            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                <div className="col-span-1 flex justify-center">
-                  <div className="w-8 h-8 flex items-center justify-center">
-                    <span className="text-base">👤</span>
-                  </div>
-                </div>
-                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Nombre completo</div>
-                </div>
-                <div className="col-span-8 flex items-center">
-                  {isEditing ? (
-                    <div className="flex space-x-2 w-full">
-                      <input
-                        type="text"
-                        value={editForm.first_name}
-                        onChange={(e) => handleInputChange('first_name', e.target.value)}
-                        placeholder="Nombre"
-                        className="flex-1 px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                      />
-                      <input
-                        type="text"
-                        value={editForm.last_name}
-                        onChange={(e) => handleInputChange('last_name', e.target.value)}
-                        placeholder="Apellido"
-                        className="flex-1 px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-white/90 font-semibold text-sm">{user.first_name} {user.last_name}</div>
-                  )}
-                </div>
+            <div className="flex gap-3 w-full" style={{ width: '100%', marginBottom: 0 }}>
+              <div className="flex-1" style={{ minWidth: 0, marginBottom: 0 }}>
+                <Input
+                  label="Nombre"
+                  type="text"
+                  value={isEditing ? editForm.first_name : user.first_name}
+                  onChange={isEditing ? (e) => handleInputChange('first_name', e.target.value) : undefined}
+                  placeholder="Nombre"
+                  readOnly={!isEditing}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div className="flex-1" style={{ minWidth: 0, marginBottom: 0 }}>
+                <Input
+                  label="Apellido"
+                  type="text"
+                  value={isEditing ? editForm.last_name : user.last_name}
+                  onChange={isEditing ? (e) => handleInputChange('last_name', e.target.value) : undefined}
+                  placeholder="Apellido"
+                  readOnly={!isEditing}
+                  disabled={!isEditing}
+                />
               </div>
             </div>
 
-            {/* Username */}
-            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                <div className="col-span-1 flex justify-center">
-                  <div className="w-8 h-8 flex items-center justify-center">
-                    <span className="text-base">@</span>
-                  </div>
-                </div>
-                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Usuario</div>
-                </div>
-                <div className="col-span-8 flex items-center">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editForm.username}
-                      onChange={(e) => handleInputChange('username', e.target.value)}
-                      placeholder="Nombre de usuario"
-                      className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                    />
-                  ) : (
-                    <div className="text-white/90 font-semibold text-sm">{user.username}</div>
-                  )}
-                </div>
+            {/* Username y Rol */}
+            <div className="flex gap-3 w-full" style={{ width: '100%', marginBottom: 0 }}>
+              <div className="flex-1" style={{ minWidth: 0, marginBottom: 0 }}>
+                {isEditing ? (
+                  <Input
+                    label="Username"
+                    type="text"
+                    value={editForm.username}
+                    onChange={(e) => handleInputChange('username', e.target.value)}
+                    placeholder="Nombre de usuario"
+                  />
+                ) : (
+                  <Input
+                    label="Username"
+                    type="text"
+                    value={`@${user.username}`}
+                    readOnly
+                    disabled
+                  />
+                )}
+              </div>
+              <div className="flex-1" style={{ minWidth: 0, marginBottom: 0 }}>
+                <Input
+                  label="Rol"
+                  type="text"
+                  value={user.role === 'admin' ? 'Administrador' : 'Usuario'}
+                  readOnly
+                  disabled
+                />
               </div>
             </div>
 
             {/* Email */}
-            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                <div className="col-span-1 flex justify-center">
-                  <div className="w-8 h-8 flex items-center justify-center">
-                    <span className="text-base">📧</span>
-                  </div>
-                </div>
-                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Email</div>
-                </div>
-                <div className="col-span-8 flex items-center">
-                  <div className="text-white/90 font-semibold text-sm">{user.email}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Rol */}
-            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                <div className="col-span-1 flex justify-center">
-                  <div className="w-8 h-8 flex items-center justify-center">
-                    <span className="text-base">👑</span>
-                  </div>
-                </div>
-                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Rol</div>
-                </div>
-                <div className="col-span-8 flex items-center">
-                  <div className="text-white/90 font-semibold text-sm capitalize">
-                    {user.role === 'admin' ? 'Administrador' : 'Usuario'}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Input
+              label="Email"
+              type="email"
+              value={user.email}
+              readOnly
+              disabled
+            />
 
             {/* Fecha de creación */}
-            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                <div className="col-span-1 flex justify-center">
-                  <div className="w-8 h-8 flex items-center justify-center">
-                    <span className="text-base">📅</span>
-                  </div>
-                </div>
-                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Creado</div>
-                </div>
-                <div className="col-span-8 flex items-center">
-                  <div className="text-white/90 font-semibold text-sm">{formatDate(user.created_at)}</div>
-                </div>
-              </div>
-            </div>
+            <Input
+              label="Creado"
+              type="text"
+              value={formatDate(user.created_at)}
+              readOnly
+              disabled
+            />
 
             {/* Fecha de modificación */}
-            <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-xl">
-              <div className="grid grid-cols-12 gap-4 items-center min-h-[48px]">
-                <div className="col-span-1 flex justify-center">
-                  <div className="w-8 h-8 flex items-center justify-center">
-                    <span className="text-base">✏️</span>
-                  </div>
-                </div>
-                <div className="col-span-3" style={{ display: 'flex !important', alignItems: 'center !important', height: '100% !important' }}>
-                  <div style={{ color: '#FFFFFF !important', fontWeight: '500 !important', fontSize: '14px !important', margin: '0 !important', padding: '0 !important' }}>Modificado</div>
-                </div>
-                <div className="col-span-8 flex items-center">
-                  <div className="text-white/90 font-semibold text-sm">{formatDate(user.updated_at)}</div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Footer con botones de acción */}
-        <div 
-          className="bg-black/30 border-t border-white/10" 
-          style={{ 
-            padding: '32px',
-            paddingTop: '24px', 
-            paddingBottom: '24px', 
-            paddingLeft: '32px', 
-            paddingRight: '32px',
-            flexShrink: 0
-          }}
-        >
-          <div 
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '16px',
-              rowGap: '16px'
-            }}
-          >
-            <div 
-              className="grid grid-cols-1 md:grid-cols-2" 
-              style={{ 
-                gap: '24px',
-                columnGap: '24px'
-              }}
-            >
-              {isEditing ? (
-                <>
-                  <Button
-                    onClick={handleCancelEdit}
-                    disabled={loading}
-                    variant="secondary"
-                    size="lg"
-                    title="Cancelar Edición"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleSaveEdit}
-                    disabled={loading}
-                    variant="success"
-                    size="lg"
-                    icon="Save"
-                    title="Guardar Cambios"
-                  >
-                    {loading ? 'Guardando...' : 'Guardar'}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    onClick={handleEditClick}
-                    variant="primary"
-                    size="lg"
-                    icon="Edit"
-                    title="Editar Perfil"
-                  >
-                    Editar Perfil
-                  </Button>
-                  <Button
-                    onClick={handlePasswordChangeClick}
-                    variant="primary"
-                    size="lg"
-                    icon="Key"
-                    title="Cambiar Contraseña"
-                  >
-                    Cambiar Contraseña
-                  </Button>
-                </>
-              )}
+            <div style={{ marginBottom: 0 }}>
+              <Input
+                label="Modificado"
+                type="text"
+                value={formatDate(user.updated_at)}
+                readOnly
+                disabled
+              />
             </div>
           </div>
         </div>
+
+        {/* Footer estilo modal */}
+        <div className="bg-slate-800/50 border-t border-white/10 py-6" style={{ paddingLeft: '32px', paddingRight: '32px' }}>
+          <div className="flex gap-4 justify-end flex-wrap">
+            {isEditing ? (
+              <>
+                <Button
+                  onClick={handleCancelEdit}
+                  disabled={loading}
+                  variant="secondary"
+                  size="lg"
+                  title="Cancelar Edición"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSaveEdit}
+                  disabled={loading}
+                  variant="success"
+                  size="lg"
+                  icon="Save"
+                  iconPosition="left"
+                  title="Guardar Cambios"
+                >
+                  {loading ? 'Guardando...' : 'Guardar cambios'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={handlePasswordChangeClick}
+                  variant="primary"
+                  size="lg"
+                  icon="Key"
+                  iconPosition="left"
+                  title="Cambiar Contraseña"
+                >
+                  Cambiar Contraseña
+                </Button>
+                <Button
+                  onClick={handleEditClick}
+                  variant="primary"
+                  size="lg"
+                  icon="Edit"
+                  iconPosition="left"
+                  title="Editar Perfil"
+                >
+                  Editar Perfil
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
       </div>
 
       <Snackbar

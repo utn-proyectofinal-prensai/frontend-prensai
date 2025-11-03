@@ -207,12 +207,12 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
               variant="ghost"
               size="icon"
-              className="absolute right-3 top-8 w-6 h-6 p-0 text-white/80 hover:text-white"
+              className="absolute right-3 top-[46px] w-6 h-6 p-0 text-white/80 hover:text-white flex items-center justify-center"
+              style={{ transform: 'translateY(-50%)' }}
               title={showCurrentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               disabled={isLoading}
-            >
-              {showCurrentPassword ? '⚫' : '👁'}
-            </Button>
+              icon={showCurrentPassword ? "EyeOff" : "Eye"}
+            />
           </div>
         )}
 
@@ -231,12 +231,12 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
             onClick={() => setShowNewPassword(!showNewPassword)}
             variant="ghost"
             size="icon"
-            className="absolute right-3 top-8 w-6 h-6 p-0 text-white/80 hover:text-white"
+            className="absolute right-3 top-[46px] w-6 h-6 p-0 text-white/80 hover:text-white flex items-center justify-center"
+            style={{ transform: 'translateY(-50%)' }}
             title={showNewPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             disabled={isLoading}
-          >
-            {showNewPassword ? '⚫' : '👁'}
-          </Button>
+            icon={showNewPassword ? "EyeOff" : "Eye"}
+          />
         </div>
 
         {/* Confirmar Contraseña */}
@@ -254,12 +254,12 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             variant="ghost"
             size="icon"
-            className="absolute right-3 top-8 w-6 h-6 p-0 text-white/80 hover:text-white"
+            className="absolute right-3 top-[46px] w-6 h-6 p-0 text-white/80 hover:text-white flex items-center justify-center"
+            style={{ transform: 'translateY(-50%)' }}
             title={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             disabled={isLoading}
-          >
-            {showConfirmPassword ? '⚫' : '👁'}
-          </Button>
+            icon={showConfirmPassword ? "EyeOff" : "Eye"}
+          />
         </div>
 
           {/* Mensaje de validación prioritario */}
