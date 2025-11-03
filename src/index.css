@@ -75,6 +75,17 @@ html, body {
   margin: 0 !important;
 }
 
+/* Excepciones para la página de perfil */
+.dashboard-container .profile-page-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.dashboard-container .profile-page-content {
+  width: 100% !important;
+  max-width: 650px !important;
+}
+
 .dashboard-container .px-6 {
   padding-left: 1.5rem !important;
   padding-right: 1.5rem !important;
