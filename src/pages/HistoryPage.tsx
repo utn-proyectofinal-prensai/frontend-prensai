@@ -7,6 +7,7 @@ import Snackbar from '../components/common/Snackbar';
 import { EditNewsModal } from '../components/common/EditNewsModal';
 import NewsTable from '../components/common/NewsTable';
 import { Button } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 import '../styles/history.css';
 import '../styles/upload-news.css';
 
@@ -123,12 +124,10 @@ export default function HistoryPage() {
   return (
     <div className="history-container px-6">
       {/* Header de la página */}
-      <div className="upload-news-header">
-        <h1 className="upload-news-title text-2xl sm:text-3xl lg:text-4xl">Historial de Noticias Procesadas</h1>
-        <p className="upload-news-subtitle">
-          Revisa todas las noticias que han sido procesadas por el sistema
-        </p>
-      </div>
+      <PageHeader
+        title="Historial de Noticias Procesadas"
+        description="Revisa todas las noticias que han sido procesadas por el sistema"
+      />
 
       {/* Filtros y métricas */}
       <div className="upload-news-panel history-filters-panel">

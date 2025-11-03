@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import type { Mention } from '../../services/api';
 import { Button } from '../ui/button';
 import { Modal, ModalFooter } from '../ui/modal';
-import { Input, Select } from '../ui/input';
+import { Input } from '../ui/input';
+import { Check, X } from 'lucide-react';
 
 interface MentionModalProps {
   mention: Mention | null;
@@ -159,7 +160,7 @@ export const MentionModal: React.FC<MentionModalProps> = ({
       footer={footer}
       size="default"
     >
-      <div className="space-y-6">
+      <div className="space-y-6" style={{ paddingBottom: '1rem' }}>
         {isEditing ? (
           <>
             {/* Nombre */}
@@ -173,15 +174,40 @@ export const MentionModal: React.FC<MentionModalProps> = ({
             />
 
             {/* Estado */}
-            <Select
-              label="Estado"
-              value={editForm.enabled ? 'true' : 'false'}
-              onChange={(e) => handleInputChange('enabled', e.target.value === 'true')}
-              options={[
-                { value: 'true', label: '✅ Activa' },
-                { value: 'false', label: '❌ Inactiva' }
-              ]}
-            />
+            <div style={{ marginBottom: '2rem' }}>
+              <div className="text-sm font-medium text-white mb-2">Estado</div>
+              <div className="relative">
+                <select
+                  value={editForm.enabled ? 'true' : 'false'}
+                  onChange={(e) => handleInputChange('enabled', e.target.value === 'true')}
+                  className="w-full"
+                  style={{
+                    padding: '12px 16px',
+                    paddingLeft: '40px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '14px',
+                    outline: 'none',
+                    transition: 'all 0.3s ease',
+                    appearance: 'none',
+                    backgroundImage: 'none'
+                  }}
+                >
+                  <option value="true" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Activa</option>
+                  <option value="false" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Inactiva</option>
+                </select>
+                {/* Icono del diseño del sistema */}
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  {editForm.enabled ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-400" />
+                  )}
+                </div>
+              </div>
+            </div>
           </>
         ) : (
           <>

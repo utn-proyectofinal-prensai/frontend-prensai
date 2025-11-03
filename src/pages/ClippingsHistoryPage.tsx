@@ -5,6 +5,7 @@ import Snackbar from '../components/common/Snackbar';
 import ConfirmationModal from '../components/common/ConfirmationModal';
 import { EditClippingModal, ClippingReportButton } from '../components/common';
 import { Button } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 import '../styles/history.css';
 import '../styles/upload-news.css';
 
@@ -199,12 +200,10 @@ export default function ClippingsHistoryPage() {
   return (
     <div className="history-container px-6">
       {/* Header de la página */}
-      <div className="upload-news-header">
-        <h1 className="upload-news-title text-2xl sm:text-3xl lg:text-4xl">Historial de Clippings</h1>
-        <p className="upload-news-subtitle">
-          Revisa todos los clippings que han sido generados por el sistema
-        </p>
-      </div>
+      <PageHeader
+        title="Historial de Clippings"
+        description="Revisa todos los clippings que has generado en el sistema"
+      />
 
       {/* Filtros y métricas */}
       <div className="upload-news-panel history-filters-panel">

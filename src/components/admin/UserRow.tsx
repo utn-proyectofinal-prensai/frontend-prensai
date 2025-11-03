@@ -1,6 +1,7 @@
 import React from 'react';
 import type { User } from '../../types/auth';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 interface UserRowProps {
   usuario: User;
   onView: (usuario: User) => void;
@@ -45,10 +46,17 @@ export const UserRow: React.FC<UserRowProps> = ({
         <div className="text-sm text-white/90 font-medium">{usuario.email}</div>
       </td>
       
-      {/* Nombre Completo */}
+      {/* Nombre */}
       <td className="px-6 py-4 text-left">
         <div className="text-sm font-semibold text-white group-hover:text-blue-300 transition-colors">
-          {usuario.first_name || 'Sin nombre'} {usuario.last_name || 'Sin apellido'}
+          {usuario.first_name || 'Sin nombre'}
+        </div>
+      </td>
+      
+      {/* Apellido */}
+      <td className="px-6 py-4 text-left">
+        <div className="text-sm font-semibold text-white group-hover:text-blue-300 transition-colors">
+          {usuario.last_name || 'Sin apellido'}
         </div>
       </td>
       
@@ -59,10 +67,12 @@ export const UserRow: React.FC<UserRowProps> = ({
       
       {/* Rol */}
       <td className="px-6 py-4 text-left">
-        <span className={`inline-flex items-center px-6 py-3 text-sm font-bold rounded-full border ${getRolInfo(usuario.role).color}`}>
-          <span className="mr-4 flex-shrink-0">{getRolInfo(usuario.role).icon}</span>
-          <span>{getRolInfo(usuario.role).label}</span>
-        </span>
+        <Badge 
+          variant={usuario.role === 'admin' ? 'admin' : 'user'} 
+          size="default"
+        >
+          {getRolInfo(usuario.role).label}
+        </Badge>
       </td>
       
       {/* Acciones */}

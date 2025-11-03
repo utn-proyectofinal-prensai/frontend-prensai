@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/useAuth';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 interface UserDropdownProps {
   isOpen: boolean;
@@ -63,11 +64,11 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
       style={dropdownStyle}
     >
       {/* Header del dropdown */}
-      <div className="bg-slate-800/50 border-b border-white/10" style={{ padding: '20px 24px 20px 28px' }}>
-        <div className="flex items-center" style={{ gap: '24px' }}>
+      <div className="bg-slate-800/50 border-b border-white/10" style={{ padding: '20px 24px 20px 12px' }}>
+        <div className="flex items-center" style={{ paddingLeft: '16px', paddingRight: '16px' }}>
           {/* Avatar del usuario */}
-          <div className="w-14 h-14 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg border border-white/20 flex-shrink-0">
-            <span className="text-white text-lg font-bold">
+          <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-purple-500 via-purple-600 to-blue-500 rounded-lg flex items-center justify-center shadow-lg border border-white/20" style={{ marginRight: '20px' }}>
+            <span className="text-white text-base font-bold">
               {user?.username?.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -77,9 +78,9 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
             <h3 className="text-lg font-bold text-white truncate mb-1">{user?.username}</h3>
             <p className="text-sm text-white/70 truncate mb-2">{user?.email}</p>
             {isAdmin && (
-              <span className="inline-flex items-center px-3 py-1 text-xs font-bold rounded-full border border-red-300/30 bg-red-500/20 text-red-400">
+              <Badge variant="admin" size="sm">
                 ADMINISTRADOR
-              </span>
+              </Badge>
             )}
           </div>
         </div>
@@ -92,7 +93,8 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
           onClick={() => handleNavigation('/profile')}
           variant="ghost"
           size="lg"
-          className="w-full justify-start px-4 py-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group mb-3"
+          className="w-full justify-start py-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group mb-3"
+          style={{ paddingLeft: '16px', paddingRight: '16px' }}
         >
           <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-blue-300/30 group-hover:scale-105 transition-transform duration-200" style={{ marginRight: '20px' }}>
             <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +112,8 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
           onClick={() => handleNavigation('/settings')}
           variant="ghost"
           size="lg"
-          className="w-full justify-start px-4 py-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group mb-3"
+          className="w-full justify-start py-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group mb-3"
+          style={{ paddingLeft: '16px', paddingRight: '16px' }}
         >
           <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-green-300/30 group-hover:scale-105 transition-transform duration-200" style={{ marginRight: '20px' }}>
             <svg className="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,54 +126,62 @@ export default function UserDropdown({ isOpen, onClose, triggerRef }: UserDropdo
           </div>
         </Button>
 
-        {/* Gestión de Usuarios */}
-        <Button 
-          onClick={() => handleNavigation('/users')}
-          variant="ghost"
-          size="lg"
-          className="w-full justify-start px-4 py-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group mb-3"
-        >
-          <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-purple-500/20 to-violet-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-purple-300/30 group-hover:scale-105 transition-transform duration-200" style={{ marginRight: '20px' }}>
-            <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-            </svg>
-          </div>
-          <div className="flex flex-col items-start">
-            <span className="font-semibold text-base">Gestión de Usuarios</span>
-            <span className="text-xs text-white/60">Usuarios y permisos</span>
-          </div>
-        </Button>
+        {/* Opciones solo para administradores */}
+        {isAdmin && (
+          <>
+            {/* Gestión de Usuarios */}
+            <Button 
+              onClick={() => handleNavigation('/users')}
+              variant="ghost"
+              size="lg"
+              className="w-full justify-start py-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group mb-3"
+              style={{ paddingLeft: '16px', paddingRight: '16px' }}
+            >
+              <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-purple-500/20 to-violet-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-purple-300/30 group-hover:scale-105 transition-transform duration-200" style={{ marginRight: '20px' }}>
+                <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-base">Gestión de Usuarios</span>
+                <span className="text-xs text-white/60">Usuarios y permisos</span>
+              </div>
+            </Button>
 
-        {/* Configuraciones de IA */}
-        <Button 
-          onClick={() => handleNavigation('/ai-configurations')}
-          variant="ghost"
-          size="lg"
-          className="w-full justify-start px-4 py-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group"
-        >
-          <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-orange-500/20 to-amber-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-orange-300/30 group-hover:scale-105 transition-transform duration-200" style={{ marginRight: '20px' }}>
-            <svg className="w-5 h-5 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <div className="flex flex-col items-start">
-            <span className="font-semibold text-base">Configuraciones de IA</span>
-            <span className="text-xs text-white/60">Parámetros de IA</span>
-          </div>
-        </Button>
+            {/* Configuraciones de IA */}
+            <Button 
+              onClick={() => handleNavigation('/ai-configurations')}
+              variant="ghost"
+              size="lg"
+              className="w-full justify-start py-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 group"
+              style={{ paddingLeft: '16px', paddingRight: '16px' }}
+            >
+              <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-orange-500/20 to-amber-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-orange-300/30 group-hover:scale-105 transition-transform duration-200" style={{ marginRight: '20px' }}>
+                <svg className="w-5 h-5 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-base">Configuraciones de IA</span>
+                <span className="text-xs text-white/60">Parámetros de IA</span>
+              </div>
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Separador */}
       <div className="border-t border-white/10 mx-4"></div>
 
       {/* Cerrar Sesión */}
-      <div style={{ padding: '16px' }}>
+      <div style={{ padding: '16px 16px 16px 12px' }}>
         <Button 
           onClick={handleLogout}
           variant="ghost"
           size="lg"
-          className="w-full justify-start px-4 py-4 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 group"
+          className="w-full justify-start py-4 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 group"
+          style={{ paddingLeft: '16px', paddingRight: '16px' }}
         >
           <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-red-500/20 to-red-600/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-red-300/30 group-hover:scale-105 transition-transform duration-200" style={{ marginRight: '20px' }}>
             <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

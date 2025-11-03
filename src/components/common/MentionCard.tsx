@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Mention } from '../../services/api';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 interface MentionCardProps {
   mention: Mention;
@@ -30,22 +31,20 @@ export const MentionCard: React.FC<MentionCardProps> = ({
     <div 
       onClick={handleClick}
       className={`
-        mention-card bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 p-6 
+        mention-card bg-black/30 backdrop-blur-sm rounded-xl border border-white/20 
         hover:bg-black/40 hover:border-white/30 hover:shadow-xl hover:scale-105
         transition-all duration-300 group cursor-pointer ${className}
-      `}>
+      `}
+      style={{ paddingTop: '2rem', paddingBottom: '2rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}
+      >
       {/* Estado con espaciado apropiado */}
-      <div className="flex items-center justify-between mb-3" style={{ paddingLeft: '16px' }}>
-        <span className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-bold border-2 ${
-          mention.enabled 
-            ? 'bg-green-500/20 text-green-300 border-green-400/40' 
-            : 'bg-red-500/20 text-red-300 border-red-400/40'
-        }`}>
-          <span className="mr-1">
-            {mention.enabled ? '✅' : '❌'}
-          </span>
+      <div className="flex items-center justify-between" style={{ paddingLeft: '16px', marginBottom: '1.5rem' }}>
+        <Badge 
+          variant={mention.enabled ? 'success' : 'danger'} 
+          size="sm"
+        >
           {mention.enabled ? 'ACTIVA' : 'INACTIVA'}
-        </span>
+        </Badge>
 
         {/* Acciones */}
         {showActions && (
@@ -75,8 +74,8 @@ export const MentionCard: React.FC<MentionCardProps> = ({
       </div>
 
       {/* Nombre y descripción */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-white group-hover:text-green-300 transition-colors mb-1">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h3 className="text-lg font-semibold text-white group-hover:text-green-300 transition-colors" style={{ marginBottom: '0.75rem' }}>
           {mention.name}
         </h3>
         <p className="text-white/60 text-sm">
@@ -86,7 +85,7 @@ export const MentionCard: React.FC<MentionCardProps> = ({
 
 
       {/* Barra de estado sutil */}
-      <div className="mt-4">
+      <div style={{ marginTop: '2rem' }}>
         <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
           <div 
             className={`h-full transition-all duration-500 ${

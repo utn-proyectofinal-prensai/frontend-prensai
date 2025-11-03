@@ -4,6 +4,7 @@ import AiConfigurationField from '../components/admin/AiConfigurationField';
 import Snackbar from '../components/common/Snackbar';
 import { useAiConfigurations } from '../hooks/useAiConfigurations';
 import { Button } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 import { AlertTriangle, Check, RefreshCw, Info } from 'lucide-react';
 import {
   type DraftValue,
@@ -248,14 +249,10 @@ export default function AiConfigurationsPage() {
       )}
 
       {/* Header de la página */}
-      <div className="text-center" style={{ marginBottom: '1.5rem' }}>
-        <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-3">
-          Configuraciones de IA
-        </h1>
-        <p className="text-white/70 text-sm">
-          Gestioná los parámetros del módulo de inteligencia artificial
-        </p>
-      </div>
+      <PageHeader
+        title="Configuraciones de IA"
+        description="Gestioná los parámetros del módulo de inteligencia artificial"
+      />
 
       {loading ? (
         <div className="flex flex-col gap-6">
