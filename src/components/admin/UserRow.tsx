@@ -46,10 +46,17 @@ export const UserRow: React.FC<UserRowProps> = ({
         <div className="text-sm text-white/90 font-medium">{usuario.email}</div>
       </td>
       
-      {/* Nombre Completo */}
+      {/* Nombre */}
       <td className="px-6 py-4 text-left">
         <div className="text-sm font-semibold text-white group-hover:text-blue-300 transition-colors">
-          {usuario.first_name || 'Sin nombre'} {usuario.last_name || 'Sin apellido'}
+          {usuario.first_name || 'Sin nombre'}
+        </div>
+      </td>
+      
+      {/* Apellido */}
+      <td className="px-6 py-4 text-left">
+        <div className="text-sm font-semibold text-white group-hover:text-blue-300 transition-colors">
+          {usuario.last_name || 'Sin apellido'}
         </div>
       </td>
       

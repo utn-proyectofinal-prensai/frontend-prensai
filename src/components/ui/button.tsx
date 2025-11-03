@@ -21,7 +21,11 @@ import {
   Tag,
   FileText,
   Sparkles,
-  Info
+  Info,
+  Users,
+  Crown,
+  User,
+  List
 } from "lucide-react"
 
 // Mapeo de iconos disponibles
@@ -46,6 +50,10 @@ const iconMap = {
   Tag,
   FileText,
   Sparkles,
+  Users,
+  Crown,
+  User,
+  List,
 } as const;
 
 export type IconName = keyof typeof iconMap;

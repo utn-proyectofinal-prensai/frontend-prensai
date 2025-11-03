@@ -154,9 +154,17 @@ export default function AdminUsersPage() {
 
       const { user: updatedUser } = await apiService.updateUser(usuario.id.toString(), updateData);
       
+      // Preservar fechas si el backend no las devuelve
+      const usuarioAnterior = usuarios.find(u => u.id === usuario.id);
+      const usuarioActualizado = {
+        ...updatedUser,
+        created_at: updatedUser.created_at || usuarioAnterior?.created_at || '',
+        updated_at: updatedUser.updated_at || usuarioAnterior?.updated_at || ''
+      };
+      
       // Actualizar estado local
       setUsuarios(usuarios.map(u => 
-        u.id === usuario.id ? updatedUser : u
+        u.id === usuario.id ? usuarioActualizado : u
       ));
       
       // Cerrar el modal
@@ -295,7 +303,7 @@ export default function AdminUsersPage() {
         />
 
         {/* Espacio entre secciones */}
-        <div className="h-12"></div>
+        <div className="h-6"></div>
 
         {/* Filtros modernos */}
         <SearchFilters

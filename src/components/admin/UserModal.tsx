@@ -152,15 +152,23 @@ export const UserModal: React.FC<UserModalProps> = ({
   };
 
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      return date.toLocaleString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'N/A';
+    }
   };
 
 
@@ -232,23 +240,6 @@ export const UserModal: React.FC<UserModalProps> = ({
     >
 
             <div className="space-y-6">
-              {/* Username */}
-              {isEditing ? (
-                <Input
-                  label="Username"
-                  type="text"
-                  value={editForm.username}
-                  onChange={(e) => setEditForm({...editForm, username: e.target.value})}
-                  placeholder="Username"
-                  required
-                />
-              ) : (
-                <div style={{ marginBottom: '16px' }}>
-                  <div className="text-sm font-medium text-white mb-2">Username</div>
-                  <div className="text-white/90 font-semibold text-sm">@{displayUser.username}</div>
-                </div>
-              )}
-
               {/* Nombre */}
               {isEditing ? (
                 <Input
@@ -281,9 +272,6 @@ export const UserModal: React.FC<UserModalProps> = ({
                 </div>
               )}
 
-
-
-
               {/* Email */}
               {isEditing ? (
                 <Input
@@ -300,26 +288,49 @@ export const UserModal: React.FC<UserModalProps> = ({
                 </div>
               )}
 
-
-              {/* Rol */}
-              {isEditing ? (
-                <Select
-                  label="Rol"
-                  value={editForm.role}
-                  onChange={(e) => setEditForm({...editForm, role: e.target.value as 'admin' | 'user'})}
-                  options={[
-                    { value: 'admin', label: 'Administrador' },
-                    { value: 'user', label: 'Usuario' }
-                  ]}
-                />
-              ) : (
-                <div style={{ marginBottom: '16px' }}>
-                  <div className="text-sm font-medium text-white mb-2">Rol</div>
-                  <div className="text-white/90 font-semibold text-sm capitalize">
-                    {displayUser.role === 'admin' ? 'Administrador' : 'Usuario'}
-                  </div>
+              {/* Username y Rol en dos columnas */}
+              <div className="flex gap-3 w-full">
+                {/* Username */}
+                <div className="flex-1">
+                  {isEditing ? (
+                    <Input
+                      label="Username"
+                      type="text"
+                      value={editForm.username}
+                      onChange={(e) => setEditForm({...editForm, username: e.target.value})}
+                      placeholder="Username"
+                      required
+                    />
+                  ) : (
+                    <div style={{ marginBottom: '16px' }}>
+                      <div className="text-sm font-medium text-white mb-2">Username</div>
+                      <div className="text-white/90 font-semibold text-sm">@{displayUser.username}</div>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* Rol */}
+                <div className="flex-1">
+                  {isEditing ? (
+                    <Select
+                      label="Rol"
+                      value={editForm.role}
+                      onChange={(e) => setEditForm({...editForm, role: e.target.value as 'admin' | 'user'})}
+                      options={[
+                        { value: 'admin', label: 'Administrador' },
+                        { value: 'user', label: 'Usuario' }
+                      ]}
+                    />
+                  ) : (
+                    <div style={{ marginBottom: '16px' }}>
+                      <div className="text-sm font-medium text-white mb-2">Rol</div>
+                      <div className="text-white/90 font-semibold text-sm capitalize">
+                        {displayUser.role === 'admin' ? 'Administrador' : 'Usuario'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
 
               {/* Campos de contraseña (solo en modo creación) */}
@@ -368,17 +379,28 @@ export const UserModal: React.FC<UserModalProps> = ({
 
               {!isCreateMode && (
                 <>
-              {/* Fecha de creación */}
-              <div style={{ marginBottom: '16px' }}>
-                <div className="text-sm font-medium text-white mb-2">Creado</div>
-                <div className="text-white/90 font-semibold text-sm">{formatDate(displayUser.created_at)}</div>
-              </div>
+                  {/* Creado y Modificado en dos columnas */}
+                  <div className="flex gap-3 w-full">
+                    {/* Creado */}
+                    <div className="flex-1">
+                      <Input
+                        label="Creado"
+                        type="text"
+                        value={formatDate(displayUser.created_at)}
+                        disabled
+                      />
+                    </div>
 
-              {/* Fecha de modificación */}
-              <div style={{ marginBottom: '16px' }}>
-                <div className="text-sm font-medium text-white mb-2">Modificado</div>
-                <div className="text-white/90 font-semibold text-sm">{formatDate(displayUser.updated_at)}</div>
-              </div>
+                    {/* Modificado */}
+                    <div className="flex-1">
+                      <Input
+                        label="Modificado"
+                        type="text"
+                        value={formatDate(displayUser.updated_at)}
+                        disabled
+                      />
+                    </div>
+                  </div>
                 </>
               )}
 
