@@ -7,6 +7,7 @@ import Snackbar from '../components/common/Snackbar';
 import PasswordChangeModal from '../components/admin/PasswordChangeModal';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { PageHeader } from '../components/ui/page-header';
 
 const ProfilePage: React.FC = () => {
   const { updateUser } = useAuth();
@@ -251,14 +252,10 @@ const ProfilePage: React.FC = () => {
     <div className="flex justify-center px-4 py-6 sm:px-6 profile-page-container">
       <div className="profile-page-content" style={{ maxWidth: '650px', width: '100%' }}>
         {/* Header de la página */}
-        <div className="text-center" style={{ marginBottom: '1.5rem' }}>
-          <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-3">
-            Mi Perfil
-          </h1>
-          <p className="text-white/70 text-sm">
-            Gestioná tu información personal y configuración de cuenta
-          </p>
-        </div>
+        <PageHeader
+          title="Mi Perfil"
+          description="Gestioná tu información personal y configuración de cuenta"
+        />
 
         {/* Contenedor principal estilo modal */}
         <div className="w-full bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">

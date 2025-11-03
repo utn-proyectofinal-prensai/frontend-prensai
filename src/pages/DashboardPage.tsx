@@ -5,6 +5,7 @@ import { apiService } from '../services/api';
 import type { DashboardStats, NewsItem } from '../services/api';
 import { DASHBOARD_MESSAGES } from '../constants/messages';
 import NewsTable from '../components/common/NewsTable';
+import { PageHeader } from '../components/ui/page-header';
 import '../styles/history.css';
 
 export default function DashboardPage() {
@@ -139,10 +140,11 @@ export default function DashboardPage() {
   return (
     <>
         {/* Título de bienvenida */}
-        <div className="welcome-section mb-32 text-center">
-          <h2 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">Bienvenido a tu dashboard</h2>
-          <p className="text-white/90 text-lg font-medium drop-shadow-md">Monitorea y analiza tus noticias con inteligencia artificial</p>
-        </div>
+        <PageHeader
+          title="Bienvenido a tu dashboard"
+          description="Monitorea y analiza tus noticias con inteligencia artificial"
+          className="mb-32"
+        />
 
         {/* TODO: Cuando el endpoint /news/stats esté implementado en el backend, 
              remover el cálculo local de estadísticas y usar directamente apiService.getDashboardStats() */}
