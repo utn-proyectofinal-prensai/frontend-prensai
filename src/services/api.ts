@@ -242,7 +242,7 @@ export interface AiConfigurationListResponse {
 
 export interface UpdateAiConfigurationRequest {
   ai_configuration: {
-    value: string | string[] | null;
+    value: string | string[] | number | null;
     enabled?: boolean;
   };
 }

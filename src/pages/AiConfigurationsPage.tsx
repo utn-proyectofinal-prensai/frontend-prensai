@@ -4,6 +4,7 @@ import AiConfigurationField from '../components/admin/AiConfigurationField';
 import Snackbar from '../components/common/Snackbar';
 import { useAiConfigurations } from '../hooks/useAiConfigurations';
 import { Button } from '../components/ui/button';
+import { AlertTriangle, Check, RefreshCw, Info } from 'lucide-react';
 import {
   type DraftValue,
   normalizeValue,
@@ -137,6 +138,7 @@ export default function AiConfigurationsPage() {
     clearError();
 
     let successCount = 0;
+    let errorCount = 0;
 
     for (const key of keysToSave) {
       const config = configurationByKey.get(key);
@@ -161,25 +163,25 @@ export default function AiConfigurationsPage() {
           [key]: false,
         }));
 
-
         successCount += 1;
       } catch (err) {
-        // Error handling could be improved here
         console.error('Error saving configuration:', err);
+        errorCount += 1;
+        // El error ya se maneja en updateConfiguration que llama a setError
       } finally {
         setSavingKeys((prev) => prev.filter((item) => item !== key));
       }
     }
 
+    setIsSaving(false);
+    
     if (successCount > 0) {
       setSuccessMessage(
         successCount === 1
-          ? 'Se guardó 1 configuración.'
-          : `Se guardaron ${successCount} configuraciones.`
+          ? 'Se guardó 1 configuración exitosamente.'
+          : `Se guardaron ${successCount} configuraciones exitosamente.`
       );
     }
-
-    setIsSaving(false);
   }, [clearError, configurationByKey, dirtyMap, drafts, updateConfiguration]);
 
   const dirtyCount = useMemo(
@@ -226,7 +228,7 @@ export default function AiConfigurationsPage() {
 
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-14 sm:px-6">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
       {error && (
         <Snackbar
           message={error}
@@ -245,72 +247,103 @@ export default function AiConfigurationsPage() {
         />
       )}
 
+      {/* Header de la página */}
+      <div className="text-center" style={{ marginBottom: '1.5rem' }}>
+        <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-3">
+          Configuraciones de IA
+        </h1>
+        <p className="text-white/70 text-sm">
+          Gestioná los parámetros del módulo de inteligencia artificial
+        </p>
+      </div>
+
       {loading ? (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           {Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
-              className="h-32 animate-pulse rounded-3xl border border-slate-200/60 bg-white/70"
+              className="h-40 animate-pulse rounded-2xl border border-white/20 bg-gradient-to-br from-black/30 to-black/20 backdrop-blur-sm"
             ></div>
           ))}
         </div>
       ) : configurations.length === 0 ? (
-        <div className="rounded-3xl border border-slate-200 bg-white px-10 py-16 text-center shadow-lg shadow-slate-900/10">
-          <h2 className="text-lg font-semibold text-slate-900">No hay configuraciones disponibles</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Todavía no hay configuraciones de IA habilitadas. Volvé a intentarlo más tarde.
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-8">
-          {configurations.map((configuration) => (
-            <AiConfigurationField
-              key={configuration.key}
-              configuration={configuration}
-              value={drafts[configuration.key] ?? normalizeValue(configuration)}
-              onChange={(nextValue) => handleFieldChange(configuration.key, nextValue)}
-              isSaving={savingKeys.includes(configuration.key)}
-              disabled={isSaving}
-            />
-          ))}
-
-          <div className="sticky bottom-0 bg-slate-800 border-t border-slate-700 px-6 py-4 shadow-lg">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 text-sm">
-                {hasDirtyFields ? (
-                  <span className="flex items-center gap-2 text-amber-300">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    Tenés {dirtyCount} {dirtyCount === 1 ? 'cambio pendiente' : 'cambios pendientes'} sin guardar
-                  </span>
-                ) : (
-                  <span className="text-slate-300">No hay cambios pendientes</span>
-                )}
-                {isSaving && (
-                  <span className="flex items-center gap-2 text-sky-400">
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Guardando configuraciones…
-                  </span>
-                )}
-              </div>
-
-              <Button
-                type="button"
-                onClick={handleSave}
-                disabled={!hasDirtyFields || isSaving}
-                variant="primary"
-                size="default"
-                icon="Save"
-              >
-                Guardar cambios
-              </Button>
+        <div className="rounded-2xl border border-white/20 bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl px-10 py-16 text-center shadow-xl">
+          <div className="flex flex-col items-center gap-4">
+            <div className="p-4 rounded-full bg-white/10 border border-white/20">
+              <Info className="w-8 h-8 text-white/50" />
             </div>
+            <h2 className="text-xl font-semibold text-white">No hay configuraciones disponibles</h2>
+            <p className="text-sm text-white/60 max-w-md">
+              Todavía no hay configuraciones de IA habilitadas. Volvé a intentarlo más tarde.
+            </p>
           </div>
         </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-6 pb-24">
+            {configurations.map((configuration) => (
+              <AiConfigurationField
+                key={configuration.key}
+                configuration={configuration}
+                value={drafts[configuration.key] ?? normalizeValue(configuration)}
+                onChange={(nextValue) => handleFieldChange(configuration.key, nextValue)}
+                isSaving={savingKeys.includes(configuration.key)}
+                disabled={isSaving}
+              />
+            ))}
+          </div>
+
+          {/* Barra de estado inferior mejorada */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/20 bg-gradient-to-br from-black/95 to-black/90 backdrop-blur-xl shadow-2xl">
+            <div className="mx-auto w-full max-w-6xl px-6 py-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-4 flex-wrap">
+                  {hasDirtyFields ? (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-400/30">
+                      <AlertTriangle className="w-4 h-4 text-amber-300" />
+                      <span className="text-sm font-medium text-amber-300">
+                        {dirtyCount} {dirtyCount === 1 ? 'cambio pendiente' : 'cambios pendientes'} sin guardar
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/20 border border-green-400/30">
+                      <Check className="w-4 h-4 text-green-300" />
+                      <span className="text-sm font-medium text-green-300">
+                        No hay cambios pendientes
+                      </span>
+                    </div>
+                  )}
+                  {isSaving && (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-400/30">
+                      <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
+                      <span className="text-sm font-medium text-blue-400">
+                        Guardando configuraciones…
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Button clicked', { hasDirtyFields, isSaving, dirtyCount });
+                    handleSave();
+                  }}
+                  disabled={!hasDirtyFields || isSaving}
+                  variant="primary"
+                  size="lg"
+                  icon="Save"
+                  iconPosition="left"
+                  className="min-w-[160px]"
+                >
+                  Guardar cambios
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

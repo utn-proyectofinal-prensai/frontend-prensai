@@ -57,7 +57,7 @@ const Snackbar: React.FC<SnackbarProps> = ({
   const current = stylesByVariant[variant];
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed bottom-20 left-4 z-[60]">
       <div
         className={`
           ${current.container}
