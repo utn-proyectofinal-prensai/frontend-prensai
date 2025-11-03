@@ -167,30 +167,24 @@ const ProfilePage: React.FC = () => {
     setShowPasswordModal(true);
   };
 
-  const handlePasswordChange = async (currentPassword?: string) => {
+  const handlePasswordChange = async (newPassword: string, currentPassword?: string) => {
     try {
-      // Para perfil personal, se requiere la contraseña actual
+      // Para perfil personal, se requiere la contraseña actual (validación de seguridad)
+      // Aunque el backend no la requiere técnicamente, la validamos en el frontend por seguridad UX
       if (!currentPassword) {
         throw new Error('La contraseña actual es requerida');
       }
       
-      // NOTA TEMPORAL: El endpoint de cambio de contraseña no existe aún en el backend
-      // Por ahora mostraremos un mensaje informativo
-      setSnackbar({
-        message: 'Funcionalidad de cambio de contraseña pendiente de implementación en el backend. Endpoint /api/v1/user/change_password requerido.',
-        type: 'error',
-        show: true
-      });
+      // Cambiar la contraseña usando el endpoint del backend
+      await apiService.changeCurrentUserPassword(newPassword);
       
       setShowPasswordModal(false);
       
-      // Código para cuando se implemente el endpoint:
-      // await apiService.changeCurrentUserPassword(currentPassword, newPassword);
-      // setSnackbar({
-      //   message: 'Contraseña cambiada correctamente',
-      //   type: 'success',
-      //   show: true
-      // });
+      setSnackbar({
+        message: 'Contraseña cambiada correctamente',
+        type: 'success',
+        show: true
+      });
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error al cambiar la contraseña';
