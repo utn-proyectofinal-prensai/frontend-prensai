@@ -5,6 +5,7 @@ import { useEnabledTopics } from '../hooks';
 import { NewsTable, Snackbar } from '../components/common';
 import { Button } from '../components/ui/button';
 import { LoadingModal } from '../components/ui/loading-modal';
+import { PageHeader } from '../components/ui/page-header';
 import '../styles/upload-news.css';
 
 
@@ -478,9 +479,15 @@ export default function CreateClippingPage() {
   );
 
   return (
-    <div className="upload-news-container">
-      {/* Contenido principal */}
-      <div className="upload-news-main-content">
+    <>
+      <PageHeader
+        title="Crear Clipping"
+        description="Genera reportes personalizados seleccionando un tema y noticias"
+        className="mb-6"
+      />
+      <div className="upload-news-container">
+        {/* Contenido principal */}
+        <div className="upload-news-main-content">
         <div className="upload-news-content-wrapper">
           <div className="upload-news-sections">
               
@@ -775,6 +782,7 @@ export default function CreateClippingPage() {
         onClose={() => setSuccessMessage('')}
         variant="success"
       />
-    </div>
+      </div>
+    </>
   );
 } 

@@ -85,6 +85,55 @@ export interface DashboardStats {
   noticiasPorMedio: { medio: string; count: number }[];
 }
 
+// Tipos para el nuevo endpoint de dashboard
+// El backend devuelve { context, generated_at, data } donde data contiene toda la información
+export interface DashboardSnapshot {
+  context: string;
+  generated_at: string;
+  data: {
+    meta: {
+      range: {
+        from: string;
+        to: string;
+      };
+      generated_at: string;
+    };
+    news: {
+      count: number;
+      valuation: {
+        positive: number;
+        neutral: number;
+        negative: number;
+        unassigned: number;
+      };
+      trend: Array<{
+        date: string;
+        count: number;
+      }>;
+    };
+    topics: {
+      count_unique: number;
+      top: Array<{
+        name: string;
+        news_count: number;
+      }>;
+    };
+    mentions: {
+      count_unique: number;
+      top: Array<{
+        entity: string;
+        count: number;
+      }>;
+    };
+    clippings: {
+      count: number;
+    };
+    reports: {
+      count: number;
+    };
+  };
+}
+
 export interface ActiveMention {
   position: number;
   name: string;
@@ -441,7 +490,7 @@ export const apiService = {
     });
   },
 
-  // Obtener estadísticas del dashboard
+  // Obtener estadísticas del dashboard (endpoint legacy)
   async getDashboardStats(): Promise<DashboardStats> {
     try {
       return await apiRequest<DashboardStats>('/news/stats');
@@ -457,6 +506,12 @@ export const apiService = {
         noticiasPorMedio: []
       };
     }
+  },
+
+  // Obtener snapshot del dashboard (nuevo endpoint)
+  async getDashboardSnapshot(context?: string): Promise<DashboardSnapshot> {
+    const params = context ? `?context=${context}` : '';
+    return await apiRequest<DashboardSnapshot>(`/dashboard${params}`);
   },
 
   // Importar noticias desde Excel
