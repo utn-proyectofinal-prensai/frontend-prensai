@@ -2,9 +2,8 @@ import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api';
-import type { DashboardSnapshot, NewsItem } from '../services/api';
+import type { DashboardSnapshot } from '../services/api';
 import { DASHBOARD_MESSAGES } from '../constants/messages';
-import NewsTable from '../components/common/NewsTable';
 import { PageHeader } from '../components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import {
@@ -24,10 +23,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados para las noticias
-  const [ultimasNoticias, setUltimasNoticias] = useState<NewsItem[]>([]);
-  const [newsLoading, setNewsLoading] = useState(false);
-  const [newsError, setNewsError] = useState<string | null>(null);
 
   // Función para verificar el estado de la API
   const checkApiStatus = useCallback(async () => {
@@ -53,22 +48,6 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Función para cargar noticias (solo las últimas 5)
-  const loadNews = useCallback(async () => {
-    try {
-      setNewsLoading(true);
-      setNewsError(null);
-      
-      const response = await apiService.getNews({ limit: 5 });
-      setUltimasNoticias(response.news);
-    } catch (error) {
-      console.error('Error cargando noticias:', error);
-      setNewsError('Error al cargar las noticias');
-      setUltimasNoticias([]);
-    } finally {
-      setNewsLoading(false);
-    }
-  }, []);
 
   // Función para cargar snapshot del dashboard
   const loadDashboardSnapshot = useCallback(async () => {
@@ -218,25 +197,21 @@ export default function DashboardPage() {
         }
 
         // 3. Cargar snapshot del dashboard y noticias en paralelo
-        await Promise.all([
-          loadDashboardSnapshot(),
-          loadNews()
-        ]);
+        await loadDashboardSnapshot();
 
       } catch (err) {
         console.error('Error general cargando datos del dashboard:', err);
         setError(DASHBOARD_MESSAGES.ERRORS.LOAD_DATA_ERROR);
-        setUltimasNoticias([]);
       } finally {
         setLoading(false);
       }
     };
 
     loadDashboardData();
-  }, [checkApiStatus, loadUserData, loadNews, loadDashboardSnapshot]);
+  }, [checkApiStatus, loadUserData, loadDashboardSnapshot]);
 
   // Mostrar loading mientras cargan los datos principales
-  if (loading || newsLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-white text-xl font-semibold">{DASHBOARD_MESSAGES.COMMON?.LOADING || 'Cargando dashboard...'}</div>
@@ -262,8 +237,104 @@ export default function DashboardPage() {
       <PageHeader
         title="Bienvenido a tu dashboard"
         description="Monitorea y analiza tus noticias con inteligencia artificial"
-        className="mb-8"
+        className="mb-4"
       />
+
+      {/* Acciones principales */}
+      <div className="actions-section">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <button 
+            onClick={() => navigate('/upload-news')}
+            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
+            style={{ padding: '0.5rem', minHeight: 'auto' }}
+          >
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
+                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Subir noticias</h3>
+                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Carga nuevas noticias para procesar</p>
+              </div>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => navigate('/history')}
+            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
+            style={{ padding: '0.5rem', minHeight: 'auto' }}
+          >
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
+                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Ver noticias</h3>
+                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Explora todas las noticias procesadas</p>
+              </div>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => navigate('/create-clipping')}
+            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
+            style={{ padding: '0.5rem', minHeight: 'auto' }}
+          >
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
+                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Crear clipping</h3>
+                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Genera análisis por tema específico</p>
+              </div>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => navigate('/clippings-history')}
+            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
+            style={{ padding: '0.5rem', minHeight: 'auto' }}
+          >
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
+                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Ver clippings</h3>
+                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Explora todos los clippings generados</p>
+              </div>
+            </div>
+          </button>
+
+          <button 
+              onClick={() => navigate('/settings')}
+              className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
+              style={{ padding: '0.5rem', minHeight: 'auto' }}
+            >
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
+                  <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Administración</h3>
+                  <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Gestiona temas y menciones</p>
+                </div>
+              </div>
+          </button>
+        </div>
+      </div>
 
       {/* Primera fila: Tendencia (3/4) + Cards apiladas (1/4) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch" style={{ marginBottom: '1.5rem' }}>
@@ -295,7 +366,7 @@ export default function DashboardPage() {
             title="Noticias procesadas"
             value={data?.news?.count || 0}
             subtitle={`Últimos 7 días`}
-            iconColor="blue"
+            iconColor="purple"
             icon={
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -309,8 +380,8 @@ export default function DashboardPage() {
           <MetricCard
             title="Clippings generados"
             value={data?.clippings?.count || 0}
-            subtitle={`${data?.reports?.count || 0} reportes`}
-            iconColor="blue"
+            subtitle="Últimos 7 días"
+            iconColor="purple"
             icon={
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -404,152 +475,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Acciones principales */}
-      <div className="actions-section" style={{ marginBottom: '2.5rem' }}>
-        <h2 className="text-2xl font-bold text-white mb-6">Acciones rápidas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <button 
-            onClick={() => navigate('/upload-news')}
-            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
-            style={{ padding: '0.5rem', minHeight: 'auto' }}
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
-                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Subir noticias</h3>
-                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Carga nuevas noticias para procesar</p>
-              </div>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => navigate('/history')}
-            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
-            style={{ padding: '0.5rem', minHeight: 'auto' }}
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
-                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Ver noticias</h3>
-                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Explora todas las noticias procesadas</p>
-              </div>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => navigate('/create-clipping')}
-            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
-            style={{ padding: '0.5rem', minHeight: 'auto' }}
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
-                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Crear clipping</h3>
-                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Genera análisis por tema específico</p>
-              </div>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => navigate('/clippings-history')}
-            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
-            style={{ padding: '0.5rem', minHeight: 'auto' }}
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
-                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Ver clippings</h3>
-                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Explora todos los clippings generados</p>
-              </div>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => navigate('/settings')}
-            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
-            style={{ padding: '0.5rem', minHeight: 'auto' }}
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
-                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Administración</h3>
-                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Gestiona temas y menciones</p>
-              </div>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Cuarta fila: Últimas noticias (3/4) + espacio vacío (1/4) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6" style={{ marginBottom: '2.5rem' }}>
-        {/* Últimas noticias - 3/4 */}
-        <div className="lg:col-span-3 news-section">
-        <div className="upload-news-panel">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">Últimas noticias procesadas</h2>
-            <button 
-              onClick={() => navigate('/history')}
-              className="text-white hover:text-white/90 font-bold text-base transition-colors hover:scale-105 transform" 
-            >
-              Ver todas →
-            </button>
-          </div>
-          
-          {/* Mostrar error de noticias si existe */}
-          {newsError && (
-            <div className="mb-4 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-red-300 text-sm font-medium">
-                  Error al cargar las noticias: {newsError}
-                </span>
-              </div>
-            </div>
-          )}
-          
-          {newsLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-white/70 text-lg">Cargando noticias...</div>
-            </div>
-          ) : ultimasNoticias.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-white/70 text-lg">No hay noticias disponibles</div>
-            </div>
-          ) : (
-            <NewsTable 
-              news={ultimasNoticias} 
-              showEditButton={false}
-            />
-          )}
-        </div>
-        </div>
-
-        {/* Espacio vacío - 1/4 */}
-        <div className="lg:col-span-1"></div>
-      </div>
     </>
   );
 }
