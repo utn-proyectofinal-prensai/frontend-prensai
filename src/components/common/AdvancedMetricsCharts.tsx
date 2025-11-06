@@ -25,13 +25,14 @@ ChartJS.register(
 interface AdvancedMetricsChartsProps {
   metricas: ClippingMetrics;
   chartType: 'valuation' | 'media' | 'support' | 'mention';
+  showOnlyPercentages?: boolean;
 }
 
-export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedMetricsChartsProps) {
+export default function AdvancedMetricsCharts({ metricas, chartType, showOnlyPercentages = false }: AdvancedMetricsChartsProps) {
   // Paleta de colores original de la aplicación
   const colorPalette = {
     primary: ['#3B82F6', '#10B981', '#A855F7', '#F97316', '#EF4444', '#F59E0B', '#06B6D4', '#8B5CF6'], // Colores principales
-    valuation: ['#10B981', '#F59E0B', '#EF4444'], // Verde, Amarillo, Rojo para valoración
+    valuation: ['#10B981', '#3B82F6', '#EF4444'], // Verde, Azul, Rojo para valoración
     neutral: ['#6B7280', '#9CA3AF', '#D1D5DB'], // Grises para elementos neutros
   };
 
@@ -339,7 +340,7 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
       
       {/* Leyenda inteligente */}
       {labels.length > 0 && (
-        <div className="flex flex-wrap gap-3 justify-center" style={{ marginTop: '32px' }}>
+        <div className="flex flex-wrap gap-3 justify-center" style={{ marginTop: '16px', marginBottom: '8px' }}>
           {/* Si todos los valores son iguales, mostrar solo una vez el valor común */}
           {values.every(v => v === values[0]) && values.length > 3 ? (
             <div className="flex items-center" style={{ gap: '8px' }}>
@@ -364,7 +365,7 @@ export default function AdvancedMetricsCharts({ metricas, chartType }: AdvancedM
                     style={{ backgroundColor: color }}
                   ></div>
                   <span className="text-white/70 text-xs">
-                    {label}: {Math.round(values[index])} ({percentages[index].toFixed(1)}%)
+                    {label}: {showOnlyPercentages ? `${percentages[index].toFixed(1)}%` : `${Math.round(values[index])} (${percentages[index].toFixed(1)}%)`}
                   </span>
                 </div>
               );

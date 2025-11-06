@@ -46,6 +46,10 @@ export { default as NewsTable } from './NewsTable';
 
 // Componentes de métricas
 export { default as AdvancedMetricsCharts } from './AdvancedMetricsCharts';
+export { default as DashboardLineChart } from './DashboardLineChart';
+export { default as DashboardDonutChart } from './DashboardDonutChart';
+export { default as DashboardBarChart } from './DashboardBarChart';
+export { default as MetricCard } from './MetricCard';
 
 // Componentes de reportes
 export { ClippingReportButton } from './ClippingReportButton';
