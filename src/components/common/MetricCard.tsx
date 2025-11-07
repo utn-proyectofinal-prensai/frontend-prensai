@@ -54,19 +54,19 @@ export default function MetricCard({
       className={`upload-news-panel group transition-all duration-300 ${
         onClick ? 'cursor-pointer hover:scale-105' : ''
       } ${className}`}
-      style={{ padding: '1rem', minHeight: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}
+      style={{ padding: '0.75rem', minHeight: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}
       onClick={onClick}
     >
-      <div className="flex flex-col items-center text-center justify-center flex-1" style={{ padding: '0.5rem 0' }}>
+      <div className="flex flex-col items-center text-center justify-center flex-1" style={{ padding: '0.25rem 0' }}>
         {icon && (
-          <div className={`w-12 h-12 bg-gradient-to-br ${colors.gradient} backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border ${colors.border} mb-3`}>
+          <div className={`w-10 h-10 bg-gradient-to-br ${colors.gradient} backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border ${colors.border} mb-2`}>
             <div className={colors.text}>
               {icon}
             </div>
           </div>
         )}
-        <p className="text-sm font-semibold text-slate-200 mb-1.5">{title}</p>
-        <p className="text-3xl font-bold text-white mb-1 tracking-tight">{value}</p>
+        <p className="text-xs font-semibold text-slate-200 mb-1">{title}</p>
+        <p className="text-2xl font-bold text-white mb-0.5 tracking-tight">{value}</p>
         {subtitle && (
           <p className={`text-xs ${colors.text} font-medium`}>{subtitle}</p>
         )}
