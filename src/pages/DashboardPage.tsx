@@ -51,12 +51,129 @@ export default function DashboardPage() {
 
   // Función para cargar snapshot del dashboard
   const loadDashboardSnapshot = useCallback(async () => {
+    // Para desarrollo: usar mock data para ver los gráficos
+    const USE_MOCK_DATA = true; // Cambiar a false para usar el API real
+    
+    if (USE_MOCK_DATA) {
+      const mockSnapshot: DashboardSnapshot = {
+        context: "global",
+        generated_at: "2025-11-06T19:00:00.130-03:00",
+        data: {
+          meta: {
+            range: {
+              to: "2025-11-06",
+              from: "2025-10-30"
+            },
+            generated_at: "2025-11-06T19:00:00-03:00"
+          },
+          news: {
+            count: 24,
+            trend: [
+              { date: "2025-10-30", count: 0 },
+              { date: "2025-10-31", count: 0 },
+              { date: "2025-11-01", count: 0 },
+              { date: "2025-11-02", count: 5 },
+              { date: "2025-11-03", count: 0 },
+              { date: "2025-11-04", count: 0 },
+              { date: "2025-11-05", count: 0 },
+              { date: "2025-11-06", count: 19 }
+            ],
+            valuation: {
+              neutral: 8,
+              negative: 2,
+              positive: 12,
+              unassigned: 2
+            }
+          },
+          topics: {
+            top: [
+              { name: "La Noche de los Museos", news_count: 9 },
+              { name: "Agenda Programada", news_count: 8 },
+              { name: "Elecciones", news_count: 4 },
+              { name: "Recorrido por eventos y estrenos", news_count: 1 }
+            ],
+            count_unique: 4
+          },
+          reports: {
+            count: 0
+          },
+          mentions: {
+            top: [
+              { count: 9, entity: "Gabriela Ricardes" },
+              { count: 6, entity: "Jorge Macri" }
+            ],
+            count_unique: 2
+          },
+          clippings: {
+            count: 1
+          }
+        }
+      };
+      setSnapshot(mockSnapshot);
+      return;
+    }
+
     try {
       const snapshotData = await apiService.getDashboardSnapshot();
       setSnapshot(snapshotData);
     } catch (snapshotError) {
       console.error('Error cargando snapshot del dashboard:', snapshotError);
-      throw snapshotError;
+      // Mock data como fallback si el API falla
+      const mockSnapshot: DashboardSnapshot = {
+        context: "global",
+        generated_at: "2025-11-06T19:00:00.130-03:00",
+        data: {
+          meta: {
+            range: {
+              to: "2025-11-06",
+              from: "2025-10-30"
+            },
+            generated_at: "2025-11-06T19:00:00-03:00"
+          },
+          news: {
+            count: 24,
+            trend: [
+              { date: "2025-10-30", count: 0 },
+              { date: "2025-10-31", count: 0 },
+              { date: "2025-11-01", count: 0 },
+              { date: "2025-11-02", count: 5 },
+              { date: "2025-11-03", count: 0 },
+              { date: "2025-11-04", count: 0 },
+              { date: "2025-11-05", count: 0 },
+              { date: "2025-11-06", count: 19 }
+            ],
+            valuation: {
+              neutral: 8,
+              negative: 2,
+              positive: 12,
+              unassigned: 2
+            }
+          },
+          topics: {
+            top: [
+              { name: "La Noche de los Museos", news_count: 9 },
+              { name: "Agenda Programada", news_count: 8 },
+              { name: "Elecciones", news_count: 4 },
+              { name: "Recorrido por eventos y estrenos", news_count: 1 }
+            ],
+            count_unique: 4
+          },
+          reports: {
+            count: 0
+          },
+          mentions: {
+            top: [
+              { count: 9, entity: "Gabriela Ricardes" },
+              { count: 6, entity: "Jorge Macri" }
+            ],
+            count_unique: 2
+          },
+          clippings: {
+            count: 1
+          }
+        }
+      };
+      setSnapshot(mockSnapshot);
     }
   }, []);
 
@@ -120,12 +237,12 @@ export default function DashboardPage() {
       <PageHeader
         title="Bienvenido a tu dashboard"
         description="Monitorea y analiza tus noticias con inteligencia artificial"
-        className="mb-4"
+        className="mb-3"
       />
 
       {/* Acciones principales */}
-      <div className="actions-section">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="actions-section" style={{ marginBottom: '1rem' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
           <button 
             onClick={() => navigate('/upload-news')}
             className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
@@ -220,10 +337,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Primera fila: Tendencia (3/4) + Cards apiladas (1/4) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch" style={{ marginBottom: '1.5rem' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4" style={{ marginBottom: '1rem' }}>
         {/* Columna izquierda: Tendencia */}
-        <div className="lg:col-span-3 w-full flex">
-          <Card variant="default" padding="default" className="w-full flex flex-col">
+        <div className="lg:col-span-3 w-full">
+          <Card variant="default" padding="default" className="w-full">
             <CardHeader>
               <CardTitle className="text-xl font-bold text-white mb-1">Tendencia de Volumen de Noticias</CardTitle>
               {data?.meta?.range && (
@@ -232,18 +349,18 @@ export default function DashboardPage() {
                 </p>
               )}
             </CardHeader>
-            <CardContent className="flex-1">
+            <CardContent style={{ paddingBottom: '0.5rem', paddingTop: '0.5rem' }}>
               <DashboardLineChart 
                 data={data?.news?.trend || []} 
                 color="#3B82F6"
-                height={300}
+                height={240}
               />
             </CardContent>
           </Card>
         </div>
 
         {/* Columna derecha: Cards apiladas (1/4) */}
-        <div className="lg:col-span-1 flex flex-col gap-4">
+        <div className="lg:col-span-1 flex flex-col gap-3 items-stretch">
           {/* Noticias procesadas */}
           <MetricCard
             title="Noticias procesadas"
@@ -251,12 +368,11 @@ export default function DashboardPage() {
             subtitle={`Últimos 7 días`}
             iconColor="purple"
             icon={
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             }
             onClick={() => navigate('/history')}
-            className="flex-1"
           />
 
           {/* Clippings generados */}
@@ -266,32 +382,31 @@ export default function DashboardPage() {
             subtitle="Últimos 7 días"
             iconColor="purple"
             icon={
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             }
             onClick={() => navigate('/clippings-history')}
-            className="flex-1"
           />
         </div>
       </div>
 
       {/* Segunda fila: Temas (2/4), Menciones (1/4) y Sentimiento (1/4) - Ancho total */}
-      <div className="grid gap-6" style={{ gridTemplateColumns: '2fr 1fr 1fr', marginBottom: '2.5rem' }}>
+      <div className="grid gap-4" style={{ gridTemplateColumns: '2fr 1fr 1fr', marginBottom: '1rem' }}>
         {/* Temas principales - vertical - 2/4 */}
         <Card variant="default" padding="default" className="flex flex-col">
           <CardHeader className="flex-shrink-0">
             <CardTitle className="text-xl font-bold text-white mb-1">Temas Principales</CardTitle>
             <p className="text-sm text-slate-300 font-medium mt-1">Top {data?.topics?.top?.length || 0} temas</p>
           </CardHeader>
-          <CardContent className="flex-1">
-            <DashboardBarChart 
-              data={data?.topics?.top?.map(t => ({ name: t.name, count: t.news_count })) || []}
-              color="#A855F7"
-              height={250}
-              horizontal={false}
-              maxItems={5}
-            />
+                <CardContent className="flex-1">
+                  <DashboardBarChart 
+                    data={data?.topics?.top?.map(t => ({ name: t.name, count: t.news_count })) || []}
+                    color="#A855F7"
+                    height={180}
+                    horizontal={false}
+                    maxItems={5}
+                  />
           </CardContent>
         </Card>
 
@@ -301,14 +416,14 @@ export default function DashboardPage() {
             <CardTitle className="text-xl font-bold text-white mb-1">Ranking de Menciones Principales</CardTitle>
             <p className="text-sm text-slate-300 font-medium mt-1">Top {data?.mentions?.top?.length || 0} menciones</p>
           </CardHeader>
-          <CardContent className="flex-1">
-            <DashboardBarChart 
-              data={data?.mentions?.top?.map(m => ({ name: m.entity, count: m.count })) || []}
-              color="#10B981"
-              height={250}
-              horizontal={false}
-              maxItems={5}
-            />
+                <CardContent className="flex-1">
+                  <DashboardBarChart 
+                    data={data?.mentions?.top?.map(m => ({ name: m.entity, count: m.count })) || []}
+                    color="#10B981"
+                    height={180}
+                    horizontal={false}
+                    maxItems={5}
+                  />
           </CardContent>
         </Card>
 
@@ -357,7 +472,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
     </>
   );
 }

@@ -46,8 +46,16 @@ export default function DashboardBarChart({
   const displayData = data.slice(0, maxItems);
   const total = displayData.reduce((sum, item) => sum + item.count, 0);
 
+  // Función para truncar labels largos (Chart.js no soporta saltos de línea en labels del eje X)
+  const formatLabel = (text: string, maxLength: number = 12): string => {
+    if (text.length <= maxLength) {
+      return text;
+    }
+    return text.substring(0, maxLength) + '...';
+  };
+
   const chartData = {
-    labels: displayData.map(item => item.name),
+    labels: displayData.map(item => formatLabel(item.name)),
     datasets: [
       {
         label: 'Cantidad',
@@ -88,6 +96,11 @@ export default function DashboardBarChart({
         },
         displayColors: true,
         callbacks: {
+          title: function(context: any) {
+            // Mostrar el nombre completo en el tooltip
+            const index = context[0].dataIndex;
+            return displayData[index]?.name || '';
+          },
           label: function(context: any) {
             const value = context.parsed.y || context.parsed.x;
             const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
@@ -107,12 +120,19 @@ export default function DashboardBarChart({
         ticks: { 
           color: '#cbd5e1',
           font: { 
-            size: horizontal ? 12 : 11,
+            size: horizontal ? 12 : 10,
             weight: 500,
             family: 'system-ui, -apple-system, sans-serif'
           },
-          maxRotation: horizontal ? 0 : 45,
+          maxRotation: 0,
           minRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: horizontal ? undefined : 8,
+          callback: function(_value: any, index: number) {
+            const label = displayData[index]?.name || '';
+            // En resoluciones pequeñas, truncar más agresivamente
+            return label.length > 10 ? label.substring(0, 10) + '...' : label;
+          },
         },
       },
       y: {

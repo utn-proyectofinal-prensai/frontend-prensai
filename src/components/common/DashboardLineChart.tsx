@@ -71,6 +71,14 @@ export default function DashboardLineChart({
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        bottom: 0,
+        top: 0,
+        left: 0,
+        right: 0
+      }
+    },
     plugins: {
       legend: {
         display: false,
@@ -119,6 +127,9 @@ export default function DashboardLineChart({
             weight: 500,
             family: 'system-ui, -apple-system, sans-serif'
           },
+          padding: 0,
+          maxRotation: 0,
+          autoSkip: false,
         },
       },
       y: {
@@ -141,7 +152,7 @@ export default function DashboardLineChart({
   };
 
   return (
-    <div style={{ height: `${height}px` }}>
+    <div style={{ height: `${height - 20}px` }}>
       <Line data={chartData} options={options} />
     </div>
   );

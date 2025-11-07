@@ -334,7 +334,7 @@ export default function AdvancedMetricsCharts({ metricas, chartType, showOnlyPer
 
   return (
     <div>
-      <div className="h-60">
+      <div className="h-48">
         {renderChart()}
       </div>
       
