@@ -39,7 +39,7 @@ export default function NewsTable({
           <tr>
             {showCheckboxes && <th>Seleccionar</th>}
             {showEditButton && <th>Acción</th>}
-            <th>Título</th>
+            <th className="history-table-title-col">Título</th>
             <th>Fecha</th>
             <th>Medio</th>
             <th>Link</th>
@@ -93,7 +93,7 @@ export default function NewsTable({
                   </div>
                 </td>
               )}
-              <td>
+              <td className="history-table-title-col">
                 <div className="history-table-cell-content font-semibold">
                   {item.title}
                 </div>

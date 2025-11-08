@@ -316,22 +316,22 @@ export default function DashboardPage() {
           </button>
 
           <button 
-              onClick={() => navigate('/settings')}
-              className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
-              style={{ padding: '0.5rem', minHeight: 'auto' }}
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
-                  <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Administración</h3>
-                  <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Gestiona temas y menciones</p>
-                </div>
+            onClick={() => navigate('/settings')}
+            className="upload-news-panel group hover:scale-105 transition-all duration-300 cursor-pointer text-left"
+            style={{ padding: '0.5rem', minHeight: 'auto' }}
+          >
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-cyan-500/30 transition-all duration-300 border border-blue-300/30 shadow-lg" style={{ marginRight: '1rem' }}>
+                <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
               </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold mb-1 text-white drop-shadow-sm">Administración</h3>
+                <p className="text-blue-300 text-sm leading-relaxed font-medium drop-shadow-sm">Gestiona temas y menciones</p>
+              </div>
+            </div>
           </button>
         </div>
       </div>
@@ -357,7 +357,7 @@ export default function DashboardPage() {
               />
             </CardContent>
           </Card>
-        </div>
+      </div>
 
         {/* Columna derecha: Cards apiladas (1/4) */}
         <div className="lg:col-span-1 flex flex-col gap-3 items-stretch">
@@ -466,9 +466,9 @@ export default function DashboardPage() {
                 <div className="text-center">
                   <div className="text-2xl mb-2">📊</div>
                   <div className="text-sm">No hay datos disponibles</div>
-                </div>
               </div>
-            )}
+            </div>
+          )}
           </CardContent>
         </Card>
       </div>

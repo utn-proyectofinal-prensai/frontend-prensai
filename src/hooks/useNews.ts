@@ -11,10 +11,11 @@ import type {
 interface UseNewsFilters {
   page?: number;
   limit?: number;
-  topic?: string;
-  media?: string;
-  date_from?: string;
-  date_to?: string;
+  topic_id?: number;
+  start_date?: string;
+  end_date?: string;
+  publication_type?: string;
+  valuation?: string;
   search?: string;
   status?: string;
 }
@@ -43,7 +44,20 @@ export function useNews(initialFilters?: UseNewsFilters): UseNewsReturn {
       setLoading(true);
       setError(null);
       
-      const response: NewsListResponse = await apiService.getNews(filters);
+      // Mapear los filtros al formato que espera apiService, solo incluyendo los que tienen valor
+      const apiFilters: any = {};
+      
+      if (filters.page !== undefined) apiFilters.page = filters.page;
+      if (filters.limit !== undefined) apiFilters.limit = filters.limit;
+      if (filters.topic_id !== undefined && filters.topic_id !== null) apiFilters.topic_id = filters.topic_id;
+      if (filters.start_date !== undefined && filters.start_date !== null && filters.start_date !== '') apiFilters.start_date = filters.start_date;
+      if (filters.end_date !== undefined && filters.end_date !== null && filters.end_date !== '') apiFilters.end_date = filters.end_date;
+      if (filters.publication_type !== undefined && filters.publication_type !== null && filters.publication_type !== '') apiFilters.publication_type = filters.publication_type;
+      if (filters.valuation !== undefined && filters.valuation !== null && filters.valuation !== '') apiFilters.valuation = filters.valuation;
+      if (filters.search !== undefined && filters.search !== null && filters.search !== '') apiFilters.search = filters.search;
+      if (filters.status !== undefined && filters.status !== null && filters.status !== '') apiFilters.status = filters.status;
+      
+      const response: NewsListResponse = await apiService.getNews(apiFilters);
       setNews(response.news);
       setPagination(response.pagination);
     } catch (err) {
@@ -77,7 +91,9 @@ export function useNews(initialFilters?: UseNewsFilters): UseNewsReturn {
   }, [fetchNews]);
 
   const updateFilters = useCallback((newFilters: UseNewsFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    // Reemplazar completamente los filtros, no hacer merge
+    // Esto asegura que los filtros eliminados (undefined) no se mantengan
+    setFilters(newFilters);
   }, []);
 
   useEffect(() => {

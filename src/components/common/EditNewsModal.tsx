@@ -182,10 +182,10 @@ export function EditNewsModal({
                   onChange={(e) => handleInputChange('publication_type', e.target.value)}
                   options={[
                     { value: '', label: 'Seleccionar tipo' },
-                    { value: 'noticia', label: 'Noticia' },
-                    { value: 'articulo', label: 'Artículo' },
-                    { value: 'entrevista', label: 'Entrevista' },
-                    { value: 'opinion', label: 'Opinión' }
+                    { value: 'Nota', label: 'Nota' },
+                    { value: 'Declaración', label: 'Declaración' },
+                    { value: 'Entrevista', label: 'Entrevista' },
+                    { value: 'Agenda', label: 'Agenda' }
                   ]}
                 />
                 <Select

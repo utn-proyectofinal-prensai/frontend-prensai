@@ -433,6 +433,8 @@ export const apiService = {
     media?: string;
     start_date?: string;
     end_date?: string;
+    publication_type?: string;
+    valuation?: string;
     search?: string;
     status?: string;
   }): Promise<NewsListResponse> {
@@ -444,6 +446,8 @@ export const apiService = {
     if (filters?.media) params.append('media', filters.media);
     if (filters?.start_date) params.append('start_date', filters.start_date);
     if (filters?.end_date) params.append('end_date', filters.end_date);
+    if (filters?.publication_type) params.append('publication_type', filters.publication_type);
+    if (filters?.valuation) params.append('valuation', filters.valuation);
     if (filters?.search) params.append('search', filters.search);
     if (filters?.status) params.append('status', filters.status);
 
@@ -728,8 +732,14 @@ export const apiService = {
   },
 
   // Eventos/Temas (Topics)
-  async getAllTopics(): Promise<{ topics: Topic[] }> {
-    return apiRequest<{ topics: Topic[] }>('/topics');
+  async getAllTopics(queryParams?: { enabled?: boolean }): Promise<{ topics: Topic[] }> {
+    const params = new URLSearchParams();
+    if (queryParams?.enabled !== undefined) {
+      params.append('enabled', queryParams.enabled.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/topics${queryString ? `?${queryString}` : ''}`;
+    return apiRequest<{ topics: Topic[] }>(endpoint);
   },
 
   async createTopic(data: {

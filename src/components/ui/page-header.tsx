@@ -13,7 +13,6 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
       <div
         ref={ref}
         className={cn("text-center", className)}
-        style={{ marginBottom: '1.5rem' }}
         {...props}
       >
         {icon && (
