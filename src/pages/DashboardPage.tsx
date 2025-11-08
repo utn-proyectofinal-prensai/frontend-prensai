@@ -51,129 +51,12 @@ export default function DashboardPage() {
 
   // Función para cargar snapshot del dashboard
   const loadDashboardSnapshot = useCallback(async () => {
-    // Para desarrollo: usar mock data para ver los gráficos
-    const USE_MOCK_DATA = true; // Cambiar a false para usar el API real
-    
-    if (USE_MOCK_DATA) {
-      const mockSnapshot: DashboardSnapshot = {
-        context: "global",
-        generated_at: "2025-11-06T19:00:00.130-03:00",
-        data: {
-          meta: {
-            range: {
-              to: "2025-11-06",
-              from: "2025-10-30"
-            },
-            generated_at: "2025-11-06T19:00:00-03:00"
-          },
-          news: {
-            count: 24,
-            trend: [
-              { date: "2025-10-30", count: 0 },
-              { date: "2025-10-31", count: 0 },
-              { date: "2025-11-01", count: 0 },
-              { date: "2025-11-02", count: 5 },
-              { date: "2025-11-03", count: 0 },
-              { date: "2025-11-04", count: 0 },
-              { date: "2025-11-05", count: 0 },
-              { date: "2025-11-06", count: 19 }
-            ],
-            valuation: {
-              neutral: 8,
-              negative: 2,
-              positive: 12,
-              unassigned: 2
-            }
-          },
-          topics: {
-            top: [
-              { name: "La Noche de los Museos", news_count: 9 },
-              { name: "Agenda Programada", news_count: 8 },
-              { name: "Elecciones", news_count: 4 },
-              { name: "Recorrido por eventos y estrenos", news_count: 1 }
-            ],
-            count_unique: 4
-          },
-          reports: {
-            count: 0
-          },
-          mentions: {
-            top: [
-              { count: 9, entity: "Gabriela Ricardes" },
-              { count: 6, entity: "Jorge Macri" }
-            ],
-            count_unique: 2
-          },
-          clippings: {
-            count: 1
-          }
-        }
-      };
-      setSnapshot(mockSnapshot);
-      return;
-    }
-
     try {
       const snapshotData = await apiService.getDashboardSnapshot();
       setSnapshot(snapshotData);
     } catch (snapshotError) {
       console.error('Error cargando snapshot del dashboard:', snapshotError);
-      // Mock data como fallback si el API falla
-      const mockSnapshot: DashboardSnapshot = {
-        context: "global",
-        generated_at: "2025-11-06T19:00:00.130-03:00",
-        data: {
-          meta: {
-            range: {
-              to: "2025-11-06",
-              from: "2025-10-30"
-            },
-            generated_at: "2025-11-06T19:00:00-03:00"
-          },
-          news: {
-            count: 24,
-            trend: [
-              { date: "2025-10-30", count: 0 },
-              { date: "2025-10-31", count: 0 },
-              { date: "2025-11-01", count: 0 },
-              { date: "2025-11-02", count: 5 },
-              { date: "2025-11-03", count: 0 },
-              { date: "2025-11-04", count: 0 },
-              { date: "2025-11-05", count: 0 },
-              { date: "2025-11-06", count: 19 }
-            ],
-            valuation: {
-              neutral: 8,
-              negative: 2,
-              positive: 12,
-              unassigned: 2
-            }
-          },
-          topics: {
-            top: [
-              { name: "La Noche de los Museos", news_count: 9 },
-              { name: "Agenda Programada", news_count: 8 },
-              { name: "Elecciones", news_count: 4 },
-              { name: "Recorrido por eventos y estrenos", news_count: 1 }
-            ],
-            count_unique: 4
-          },
-          reports: {
-            count: 0
-          },
-          mentions: {
-            top: [
-              { count: 9, entity: "Gabriela Ricardes" },
-              { count: 6, entity: "Jorge Macri" }
-            ],
-            count_unique: 2
-          },
-          clippings: {
-            count: 1
-          }
-        }
-      };
-      setSnapshot(mockSnapshot);
+      setError('Error al cargar los datos del dashboard. Por favor, inténtalo más tarde.');
     }
   }, []);
 
@@ -462,13 +345,17 @@ export default function DashboardPage() {
                 showOnlyPercentages={true}
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-white/60">
-                <div className="text-center">
-                  <div className="text-2xl mb-2">📊</div>
-                  <div className="text-sm">No hay datos disponibles</div>
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center flex flex-col items-center">
+                  <div className="mb-3" style={{ width: '3rem', height: '3rem' }}>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full text-white/60">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-semibold text-white/70">No hay datos disponibles</h3>
+                </div>
               </div>
-            </div>
-          )}
+            )}
           </CardContent>
         </Card>
       </div>
