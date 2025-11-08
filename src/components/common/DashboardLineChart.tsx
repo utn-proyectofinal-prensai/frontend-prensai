@@ -46,10 +46,24 @@ export default function DashboardLineChart({
     );
   }
 
-  // Formatear fechas para mostrar solo día/mes
-  const labels = data.map(item => {
-    const date = new Date(item.date);
-    return `${date.getDate()}/${date.getMonth() + 1}`;
+  // Formatear fechas para mostrar día/mes, incluyendo año si hay cambio de año
+  // Usar parseo manual para evitar problemas de zona horaria
+  const dates = data.map(item => {
+    const [year, month, day] = item.date.split('-').map(Number);
+    return { year, month, day };
+  });
+  
+  // Detectar si hay cambio de año en el rango
+  const years = dates.map(d => d.year);
+  const hasYearChange = new Set(years).size > 1;
+  
+  const labels = dates.map(({ year, month, day }) => {
+    if (hasYearChange) {
+      // Si hay cambio de año, mostrar año abreviado: día/mes/año (2 dígitos)
+      return `${day}/${month}/${year.toString().slice(-2)}`;
+    }
+    // Si todas las fechas son del mismo año, mostrar solo día/mes
+    return `${day}/${month}`;
   });
 
   const chartData = {

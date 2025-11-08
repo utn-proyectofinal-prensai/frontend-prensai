@@ -275,9 +275,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Segunda fila: Temas (2/4), Menciones (1/4) y Sentimiento (1/4) - Ancho total */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: '2fr 1fr 1fr', marginBottom: '1rem' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ marginBottom: '1rem' }}>
         {/* Temas principales - vertical - 2/4 */}
-        <Card variant="default" padding="default" className="flex flex-col">
+        <Card variant="default" padding="default" className="flex flex-col md:col-span-2 lg:col-span-2">
           <CardHeader className="flex-shrink-0">
             <CardTitle className="text-xl font-bold text-white mb-1">Temas Principales</CardTitle>
             <p className="text-sm text-slate-300 font-medium mt-1">Top {data?.topics?.top?.length || 0} temas</p>
@@ -350,12 +350,12 @@ export default function DashboardPage() {
                   <div className="mb-3" style={{ width: '3rem', height: '3rem' }}>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full text-white/60">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                </svg>
                   </div>
                   <h3 className="text-sm font-semibold text-white/70">No hay datos disponibles</h3>
                 </div>
-              </div>
-            )}
+            </div>
+          )}
           </CardContent>
         </Card>
       </div>
