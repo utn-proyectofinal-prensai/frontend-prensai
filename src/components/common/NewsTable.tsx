@@ -162,7 +162,10 @@ export default function NewsTable({
                 <div className="history-table-cell-content">
                   {item.topic ? (
                     <div className="flex flex-col gap-1">
-                      <span className="inline-block bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
+                      <span 
+                        className="inline-block bg-green-500/20 text-green-300 rounded-md text-xs font-medium"
+                        style={{ padding: '0.5rem 0.75rem' }}
+                      >
                         {item.topic.name}
                       </span>
                     </div>
@@ -176,7 +179,11 @@ export default function NewsTable({
                   {item.mentions.length > 0 ? (
                     <div className="flex flex-col gap-1">
                       {item.mentions.map((mention, index) => (
-                        <span key={index} className="inline-block bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                        <span 
+                          key={index} 
+                          className="inline-block bg-blue-500/20 text-blue-300 rounded-md text-xs font-medium"
+                          style={{ padding: '0.5rem 0.75rem' }}
+                        >
                           {mention.name}
                         </span>
                       ))}
