@@ -1,5 +1,6 @@
 import type { NewsItem } from '../../services/api';
 import { Button } from '../ui/button';
+import { Tooltip } from '../ui/tooltip';
 
 interface NewsTableProps {
   news: NewsItem[];
@@ -39,7 +40,7 @@ export default function NewsTable({
           <tr>
             {showCheckboxes && <th>Seleccionar</th>}
             {showEditButton && <th>Acción</th>}
-            <th>Título</th>
+            <th className="history-table-title-col">Título</th>
             <th>Fecha</th>
             <th>Medio</th>
             <th>Link</th>
@@ -59,8 +60,8 @@ export default function NewsTable({
               <>
                 <th>Creador</th>
                 <th>Revisor</th>
-                <th>Fecha de Creación</th>
-                <th>Última Actualización</th>
+                <th>Creación</th>
+                <th>Actualización</th>
               </>
             )}
           </tr>
@@ -93,10 +94,12 @@ export default function NewsTable({
                   </div>
                 </td>
               )}
-              <td>
-                <div className="history-table-cell-content font-semibold">
-                  {item.title}
-                </div>
+              <td className="history-table-title-col">
+                <Tooltip content={item.title} position="top" onlyIfTruncated={true}>
+                  <div className="history-table-cell-content font-semibold">
+                    {item.title}
+                  </div>
+                </Tooltip>
               </td>
               <td>
                 <div className="history-table-cell-content">
@@ -121,7 +124,7 @@ export default function NewsTable({
               <td>
                 <div className="history-table-cell-content">
                   {item.publication_type === 'REVISAR MANUAL' || !item.publication_type ? (
-                    <span className="history-badge history-badge-warning">
+                    <span className="history-badge history-badge-warning history-badge-compact">
                       {item.publication_type || 'Sin tipo'}
                     </span>
                   ) : (
@@ -150,7 +153,7 @@ export default function NewsTable({
                     : item.valuation === 'REVISAR MANUAL' || !item.valuation
                     ? 'history-badge-warning'
                     : 'history-badge-neutral'
-                }`}>
+                } ${(!item.valuation || item.valuation === 'REVISAR MANUAL') ? 'history-badge-compact' : ''}`}>
                   {item.valuation === 'positive' ? 'Positiva' :
                    item.valuation === 'negative' ? 'Negativa' :
                    item.valuation === 'neutral' ? 'Neutra' :
@@ -162,7 +165,10 @@ export default function NewsTable({
                 <div className="history-table-cell-content">
                   {item.topic ? (
                     <div className="flex flex-col gap-1">
-                      <span className="inline-block bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
+                      <span 
+                        className="inline-block bg-green-500/20 text-green-300 rounded-md text-xs font-medium"
+                        style={{ padding: '0.5rem 0.75rem' }}
+                      >
                         {item.topic.name}
                       </span>
                     </div>
@@ -176,7 +182,11 @@ export default function NewsTable({
                   {item.mentions.length > 0 ? (
                     <div className="flex flex-col gap-1">
                       {item.mentions.map((mention, index) => (
-                        <span key={index} className="inline-block bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                        <span 
+                          key={index} 
+                          className="inline-block bg-blue-500/20 text-blue-300 rounded-md text-xs font-medium"
+                          style={{ padding: '0.5rem 0.75rem' }}
+                        >
                           {mention.name}
                         </span>
                       ))}
@@ -208,7 +218,7 @@ export default function NewsTable({
               <td>
                 <div className="history-table-cell-content">
                   {item.political_factor === 'REVISAR MANUAL' || !item.political_factor ? (
-                    <span className="history-badge history-badge-warning">
+                    <span className="history-badge history-badge-warning history-badge-compact">
                       {item.political_factor || 'Sin factor'}
                     </span>
                   ) : (

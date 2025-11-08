@@ -1,20 +1,29 @@
 import { useState } from 'react';
 import { useNews } from '../hooks/useNews';
-import { useEnabledTopics } from '../hooks/useTopics';
+import { useTopics } from '../hooks/useTopics';
 import { useEnabledMentions } from '../hooks/useMentions';
 import { apiService, type NewsItem } from '../services/api';
 import Snackbar from '../components/common/Snackbar';
 import { EditNewsModal } from '../components/common/EditNewsModal';
 import NewsTable from '../components/common/NewsTable';
+import NewsFilters from '../components/common/NewsFilters';
 import { Button } from '../components/ui/button';
 import { PageHeader } from '../components/ui/page-header';
 import '../styles/history.css';
 import '../styles/upload-news.css';
 
 export default function HistoryPage() {
-  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  
+  // Estados para filtros avanzados
+  const [advancedFilters, setAdvancedFilters] = useState<{
+    topic_id?: number;
+    start_date?: string;
+    end_date?: string;
+    publication_type?: string;
+    valuation?: string;
+  }>({});
 
   // Estados para el modal de edición
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -26,11 +35,12 @@ export default function HistoryPage() {
   // Hook para obtener las noticias
   const { news: newsHistory, pagination, loading: isLoading, setFilters, refetch } = useNews({ 
     page: currentPage,
-    limit: pageSize
+    limit: pageSize,
+    ...advancedFilters
   });
 
   // Hooks para obtener temas y menciones
-  const { topics: enabledTopics } = useEnabledTopics();
+  const { topics: enabledTopics } = useTopics();
   const { mentions: enabledMentions } = useEnabledMentions();
 
   // Manejar cambios de página
@@ -39,7 +49,7 @@ export default function HistoryPage() {
     setFilters({ 
       page, 
       limit: pageSize,
-      search: searchTerm || undefined
+      ...advancedFilters
     });
   };
 
@@ -50,18 +60,58 @@ export default function HistoryPage() {
     setFilters({ 
       page: 1, 
       limit: newPageSize,
-      search: searchTerm || undefined
+      ...advancedFilters
     });
   };
 
-  // Manejar cambios en la búsqueda
-  const handleSearchChange = (term: string) => {
-    setSearchTerm(term);
+  // Manejar aplicación de filtros avanzados
+  const handleApplyFilters = (filters: {
+    topic_id?: number;
+    media?: string;
+    start_date?: string;
+    end_date?: string;
+    publication_type?: string;
+    valuation?: string;
+  }) => {
+    setAdvancedFilters(filters);
     setCurrentPage(1); // Reset a la primera página
-    setFilters({ 
-      page: 1, 
-      limit: pageSize,
-      search: term || undefined
+    
+    // Construir objeto de filtros explícitamente, solo incluyendo los que tienen valor
+    const cleanFilters: any = {
+      page: 1,
+      limit: pageSize
+    };
+    
+    // Solo agregar filtros que existan y tengan valor
+    if (filters.topic_id !== undefined && filters.topic_id !== null) {
+      cleanFilters.topic_id = filters.topic_id;
+    }
+    if (filters.media !== undefined && filters.media !== null && filters.media !== '') {
+      cleanFilters.media = filters.media;
+    }
+    if (filters.start_date !== undefined && filters.start_date !== null && filters.start_date !== '') {
+      cleanFilters.start_date = filters.start_date;
+    }
+    if (filters.end_date !== undefined && filters.end_date !== null && filters.end_date !== '') {
+      cleanFilters.end_date = filters.end_date;
+    }
+    if (filters.publication_type !== undefined && filters.publication_type !== null && filters.publication_type !== '') {
+      cleanFilters.publication_type = filters.publication_type;
+    }
+    if (filters.valuation !== undefined && filters.valuation !== null && filters.valuation !== '') {
+      cleanFilters.valuation = filters.valuation;
+    }
+    
+    setFilters(cleanFilters);
+  };
+
+  // Manejar limpieza de filtros avanzados
+  const handleClearFilters = () => {
+    setAdvancedFilters({});
+    setCurrentPage(1); // Reset a la primera página
+    setFilters({
+      page: 1,
+      limit: pageSize
     });
   };
 
@@ -124,74 +174,32 @@ export default function HistoryPage() {
   return (
     <div className="history-container px-6">
       {/* Header de la página */}
-      <PageHeader
-        title="Historial de Noticias Procesadas"
-        description="Revisa todas las noticias que han sido procesadas por el sistema"
-      />
+      <div style={{ marginBottom: '0.75rem' }}>
+        <PageHeader
+          title="Historial de Noticias"
+          description="Revisa todas las noticias que han sido procesadas por el sistema"
+        />
+      </div>
 
       {/* Filtros y métricas */}
-      <div className="upload-news-panel history-filters-panel">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4 mb-4">
-          <h3 className="upload-news-section-title flex-shrink-0">Filtros de búsqueda</h3>
-          
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            {/* Búsqueda */}
-            <div className="history-filter-group flex-1">
-              <input
-                type="text"
-                placeholder="🔍 Buscar por título, fuente, tema o mención..."
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="history-filter-input"
-                  />
-                </div>
-
-            {/* Botón de filtros (TODO: implementar filtros avanzados) */}
-            <div className="history-filter-group flex-shrink-0">
-              <Button
-                variant="primary"
-                size="default"
-                icon="Search"
-                onClick={() => alert('TODO: Implementar filtros avanzados (fecha, medio, tema, etc.)')}
-              >
-                Filtrar
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Estadísticas dentro del panel */}
-        <div className="history-stats">
-          <div className="history-stat-item">
-            <div className="history-stat-value">{pagination?.count || 0}</div>
-            <div className="history-stat-label">Total</div>
-          </div>
-          <div className="history-stat-item">
-            <div className="history-stat-value">{filteredNews.length}</div>
-            <div className="history-stat-label">Mostrando</div>
-          </div>
-          <div className="history-stat-item">
-            <div className="history-stat-value">
-              {newsHistory.filter(n => n.valuation === 'positive').length}
-            </div>
-            <div className="history-stat-label">Positivas</div>
-                </div>
-          <div className="history-stat-item">
-            <div className="history-stat-value">
-              {newsHistory.filter(n => n.crisis).length}
-                </div>
-            <div className="history-stat-label">Crisis</div>
-                </div>
-              </div>
-            </div>
+      <div className="upload-news-panel history-filters-panel" style={{ marginBottom: '0.75rem' }}>
+        {/* Filtros avanzados */}
+        <NewsFilters
+          topics={enabledTopics}
+          onApplyFilters={handleApplyFilters}
+          onClearFilters={handleClearFilters}
+          currentFilters={advancedFilters}
+        />
+      </div>
 
       {/* Tabla de noticias mejorada */}
-      <div className="history-table-container">
               {isLoading ? (
-          <div className="history-loading">
-            <div className="history-loading-spinner"></div>
-            <p>Cargando historial de noticias...</p>
-                </div>
+          <div className="history-table-container">
+            <div className="history-loading">
+              <div className="history-loading-spinner"></div>
+              <p>Cargando historial de noticias...</p>
+            </div>
+          </div>
               ) : (
           <NewsTable 
             news={filteredNews} 
@@ -209,7 +217,7 @@ export default function HistoryPage() {
                   </div>
             <h3 className="text-xl font-semibold text-white mb-2">No se encontraron noticias</h3>
             <p className="text-white/70">
-              {searchTerm ? `No hay noticias que coincidan con "${searchTerm}"` : 'No hay noticias procesadas aún'}
+              {Object.keys(advancedFilters).length > 0 ? 'No hay noticias que coincidan con los filtros aplicados' : 'No hay noticias procesadas aún'}
             </p>
                 </div>
               )}
@@ -231,7 +239,7 @@ export default function HistoryPage() {
                   <option value={50}>50</option>
                 </select>
                 <span className="text-sm text-white font-medium">por página</span>
-            </div>
+              </div>
 
               {/* Información de paginación */}
               <div className="flex items-center gap-4">
@@ -277,7 +285,6 @@ export default function HistoryPage() {
             </div>
           </div>
         )}
-      </div>
 
       {/* Modal de edición */}
       {isEditModalOpen && editingNews && (
