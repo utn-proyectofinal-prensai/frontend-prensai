@@ -1,5 +1,6 @@
 import type { NewsItem } from '../../services/api';
 import { Button } from '../ui/button';
+import { Tooltip } from '../ui/tooltip';
 
 interface NewsTableProps {
   news: NewsItem[];
@@ -59,8 +60,8 @@ export default function NewsTable({
               <>
                 <th>Creador</th>
                 <th>Revisor</th>
-                <th>Fecha de Creación</th>
-                <th>Última Actualización</th>
+                <th>Creación</th>
+                <th>Actualización</th>
               </>
             )}
           </tr>
@@ -94,9 +95,11 @@ export default function NewsTable({
                 </td>
               )}
               <td className="history-table-title-col">
-                <div className="history-table-cell-content font-semibold">
-                  {item.title}
-                </div>
+                <Tooltip content={item.title} position="top" onlyIfTruncated={true}>
+                  <div className="history-table-cell-content font-semibold">
+                    {item.title}
+                  </div>
+                </Tooltip>
               </td>
               <td>
                 <div className="history-table-cell-content">
@@ -121,7 +124,7 @@ export default function NewsTable({
               <td>
                 <div className="history-table-cell-content">
                   {item.publication_type === 'REVISAR MANUAL' || !item.publication_type ? (
-                    <span className="history-badge history-badge-warning">
+                    <span className="history-badge history-badge-warning history-badge-compact">
                       {item.publication_type || 'Sin tipo'}
                     </span>
                   ) : (
@@ -150,7 +153,7 @@ export default function NewsTable({
                     : item.valuation === 'REVISAR MANUAL' || !item.valuation
                     ? 'history-badge-warning'
                     : 'history-badge-neutral'
-                }`}>
+                } ${(!item.valuation || item.valuation === 'REVISAR MANUAL') ? 'history-badge-compact' : ''}`}>
                   {item.valuation === 'positive' ? 'Positiva' :
                    item.valuation === 'negative' ? 'Negativa' :
                    item.valuation === 'neutral' ? 'Neutra' :
@@ -215,7 +218,7 @@ export default function NewsTable({
               <td>
                 <div className="history-table-cell-content">
                   {item.political_factor === 'REVISAR MANUAL' || !item.political_factor ? (
-                    <span className="history-badge history-badge-warning">
+                    <span className="history-badge history-badge-warning history-badge-compact">
                       {item.political_factor || 'Sin factor'}
                     </span>
                   ) : (

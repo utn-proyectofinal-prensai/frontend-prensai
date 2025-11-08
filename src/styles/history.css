@@ -201,31 +201,6 @@
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* Indicador visual de scroll - siempre visible en el borde derecho */
-.history-table-container::after {
-  content: '→';
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 1.5rem;
-  pointer-events: none;
-  z-index: 10;
-  opacity: 0.6;
-  animation: pulse-scroll 2s ease-in-out infinite;
-}
-
-@keyframes pulse-scroll {
-  0%, 100% {
-    opacity: 0.4;
-    transform: translateY(-50%) translateX(0);
-  }
-  50% {
-    opacity: 0.7;
-    transform: translateY(-50%) translateX(5px);
-  }
-}
 
 .history-table {
   width: 100%;
@@ -339,6 +314,12 @@
   background-color: rgba(245, 158, 11, 0.2);
   color: rgb(245, 158, 11);
   border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.history-badge-compact {
+  font-size: 0.625rem;
+  padding: 0.2rem 0.5rem;
+  white-space: nowrap;
 }
 
 .history-badge-processed {
