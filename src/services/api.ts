@@ -1,7 +1,9 @@
 // Configuración de la API
 import { AUTH_MESSAGES, API_MESSAGES } from '../constants/messages';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
+// TEMPORAL: Apuntando a producción. Revertir después de las pruebas.
+// TODO: Cambiar de vuelta a localhost cuando termine la prueba
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://prensai-api-325152031261.us-central1.run.app/api/v1'
 
 
 // Tipos de datos según la nueva API

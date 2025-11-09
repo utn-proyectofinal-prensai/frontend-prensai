@@ -123,8 +123,11 @@ export default function DashboardLineChart({
         callbacks: {
           title: function(context: any) {
             const index = context[0].dataIndex;
-            const date = new Date(data[index].date);
-            return `Día: ${date.toLocaleDateString('es-AR')}`;
+            // Usar parseo manual para evitar problemas de zona horaria
+            const dateString = data[index].date;
+            const [year, month, day] = dateString.split('-').map(Number);
+            // Formatear como día/mes/año
+            return `Día: ${day}/${month}/${year}`;
           },
           label: function(context: any) {
             return `Noticias: ${context.parsed.y}`;

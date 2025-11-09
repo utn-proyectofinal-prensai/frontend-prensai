@@ -51,6 +51,9 @@ export { default as ClippingsFilters } from './ClippingsFilters';
 // Componentes de badges
 export { default as TopicBadge } from './TopicBadge';
 
+// Componentes de resultados
+export { default as BatchProcessResultsModal } from './BatchProcessResultsModal';
+
 // Componentes de métricas
 export { default as AdvancedMetricsCharts } from './AdvancedMetricsCharts';
 export { default as DashboardLineChart } from './DashboardLineChart';
