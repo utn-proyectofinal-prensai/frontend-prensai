@@ -7,7 +7,6 @@ import {
   Snackbar
 } from '../components/common';
 import { Button } from '../components/ui/button';
-import { LoadingSpinner } from '../components/ui/loading-spinner';
 import { LoadingModal } from '../components/ui/loading-modal';
 import '../styles/upload-news.css';
 
@@ -38,8 +37,7 @@ export default function UploadNewsPage() {
   
   // Estados para mensajes
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [successVariant, setSuccessVariant] = useState<'success' | 'warning'>('success');
+  
 
   // Estados para la nueva interfaz
   const [activeSection, setActiveSection] = useState<'topics' | 'mentions' | 'urls' | 'summary'>('topics');
@@ -64,6 +62,58 @@ export default function UploadNewsPage() {
   const handleSectionChange = (section: 'topics' | 'mentions' | 'urls' | 'summary') => {
     setActiveSection(section);
     setIsDropdownOpen(false);
+  };
+
+  // Funciones para navegación entre pasos
+  const goToNextStep = () => {
+    // Si estamos en summary, procesar las noticias
+    if (activeSection === 'summary') {
+      processNews();
+      return;
+    }
+    
+      const steps: Array<'topics' | 'mentions' | 'urls' | 'summary'> = ['topics', 'mentions', 'urls', 'summary'];
+      const currentIndex = steps.indexOf(activeSection);
+      if (currentIndex < steps.length - 1) {
+        const nextStep = steps[currentIndex + 1];
+        // Verificar que el paso actual sea válido antes de avanzar
+        if (
+          (activeSection === 'topics' && isTopicsStepValid) ||
+          (activeSection === 'mentions' && isMentionsStepValid) ||
+          (activeSection === 'urls' && isUrlsStepValid)
+        ) {
+          setActiveSection(nextStep);
+        }
+      }
+  };
+
+  const goToPreviousStep = () => {
+    const steps: Array<'topics' | 'mentions' | 'urls' | 'summary'> = ['topics', 'mentions', 'urls', 'summary'];
+    const currentIndex = steps.indexOf(activeSection);
+    if (currentIndex > 0) {
+      setActiveSection(steps[currentIndex - 1]);
+    }
+  };
+
+  // Determinar si se puede avanzar
+  const canGoNext = () => {
+    switch (activeSection) {
+      case 'topics':
+        return isTopicsStepValid;
+      case 'mentions':
+        return isMentionsStepValid;
+      case 'urls':
+        return isUrlsStepValid;
+      case 'summary':
+        return isReadyToProcess && !isProcessing; // Habilitado si está listo para procesar
+      default:
+        return false;
+    }
+  };
+
+  // Determinar si se puede retroceder
+  const canGoPrevious = () => {
+    return activeSection !== 'topics';
   };
 
   // Función para obtener el texto del paso actual
@@ -108,44 +158,27 @@ export default function UploadNewsPage() {
 
     setIsProcessing(true);
 
-    try {
-      const requestData: BatchProcessRequest = {
-        urls: validUrls,
-        topics: workflowState.selectedTopics,
-        mentions: workflowState.selectedMentions
-      };
+    const requestData: BatchProcessRequest = {
+      urls: validUrls,
+      topics: workflowState.selectedTopics,
+      mentions: workflowState.selectedMentions
+    };
 
+    try {
       const response = await batchProcess(requestData);
 
-      const allOk = response.received === response.persisted && response.persisted > 0;
-      const partial = response.persisted > 0 && response.errors.length > 0;
-      const none = response.persisted === 0 && response.errors.length > 0;
+      // Limpiar el workflow antes de navegar
+      clearUrls();
+      clearTopics();
+      clearMentions();
 
-      if (allOk) {
-        setSuccessVariant('success');
-        setSuccessMessage(`Listo: ${response.persisted}/${response.received} procesadas correctamente.`);
-        
-        // Redirigir al dashboard de histórico después de 2 segundos
-        setTimeout(() => {
-          navigate('/history');
-        }, 2000);
-      } else if (partial) {
-        setSuccessVariant('warning');
-        setSuccessMessage(`Parcial: ${response.persisted}/${response.received} OK. ${response.errors.length} con error.`);
-        
-        // Redirigir al dashboard de histórico después de 3 segundos (más tiempo para leer el mensaje)
-        setTimeout(() => {
-          navigate('/history');
-        }, 3000);
-      } else if (none) {
-        setErrorMessage('No se pudo procesar ninguna noticia. Revisa los links ingresados.');
-      } else {
-        setSuccessVariant('warning');
-        setSuccessMessage(`Resultado: ${response.persisted}/${response.received} procesadas.`);
-      }
-    } catch (error) {
+      // Navegar a la página de resumen con los resultados
+      navigate('/batch-process-results', { state: { results: response } });
+    } catch (error: any) {
       console.error('Error procesando noticias:', error);
       
+      // batchProcessNews ahora maneja los errores 422 y devuelve BatchProcessResponse
+      // Si llegamos aquí, es un error real (red, 500, etc.)
       const errorMessage = parseApiError(error, 'Error al procesar las noticias');
       setErrorMessage(errorMessage);
     } finally {
@@ -165,8 +198,11 @@ export default function UploadNewsPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
             <h3 className="upload-news-section-title">Paso 1: Temas a analizar</h3>
             <div className="upload-news-tip">
-              <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Selecciona al menos un tema para continuar al siguiente paso
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Selecciona al menos un tema para continuar al siguiente paso
               </p>
             </div>
             <div className="upload-news-section-actions">
@@ -201,15 +237,16 @@ export default function UploadNewsPage() {
               <div
                 key={topic.id}
                 onClick={() => toggleTopic(topic.name)}
-                className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] ${
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] min-h-[4rem] flex flex-col relative ${
                   isSelected
-                    ? 'border-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20'
-                    : 'border-white/20 bg-white/5 hover:border-blue-400/50 hover:bg-white/10'
+                    ? 'border-green-400 bg-green-500/10 shadow-lg shadow-green-400/20'
+                    : 'border-white/20 bg-white/5 hover:border-green-400/50 hover:bg-white/10'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                    isSelected ? 'border-blue-400 bg-blue-400' : 'border-white/30'
+                {/* Checkbox arriba a la derecha - completamente dentro de la card */}
+                <div className="absolute top-3 right-3">
+                  <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 ${
+                    isSelected ? 'border-green-400 bg-green-400' : 'border-white/30'
                   }`}>
                     {isSelected && (
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -217,10 +254,13 @@ export default function UploadNewsPage() {
                       </svg>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-white">{topic.name}</h4>
+                </div>
+                {/* Contenido centrado */}
+                <div className="flex-1 flex items-center justify-center" style={{ paddingRight: '2.25rem', paddingLeft: '0.5rem' }}>
+                  <div className="flex flex-col items-center justify-center text-center w-full">
+                    <h4 className="font-medium text-white leading-tight break-words">{topic.name}</h4>
                     {topic.description && (
-                      <p className="text-sm text-white/70 mt-1">{topic.description}</p>
+                      <p className="text-sm text-white/70 mt-1 leading-tight break-words">{topic.description}</p>
                     )}
                   </div>
                 </div>
@@ -240,8 +280,11 @@ export default function UploadNewsPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
             <h3 className="upload-news-section-title">Paso 2: Menciones a buscar</h3>
             <div className="upload-news-tip">
-              <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Selecciona al menos una mención para continuar al siguiente paso
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Selecciona al menos una mención para continuar al siguiente paso
               </p>
             </div>
             <div className="upload-news-section-actions">
@@ -276,15 +319,16 @@ export default function UploadNewsPage() {
               <div
                 key={mention.id}
                 onClick={() => toggleMention(mention.name)}
-                className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] ${
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] min-h-[4rem] flex flex-col relative ${
                   isSelected
-                    ? 'border-green-400 bg-green-500/10 shadow-lg shadow-green-500/20'
-                    : 'border-white/20 bg-white/5 hover:border-green-400/50 hover:bg-white/10'
+                    ? 'border-blue-400 bg-blue-500/10 shadow-lg shadow-blue-400/20'
+                    : 'border-white/20 bg-white/5 hover:border-blue-400/50 hover:bg-white/10'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                    isSelected ? 'border-green-400 bg-green-400' : 'border-white/30'
+                {/* Checkbox arriba a la derecha - completamente dentro de la card */}
+                <div className="absolute top-3 right-3">
+                  <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 ${
+                    isSelected ? 'border-blue-400 bg-blue-400' : 'border-white/30'
                   }`}>
                     {isSelected && (
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -292,9 +336,11 @@ export default function UploadNewsPage() {
                       </svg>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-white">{mention.name}</h4>
-                    <p className="text-sm text-white/70 mt-1">Menciones de {mention.name}</p>
+                </div>
+                {/* Contenido centrado */}
+                <div className="flex-1 flex items-center justify-center" style={{ paddingRight: '2.25rem', paddingLeft: '0.5rem' }}>
+                  <div className="flex flex-col items-center justify-center text-center w-full">
+                    <h4 className="font-medium text-white leading-tight break-words">{mention.name}</h4>
                   </div>
                 </div>
               </div>
@@ -307,9 +353,8 @@ export default function UploadNewsPage() {
 
   // Componente de carga de URLs mejorado
   const UrlsSection = () => {
-    // Estado local para el textarea
+    // Estado local para el input
     const [localTextArea, setLocalTextArea] = useState('');
-    const [previewUrls, setPreviewUrls] = useState<Array<{url: string, isValid: boolean, error?: string}>>([]);
 
     // Función de validación de URL
     const isValidUrl = (url: string): boolean => {
@@ -325,171 +370,152 @@ export default function UploadNewsPage() {
       }
     };
 
-    // Actualizar preview cuando cambia el texto
-    const updatePreview = (text: string) => {
-      if (!text.trim()) {
-        setPreviewUrls([]);
-        return;
+    // Analizar URLs en el textarea para detectar duplicados e inválidas
+    const analyzeUrls = () => {
+      const text = localTextArea.trim();
+      if (!text) {
+        return { valid: [], duplicates: [], invalid: [] };
       }
-      
+
       const urlLines = text
         .split('\n')
         .map(url => url.trim())
         .filter(url => url.length > 0);
-      
-      // Detectar URLs repetidas
+
+      const existingUrls = workflowState.urls.map(u => u.url.toLowerCase());
       const urlCounts = new Map<string, number>();
+      const valid: string[] = [];
+      const duplicates: string[] = [];
+      const invalid: string[] = [];
+
       urlLines.forEach(url => {
-        urlCounts.set(url.toLowerCase(), (urlCounts.get(url.toLowerCase()) || 0) + 1);
+        const urlLower = url.toLowerCase();
+        urlCounts.set(urlLower, (urlCounts.get(urlLower) || 0) + 1);
       });
-      
-      // Verificar duplicados con URLs ya existentes
-      const existingUrls = workflowState.urls.map(url => url.url.toLowerCase());
-      
-      const urls = urlLines.map(url => {
-        const isValid = isValidUrl(url);
-        const isDuplicate = urlCounts.get(url.toLowerCase())! > 1;
-        const isExistingDuplicate = existingUrls.includes(url.toLowerCase());
-        
-        let error;
-        if (!isValid) {
-          error = 'URL inválida';
-        } else if (isDuplicate || isExistingDuplicate) {
-          error = 'URL duplicada';
+
+      urlLines.forEach(url => {
+        const urlLower = url.toLowerCase();
+        const isDuplicateInText = urlCounts.get(urlLower)! > 1;
+        const isExistingDuplicate = existingUrls.includes(urlLower);
+
+        if (!isValidUrl(url)) {
+          invalid.push(url);
+        } else if (isDuplicateInText || isExistingDuplicate) {
+          duplicates.push(url);
+        } else {
+          valid.push(url);
         }
-        
-        return {
-          url,
-          isValid: isValid && !isDuplicate && !isExistingDuplicate,
-          error
-        };
       });
-      
-      setPreviewUrls(urls);
+
+      return { valid, duplicates, invalid };
     };
 
-    const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value;
-      setLocalTextArea(value);
-      updatePreview(value);
-    };
+    const urlAnalysis = analyzeUrls();
 
     const handleAddUrls = () => {
-      if (previewUrls.length === 0) return;
-      
-      // Solo agregar URLs válidas
-      const validUrls = previewUrls
-        .filter(item => item.isValid)
-        .map(item => item.url);
-      
-      // Usar la nueva función para agregar múltiples URLs
-      addMultipleUrls(validUrls);
-      
-      setLocalTextArea('');
-      setPreviewUrls([]);
+      if (urlAnalysis.valid.length > 0) {
+        addMultipleUrls(urlAnalysis.valid);
+        setLocalTextArea('');
+      }
     };
 
-    const validCount = previewUrls.filter(item => item.isValid).length;
+    // Verificar si hay al menos una URL válida en el texto
+    const hasValidUrls = () => {
+      return urlAnalysis.valid.length > 0;
+    };
 
     return (
     <div className="upload-news-section">
       <div className="upload-news-section-header">
         <div className="flex-1">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-1 lg:gap-0">
           <h3 className="upload-news-section-title">Paso 3: Links de noticias</h3>
           <div className="upload-news-tip">
-            <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Agrega al menos un link válido para poder procesar las noticias
+            <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Agrega al menos un link válido para poder procesar las noticias
               </p>
             </div>
-          <div className="upload-news-section-actions">
-          <Button
-              onClick={handleAddUrls}
-              disabled={validCount === 0}
-              variant="success"
-              size="default"
-              icon="Plus"
-          >
-              Agregar {validCount} links
-          </Button>
-          <Button
-            onClick={clearUrls}
-            variant="secondary"
-            size="default"
-            icon="Refresh"
-          >
-              Limpiar todo
-          </Button>
-          </div>
         </div>
         </div>
       </div>
 
-      {/* Opciones de carga de URLs */}
-      <div className="space-y-4">
-        
-        {/* Carga de URLs */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <div className="mb-4">
-            <div className="flex items-center gap-3 mb-2">
-              <h4 className="text-lg font-semibold text-white leading-tight">📋 Agregar links</h4>
-              <p className="text-white/70 text-sm">Pegá los links, uno por línea</p>
-            </div>
-          </div>
-
-          {/* Textarea de URLs */}
-        <div className="relative">
+      {/* Input de URLs */}
+      <div className="space-y-3">
+        <div>
+          <h4 className="text-lg font-semibold text-white mb-2">Agregar links</h4>
+          <p className="text-white/70 text-sm mb-3">Pegá los links, uno por línea</p>
           <textarea
-              value={localTextArea}
-              onChange={handleTextChange}
-              placeholder="https://ejemplo.com/noticia1&#10;https://ejemplo.com/noticia2&#10;https://ejemplo.com/noticia3"
-              className="w-full h-28 sm:h-32 bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-xl p-3 sm:p-4 text-white placeholder-white/50 resize-none transition-all duration-300 focus:outline-none focus:border-blue-400 text-sm sm:text-base"
+            value={localTextArea}
+            onChange={(e) => {
+              setLocalTextArea(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.ctrlKey && localTextArea.trim()) {
+                e.preventDefault();
+                handleAddUrls();
+              }
+            }}
+            placeholder="https://ejemplo.com/noticia1&#10;https://ejemplo.com/noticia2&#10;https://ejemplo.com/noticia3"
+            className="w-full h-32 bg-blue-500/20 backdrop-filter backdrop-blur-sm border border-blue-400/30 rounded-xl p-4 text-white placeholder-white/50 resize-none transition-all duration-300 focus:outline-none focus:border-blue-400 focus:bg-blue-500/30 text-sm sm:text-base"
           />
-          <div className="absolute bottom-3 right-3 text-xs text-white/50">
-              {previewUrls.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-green-400">✅ {previewUrls.filter(item => item.isValid).length} válidas</span>
-                  {previewUrls.filter(item => !item.isValid).length > 0 && (
-                    <span className="text-red-400">❌ {previewUrls.filter(item => !item.isValid).length} inválidas</span>
-                  )}
-                  {previewUrls.filter(item => item.error === 'URL duplicada').length > 0 && (
-                    <span className="text-yellow-400">⚠️ {previewUrls.filter(item => item.error === 'URL duplicada').length} duplicadas</span>
-                  )}
+          {/* Botones de acción debajo del textarea */}
+          <div className="flex gap-3 mt-3">
+            <Button
+              onClick={handleAddUrls}
+              disabled={!hasValidUrls()}
+              variant="success"
+              size="default"
+              icon="Plus"
+            >
+              Agregar {localTextArea.split('\n').filter(l => l.trim()).length > 0 ? localTextArea.split('\n').filter(l => l.trim()).length : ''} link{localTextArea.split('\n').filter(l => l.trim()).length !== 1 ? 's' : ''}
+            </Button>
+            <Button
+              onClick={clearUrls}
+              variant="secondary"
+              size="default"
+              icon="Refresh"
+            >
+              Limpiar todo
+            </Button>
+          </div>
+          {/* Mostrar URLs duplicadas e inválidas */}
+          {(urlAnalysis.duplicates.length > 0 || urlAnalysis.invalid.length > 0) && (
+            <div className="mt-2 p-3 bg-black/20 rounded-lg border border-white/10">
+              {urlAnalysis.duplicates.length > 0 && (
+                <div className="mb-2">
+                  <p className="text-yellow-400 text-sm font-medium mb-1">
+                    ⚠️ {urlAnalysis.duplicates.length} URL{urlAnalysis.duplicates.length !== 1 ? 's' : ''} duplicada{urlAnalysis.duplicates.length !== 1 ? 's' : ''}:
+                  </p>
+                  <ul className="list-disc list-inside text-yellow-300/80 text-xs space-y-1">
+                    {urlAnalysis.duplicates.map((url, index) => (
+                      <li key={index} className="truncate">{url}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
-          </div>
-        </div>
-        
-          {/* Preview de URLs */}
-          {previewUrls.length > 0 && (
-            <div className="mt-4 p-4 bg-black/20 rounded-lg border border-white/10">
-              <h4 className="font-medium text-white mb-3">Vista previa de links:</h4>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {previewUrls.map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
-                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                      item.isValid 
-                        ? 'bg-green-400' 
-                        : item.error === 'URL duplicada'
-                        ? 'bg-yellow-400'
-                        : 'bg-red-400'
-                    }`}></div>
-                    <span className="text-white/80 truncate flex-1">{item.url}</span>
-                    {item.error && <span className={`text-xs ${
-                      item.error === 'URL duplicada' ? 'text-yellow-400' : 'text-red-400'
-                    }`}>{item.error}</span>}
-          </div>
-                ))}
-        </div>
+              {urlAnalysis.invalid.length > 0 && (
+                <div>
+                  <p className="text-red-400 text-sm font-medium mb-1">
+                    ❌ {urlAnalysis.invalid.length} URL{urlAnalysis.invalid.length !== 1 ? 's' : ''} inválida{urlAnalysis.invalid.length !== 1 ? 's' : ''}:
+                  </p>
+                  <ul className="list-disc list-inside text-red-300/80 text-xs space-y-1">
+                    {urlAnalysis.invalid.map((url, index) => (
+                      <li key={index} className="truncate">{url}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>
-
       </div>
 
       {/* Lista de URLs mejorada */}
           {workflowState.urls.length > 0 && (
-        <div className="upload-news-url-list">
+        <div className="upload-news-url-list" style={{ marginTop: '0.5rem' }}>
           <div className="upload-news-url-list-header">
             <h4 className="upload-news-url-list-title">
                   Links a procesar ({workflowState.urls.length})
@@ -522,12 +548,20 @@ export default function UploadNewsPage() {
                         <p className="text-red-400 text-sm mt-1">{url.error}</p>
                       )}
                     </div>
-                    <Button
-                      onClick={() => removeUrl(url.id)}
-                      variant="danger"
-                      size="icon"
-                      icon="Delete"
-                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => window.open(url.url, '_blank')}
+                        variant="ghost"
+                        size="icon"
+                        icon="ExternalLink"
+                      />
+                      <Button
+                        onClick={() => removeUrl(url.id)}
+                        variant="ghost"
+                        size="icon"
+                        icon="Delete"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -538,134 +572,184 @@ export default function UploadNewsPage() {
   };
 
   // Componente de resumen
-  const SummarySection = () => (
-    <div className="upload-news-section">
-      <div className="upload-news-section-header">
-        <div className="flex-1">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
-          <h3 className="upload-news-section-title">Paso 4: Procesar noticias</h3>
-          <div className="upload-news-tip">
-            <p className="upload-news-tip-text">
-              💡 <strong>Tip:</strong> Revisa la configuración antes de procesar las noticias
-            </p>
+  const SummarySection = () => {
+    const [expandedTopics, setExpandedTopics] = useState(false);
+    const [expandedMentions, setExpandedMentions] = useState(false);
+    const [expandedLinks, setExpandedLinks] = useState(false);
+
+    return (
+      <div className="upload-news-section">
+        <div className="upload-news-section-header">
+          <div className="flex-1">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
+            <h3 className="upload-news-section-title">Paso 4: Procesar noticias</h3>
+            <div className="upload-news-tip">
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Revisa la configuración antes de procesar las noticias
+              </p>
+            </div>
           </div>
-          <div className="upload-news-section-actions">
-            <Button
-              onClick={processNews}
-              disabled={!isReadyToProcess || isProcessing}
-              variant="success"
-              size="lg"
-              icon="Generate"
+          </div>
+                      </div>
+
+        {/* Dropdowns de resumen - Ocupan todo el ancho */}
+        <div>
+          {/* Dropdown de Temas */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden" style={{ marginBottom: '1.5rem' }}>
+            <button
+              onClick={() => setExpandedTopics(!expandedTopics)}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
             >
-              {isProcessing ? (
-                <>
-                  <LoadingSpinner size="sm" variant="simple" className="mr-2" />
-                  <span>Procesando...</span>
-                </>
-              ) : (
-                <span>Procesar {workflowState.urls.filter(url => url.isValid).length} noticias</span>
-              )}
-            </Button>
-          </div>
-        </div>
-        </div>
-                    </div>
-
-      {/* Resumen de configuración */}
-        <div className="space-y-6">
-        {/* Temas seleccionados */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                Temas seleccionados
-              </h4>
-              <div className="flex items-center gap-2">
-                {workflowState.selectedTopics.map((topic) => (
-                  <span key={topic} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
-                    {topic}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
-              {workflowState.selectedTopics.length}
-            </div>
-          </div>
-        </div>
-
-        {/* Menciones seleccionadas */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Menciones seleccionadas
-              </h4>
-              <div className="flex items-center gap-2">
-                {workflowState.selectedMentions.map((mention) => (
-                  <span key={mention} className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm font-medium">
-                    {mention}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">
-              {workflowState.selectedMentions.length}
-            </div>
-          </div>
-        </div>
-
-        {/* URLs a procesar */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-            <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-              Links a procesar
-            </h4>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">
-                {workflowState.urls.length}
-              </div>
-              {workflowState.urls.filter(url => !url.isValid).length > 0 && (
-                <span className="px-3 py-1 bg-red-500 text-white rounded-full text-sm font-bold">
-                  {workflowState.urls.filter(url => !url.isValid).length} inválidas
-                </span>
-              )}
-            </div>
-          </div>
-          
-          {/* Lista compacta de URLs */}
-          <div className="max-h-48 overflow-y-auto space-y-2">
-            {workflowState.urls.map((url) => (
-              <div key={url.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    url.isValid ? 'bg-green-400' : 'bg-red-400'
-                  }`}></div>
-                  <span className="text-white/80 truncate text-sm">{url.url}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-green-300/30">
+                  <svg className="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
                 </div>
-                <Button
-                  onClick={() => removeUrl(url.id)}
-                  variant="danger"
-                  size="icon"
-                  icon="Delete"
-                />
+                <div className="text-left">
+                  <h4 className="text-base font-semibold text-white">Temas seleccionados</h4>
+                  <p className="text-sm text-white/70">{workflowState.selectedTopics.length} tema{workflowState.selectedTopics.length !== 1 ? 's' : ''}</p>
+                </div>
               </div>
-            ))}
+              <svg 
+                className={`w-5 h-5 text-white/70 transition-transform ${expandedTopics ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {expandedTopics && workflowState.selectedTopics.length > 0 && (
+              <div className="border-t border-white/10 pt-4 pb-4" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                <div className="flex flex-wrap gap-3">
+                  {workflowState.selectedTopics.map((topic) => (
+                    <span 
+                      key={topic} 
+                      className="inline-block bg-green-500/20 text-green-300 rounded-md text-xs font-medium"
+                      style={{ padding: '0.5rem 0.75rem' }}
+                    >
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown de Menciones */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden" style={{ marginBottom: '1.5rem' }}>
+            <button
+              onClick={() => setExpandedMentions(!expandedMentions)}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-blue-300/30">
+                  <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h4 className="text-base font-semibold text-white">Menciones seleccionadas</h4>
+                  <p className="text-sm text-white/70">{workflowState.selectedMentions.length} mención{workflowState.selectedMentions.length !== 1 ? 'es' : ''}</p>
+                </div>
+              </div>
+              <svg 
+                className={`w-5 h-5 text-white/70 transition-transform ${expandedMentions ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {expandedMentions && workflowState.selectedMentions.length > 0 && (
+              <div className="border-t border-white/10 pt-4 pb-4" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                <div className="flex flex-wrap gap-3">
+                  {workflowState.selectedMentions.map((mention) => (
+                    <span 
+                      key={mention} 
+                      className="inline-block bg-blue-500/20 text-blue-300 rounded-md text-xs font-medium"
+                      style={{ padding: '0.5rem 0.75rem' }}
+                    >
+                      {mention}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown de Links */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => setExpandedLinks(!expandedLinks)}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-violet-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-purple-300/30">
+                  <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h4 className="text-base font-semibold text-white">Links a procesar</h4>
+                  <p className="text-sm text-white/70">
+                    {workflowState.urls.filter(url => url.isValid).length} válido{workflowState.urls.filter(url => url.isValid).length !== 1 ? 's' : ''}
+                    {workflowState.urls.filter(url => !url.isValid).length > 0 && (
+                      <span className="text-red-300 ml-1">• {workflowState.urls.filter(url => !url.isValid).length} inválida{workflowState.urls.filter(url => !url.isValid).length !== 1 ? 's' : ''}</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <svg 
+                className={`w-5 h-5 text-white/70 transition-transform ${expandedLinks ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {expandedLinks && (
+              <div className="border-t border-white/10 pt-4 pb-4" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                {workflowState.urls.length > 0 ? (
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {workflowState.urls.map((url) => (
+                      <div key={url.id} className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <span className="text-white/80 truncate text-sm">{url.url}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => window.open(url.url, '_blank')}
+                            variant="ghost"
+                            size="icon"
+                            icon="ExternalLink"
+                          />
+                          <Button
+                            onClick={() => removeUrl(url.id)}
+                            variant="ghost"
+                            size="icon"
+                            icon="Delete"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-white/50 text-sm text-center py-4">No hay links agregados</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
-
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="upload-news-container">
@@ -690,28 +774,28 @@ export default function UploadNewsPage() {
                   active={activeSection === 'topics'}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                    <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center text-sm font-bold">
                       {activeSection === 'topics' ? '1' : activeSection === 'mentions' ? '2' : activeSection === 'urls' ? '3' : '4'}
                     </div>
                     <span>{getCurrentStepText()}</span>
                     <div className="flex items-center gap-2">
                       {activeSection === 'topics' && workflowState.selectedTopics.length > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-green-500 text-white min-w-[2rem] flex items-center justify-center">
                           {workflowState.selectedTopics.length}
                         </span>
                       )}
                       {activeSection === 'mentions' && workflowState.selectedMentions.length > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500 text-white min-w-[2rem] flex items-center justify-center">
                           {workflowState.selectedMentions.length}
                         </span>
                       )}
                       {activeSection === 'urls' && workflowState.urls.length > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-purple-500 text-white min-w-[2rem] flex items-center justify-center">
                           {workflowState.urls.length}
                         </span>
                       )}
                       {activeSection === 'summary' && isReadyToProcess && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-orange-500 text-white min-w-[2rem] flex items-center justify-center">
                           ✓
                         </span>
                       )}
@@ -733,7 +817,7 @@ export default function UploadNewsPage() {
                       onClick={() => handleSectionChange('topics')}
                       className={`upload-news-dropdown-item ${activeSection === 'topics' ? 'active' : ''}`}
                     >
-                      <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                      <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center text-sm font-bold">
                         1
                       </div>
                       <div className="flex-1">
@@ -741,7 +825,7 @@ export default function UploadNewsPage() {
                         <div className="text-xs text-white/50">Selecciona los temas que quieres analizar</div>
                       </div>
                       {workflowState.selectedTopics.length > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-green-500 text-white min-w-[2rem] flex items-center justify-center">
                           {workflowState.selectedTopics.length}
                         </span>
                       )}
@@ -752,9 +836,13 @@ export default function UploadNewsPage() {
                       className={`upload-news-dropdown-item ${activeSection === 'mentions' ? 'active' : ''} ${!isTopicsStepValid ? 'disabled' : ''}`}
                     >
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
-                        !isTopicsStepValid ? 'bg-white/10' : 'bg-green-500/20'
+                        !isTopicsStepValid ? 'bg-white/10' : 'bg-blue-500/20'
                       }`}>
-                        {!isTopicsStepValid ? '🔒' : '2'}
+                        {!isTopicsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '2'}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">Paso 2: Menciones</div>
@@ -763,7 +851,7 @@ export default function UploadNewsPage() {
                         </div>
                       </div>
                       {workflowState.selectedMentions.length > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500 text-white min-w-[2rem] flex items-center justify-center">
                           {workflowState.selectedMentions.length}
                         </span>
                       )}
@@ -776,7 +864,11 @@ export default function UploadNewsPage() {
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
                         !isMentionsStepValid ? 'bg-white/10' : 'bg-purple-500/20'
                       }`}>
-                        {!isMentionsStepValid ? '🔒' : '3'}
+                        {!isMentionsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '3'}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">Paso 3: Links</div>
@@ -785,7 +877,7 @@ export default function UploadNewsPage() {
                         </div>
                       </div>
                       {workflowState.urls.length > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-purple-500 text-white min-w-[2rem] flex items-center justify-center">
                           {workflowState.urls.length}
                         </span>
                       )}
@@ -798,7 +890,11 @@ export default function UploadNewsPage() {
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
                         !isUrlsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
                       }`}>
-                        {!isUrlsStepValid ? '🔒' : '4'}
+                        {!isUrlsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '4'}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">Paso 4: Procesar</div>
@@ -807,7 +903,7 @@ export default function UploadNewsPage() {
                         </div>
                       </div>
                       {isReadyToProcess && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-orange-500 text-white min-w-[2rem] flex items-center justify-center">
                           ✓
                         </span>
                       )}
@@ -822,7 +918,7 @@ export default function UploadNewsPage() {
                       isTopicsStepValid 
                         ? 'bg-green-500 text-white' 
                         : activeSection === 'topics'
-                        ? 'bg-blue-500 text-white'
+                        ? 'bg-green-500 text-white'
                         : 'bg-white/20 text-white/50'
                     }`}>
                       {isTopicsStepValid ? '✓' : '1'}
@@ -837,7 +933,7 @@ export default function UploadNewsPage() {
                       isMentionsStepValid 
                         ? 'bg-green-500 text-white' 
                         : activeSection === 'mentions'
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-blue-500 text-white'
                         : isTopicsStepValid
                         ? 'bg-white/30 text-white/70'
                         : 'bg-white/10 text-white/30'
@@ -891,16 +987,16 @@ export default function UploadNewsPage() {
                     active={activeSection === 'topics'}
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                      <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center text-sm font-bold">
                         1
                       </div>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
                       <span className="text-base">Temas</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-bold min-w-[2rem] flex items-center justify-center ${
                         workflowState.selectedTopics.length > 0 
-                          ? 'bg-blue-500 text-white' 
+                          ? 'bg-green-500 text-white' 
                           : 'bg-white/20 text-white/70'
                       }`}>
                         {workflowState.selectedTopics.length}
@@ -921,17 +1017,21 @@ export default function UploadNewsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
-                        !isTopicsStepValid ? 'bg-white/10' : 'bg-green-500/20'
+                        !isTopicsStepValid ? 'bg-white/10' : 'bg-blue-500/20'
                       }`}>
-                        {!isTopicsStepValid ? '🔒' : '2'}
+                        {!isTopicsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '2'}
                       </div>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                       <span className="text-base">Menciones</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-bold min-w-[2rem] flex items-center justify-center ${
                         workflowState.selectedMentions.length > 0 
-                          ? 'bg-green-500 text-white' 
+                          ? 'bg-blue-500 text-white' 
                           : 'bg-white/20 text-white/70'
                       }`}>
                         {workflowState.selectedMentions.length}
@@ -956,13 +1056,17 @@ export default function UploadNewsPage() {
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                         !isMentionsStepValid ? 'bg-white/10' : 'bg-purple-500/20'
                       }`}>
-                        {!isMentionsStepValid ? '🔒' : '3'}
+                        {!isMentionsStepValid ? (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '3'}
                       </div>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                       </svg>
                       <span>Links</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-bold min-w-[2rem] flex items-center justify-center ${
                         workflowState.urls.length > 0 
                           ? 'bg-purple-500 text-white' 
                           : 'bg-white/20 text-white/70'
@@ -989,13 +1093,17 @@ export default function UploadNewsPage() {
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                         !isUrlsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
                       }`}>
-                        {!isUrlsStepValid ? '🔒' : '4'}
+                        {!isUrlsStepValid ? (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '4'}
                       </div>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       <span>Procesar noticias</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-bold min-w-[2rem] flex items-center justify-center ${
                         isReadyToProcess 
                           ? 'bg-orange-500 text-white' 
                           : 'bg-white/20 text-white/70'
@@ -1020,6 +1128,36 @@ export default function UploadNewsPage() {
                 {activeSection === 'urls' && <UrlsSection />}
                 {activeSection === 'summary' && <SummarySection />}
               </div>
+
+              {/* Botones de navegación */}
+              <div className="flex justify-between items-center gap-4 mt-6">
+                <Button
+                  onClick={goToPreviousStep}
+                  disabled={!canGoPrevious()}
+                  variant="secondary"
+                  size="default"
+                  icon="ArrowLeft"
+                  iconPosition="left"
+                  className="flex-1"
+                >
+                  Anterior
+                </Button>
+                <Button
+                  onClick={goToNextStep}
+                  disabled={!canGoNext()}
+                  variant={activeSection === 'summary' ? 'success' : 'primary'}
+                  size="default"
+                  icon={activeSection === 'summary' ? 'Generate' : 'ArrowRight'}
+                  iconPosition={activeSection === 'summary' ? 'left' : 'right'}
+                  className="flex-1"
+                >
+                  {activeSection === 'summary' 
+                    ? (isProcessing 
+                        ? 'Procesando...' 
+                        : `Procesar ${workflowState.urls.filter(url => url.isValid).length} noticias`)
+                    : 'Siguiente'}
+                </Button>
+              </div>
               
             </div>
         </div>
@@ -1040,19 +1178,12 @@ export default function UploadNewsPage() {
         }
       />
 
-      {/* Snackbars para mensajes */}
+      {/* Snackbar para errores de conexión/procesamiento */}
       <Snackbar
         message={errorMessage}
         isOpen={!!errorMessage}
         onClose={() => setErrorMessage('')}
         variant="error"
-      />
-      
-      <Snackbar
-        message={successMessage}
-        isOpen={!!successMessage}
-        onClose={() => setSuccessMessage('')}
-        variant={successVariant}
       />
     </div>
   );

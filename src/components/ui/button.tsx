@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Key,
   ArrowLeft,
+  ArrowRight,
   ChevronDown,
   Tag,
   FileText,
@@ -25,7 +26,10 @@ import {
   Users,
   Crown,
   User,
-  List
+  List,
+  Lock,
+  Lightbulb,
+  ExternalLink
 } from "lucide-react"
 
 // Mapeo de iconos disponibles
@@ -46,6 +50,7 @@ const iconMap = {
   Refresh: RefreshCw,
   Key,
   ArrowLeft,
+  ArrowRight,
   ChevronDown,
   Tag,
   FileText,
@@ -54,6 +59,9 @@ const iconMap = {
   Crown,
   User,
   List,
+  Lock,
+  Lightbulb,
+  ExternalLink,
 } as const;
 
 export type IconName = keyof typeof iconMap;

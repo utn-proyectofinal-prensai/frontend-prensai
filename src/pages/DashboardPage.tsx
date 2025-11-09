@@ -226,11 +226,18 @@ export default function DashboardPage() {
           <Card variant="default" padding="default" className="w-full">
             <CardHeader>
               <CardTitle className="text-xl font-bold text-white mb-1">Tendencia de Volumen de Noticias</CardTitle>
-              {data?.meta?.range && (
-                <p className="text-sm text-slate-300 font-medium mt-1">
-                  {new Date(data.meta.range.from).toLocaleDateString('es-AR')} - {new Date(data.meta.range.to).toLocaleDateString('es-AR')}
-                </p>
-              )}
+              {data?.meta?.range && (() => {
+                // Parsear fechas manualmente para evitar problemas de zona horaria
+                const formatDate = (dateString: string) => {
+                  const [year, month, day] = dateString.split('-').map(Number);
+                  return `${day}/${month}/${year}`;
+                };
+                return (
+                  <p className="text-sm text-slate-300 font-medium mt-1">
+                    {formatDate(data.meta.range.from)} - {formatDate(data.meta.range.to)}
+                  </p>
+                );
+              })()}
             </CardHeader>
             <CardContent style={{ paddingBottom: '0.5rem', paddingTop: '0.5rem' }}>
               <DashboardLineChart 

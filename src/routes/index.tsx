@@ -14,6 +14,7 @@ import ClippingReportPage from '../pages/ClippingReportPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LoginPage from '../pages/LoginPage';
+import BatchProcessResultsPage from '../pages/BatchProcessResultsPage';
 import { ProtectedRoute, AdminRoute } from '../components/auth/ProtectedRoute';
 
 export const router = createBrowserRouter([
@@ -46,6 +47,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <UploadNewsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'batch-process-results',
+        element: (
+          <ProtectedRoute>
+            <BatchProcessResultsPage />
           </ProtectedRoute>
         ),
       },
