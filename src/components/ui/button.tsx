@@ -26,7 +26,10 @@ import {
   Users,
   Crown,
   User,
-  List
+  List,
+  Lock,
+  Lightbulb,
+  ExternalLink
 } from "lucide-react"
 
 // Mapeo de iconos disponibles
@@ -56,6 +59,9 @@ const iconMap = {
   Crown,
   User,
   List,
+  Lock,
+  Lightbulb,
+  ExternalLink,
 } as const;
 
 export type IconName = keyof typeof iconMap;

@@ -9,7 +9,6 @@ import {
 } from '../components/common';
 import type { BatchProcessResponse } from '../services/api';
 import { Button } from '../components/ui/button';
-import { LoadingSpinner } from '../components/ui/loading-spinner';
 import { LoadingModal } from '../components/ui/loading-modal';
 import '../styles/upload-news.css';
 
@@ -72,20 +71,25 @@ export default function UploadNewsPage() {
 
   // Funciones para navegación entre pasos
   const goToNextStep = () => {
-    const steps: Array<'topics' | 'mentions' | 'urls' | 'summary'> = ['topics', 'mentions', 'urls', 'summary'];
-    const currentIndex = steps.indexOf(activeSection);
-    if (currentIndex < steps.length - 1) {
-      const nextStep = steps[currentIndex + 1];
-      // Verificar que el paso actual sea válido antes de avanzar
-      if (
-        (activeSection === 'topics' && isTopicsStepValid) ||
-        (activeSection === 'mentions' && isMentionsStepValid) ||
-        (activeSection === 'urls' && isUrlsStepValid) ||
-        activeSection === 'summary'
-      ) {
-        setActiveSection(nextStep);
-      }
+    // Si estamos en summary, procesar las noticias
+    if (activeSection === 'summary') {
+      processNews();
+      return;
     }
+    
+      const steps: Array<'topics' | 'mentions' | 'urls' | 'summary'> = ['topics', 'mentions', 'urls', 'summary'];
+      const currentIndex = steps.indexOf(activeSection);
+      if (currentIndex < steps.length - 1) {
+        const nextStep = steps[currentIndex + 1];
+        // Verificar que el paso actual sea válido antes de avanzar
+        if (
+          (activeSection === 'topics' && isTopicsStepValid) ||
+          (activeSection === 'mentions' && isMentionsStepValid) ||
+          (activeSection === 'urls' && isUrlsStepValid)
+        ) {
+          setActiveSection(nextStep);
+        }
+      }
   };
 
   const goToPreviousStep = () => {
@@ -106,7 +110,7 @@ export default function UploadNewsPage() {
       case 'urls':
         return isUrlsStepValid;
       case 'summary':
-        return false; // No hay siguiente paso después de summary
+        return isReadyToProcess && !isProcessing; // Habilitado si está listo para procesar
       default:
         return false;
     }
@@ -193,8 +197,11 @@ export default function UploadNewsPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
             <h3 className="upload-news-section-title">Paso 1: Temas a analizar</h3>
             <div className="upload-news-tip">
-              <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Selecciona al menos un tema para continuar al siguiente paso
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Selecciona al menos un tema para continuar al siguiente paso
               </p>
             </div>
             <div className="upload-news-section-actions">
@@ -272,8 +279,11 @@ export default function UploadNewsPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
             <h3 className="upload-news-section-title">Paso 2: Menciones a buscar</h3>
             <div className="upload-news-tip">
-              <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Selecciona al menos una mención para continuar al siguiente paso
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Selecciona al menos una mención para continuar al siguiente paso
               </p>
             </div>
             <div className="upload-news-section-actions">
@@ -420,8 +430,11 @@ export default function UploadNewsPage() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-1 lg:gap-0">
           <h3 className="upload-news-section-title">Paso 3: Links de noticias</h3>
           <div className="upload-news-tip">
-            <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Agrega al menos un link válido para poder procesar las noticias
+            <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Agrega al menos un link válido para poder procesar las noticias
               </p>
             </div>
         </div>
@@ -534,12 +547,20 @@ export default function UploadNewsPage() {
                         <p className="text-red-400 text-sm mt-1">{url.error}</p>
                       )}
                     </div>
-                    <Button
-                      onClick={() => removeUrl(url.id)}
-                      variant="ghost"
-                      size="icon"
-                      icon="Delete"
-                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => window.open(url.url, '_blank')}
+                        variant="ghost"
+                        size="icon"
+                        icon="ExternalLink"
+                      />
+                      <Button
+                        onClick={() => removeUrl(url.id)}
+                        variant="ghost"
+                        size="icon"
+                        icon="Delete"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -550,134 +571,184 @@ export default function UploadNewsPage() {
   };
 
   // Componente de resumen
-  const SummarySection = () => (
-    <div className="upload-news-section">
-      <div className="upload-news-section-header">
-        <div className="flex-1">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
-          <h3 className="upload-news-section-title">Paso 4: Procesar noticias</h3>
-          <div className="upload-news-tip">
-            <p className="upload-news-tip-text">
-              💡 <strong>Tip:</strong> Revisa la configuración antes de procesar las noticias
-            </p>
+  const SummarySection = () => {
+    const [expandedTopics, setExpandedTopics] = useState(false);
+    const [expandedMentions, setExpandedMentions] = useState(false);
+    const [expandedLinks, setExpandedLinks] = useState(false);
+
+    return (
+      <div className="upload-news-section">
+        <div className="upload-news-section-header">
+          <div className="flex-1">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
+            <h3 className="upload-news-section-title">Paso 4: Procesar noticias</h3>
+            <div className="upload-news-tip">
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Revisa la configuración antes de procesar las noticias
+              </p>
+            </div>
           </div>
-          <div className="upload-news-section-actions">
-            <Button
-              onClick={processNews}
-              disabled={!isReadyToProcess || isProcessing}
-              variant="success"
-              size="lg"
-              icon="Generate"
+          </div>
+                      </div>
+
+        {/* Dropdowns de resumen - Ocupan todo el ancho */}
+        <div>
+          {/* Dropdown de Temas */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden" style={{ marginBottom: '1.5rem' }}>
+            <button
+              onClick={() => setExpandedTopics(!expandedTopics)}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
             >
-              {isProcessing ? (
-                <>
-                  <LoadingSpinner size="sm" variant="simple" className="mr-2" />
-                  <span>Procesando...</span>
-                </>
-              ) : (
-                <span>Procesar {workflowState.urls.filter(url => url.isValid).length} noticias</span>
-              )}
-            </Button>
-          </div>
-        </div>
-        </div>
-                    </div>
-
-      {/* Resumen de configuración */}
-        <div className="space-y-6">
-        {/* Temas seleccionados */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                Temas seleccionados
-              </h4>
-              <div className="flex items-center gap-2">
-                {workflowState.selectedTopics.map((topic) => (
-                  <span key={topic} className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm font-medium">
-                    {topic}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">
-              {workflowState.selectedTopics.length}
-            </div>
-          </div>
-        </div>
-
-        {/* Menciones seleccionadas */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Menciones seleccionadas
-              </h4>
-              <div className="flex items-center gap-2">
-                {workflowState.selectedMentions.map((mention) => (
-                  <span key={mention} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
-                    {mention}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
-              {workflowState.selectedMentions.length}
-            </div>
-          </div>
-        </div>
-
-        {/* URLs a procesar */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-            <h4 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-              Links a procesar
-            </h4>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">
-                {workflowState.urls.length}
-              </div>
-              {workflowState.urls.filter(url => !url.isValid).length > 0 && (
-                <span className="px-3 py-1 bg-red-500 text-white rounded-full text-sm font-bold">
-                  {workflowState.urls.filter(url => !url.isValid).length} inválidas
-                </span>
-              )}
-            </div>
-          </div>
-          
-          {/* Lista compacta de URLs */}
-          <div className="max-h-48 overflow-y-auto space-y-2">
-            {workflowState.urls.map((url) => (
-              <div key={url.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    url.isValid ? 'bg-green-400' : 'bg-red-400'
-                  }`}></div>
-                  <span className="text-white/80 truncate text-sm">{url.url}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-green-300/30">
+                  <svg className="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
                 </div>
-                <Button
-                  onClick={() => removeUrl(url.id)}
-                  variant="ghost"
-                  size="icon"
-                  icon="Delete"
-                />
+                <div className="text-left">
+                  <h4 className="text-base font-semibold text-white">Temas seleccionados</h4>
+                  <p className="text-sm text-white/70">{workflowState.selectedTopics.length} tema{workflowState.selectedTopics.length !== 1 ? 's' : ''}</p>
+                </div>
               </div>
-            ))}
+              <svg 
+                className={`w-5 h-5 text-white/70 transition-transform ${expandedTopics ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {expandedTopics && workflowState.selectedTopics.length > 0 && (
+              <div className="border-t border-white/10 pt-4 pb-4" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                <div className="flex flex-wrap gap-3">
+                  {workflowState.selectedTopics.map((topic) => (
+                    <span 
+                      key={topic} 
+                      className="inline-block bg-green-500/20 text-green-300 rounded-md text-xs font-medium"
+                      style={{ padding: '0.5rem 0.75rem' }}
+                    >
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown de Menciones */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden" style={{ marginBottom: '1.5rem' }}>
+            <button
+              onClick={() => setExpandedMentions(!expandedMentions)}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-blue-300/30">
+                  <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h4 className="text-base font-semibold text-white">Menciones seleccionadas</h4>
+                  <p className="text-sm text-white/70">{workflowState.selectedMentions.length} mención{workflowState.selectedMentions.length !== 1 ? 'es' : ''}</p>
+                </div>
+              </div>
+              <svg 
+                className={`w-5 h-5 text-white/70 transition-transform ${expandedMentions ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {expandedMentions && workflowState.selectedMentions.length > 0 && (
+              <div className="border-t border-white/10 pt-4 pb-4" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                <div className="flex flex-wrap gap-3">
+                  {workflowState.selectedMentions.map((mention) => (
+                    <span 
+                      key={mention} 
+                      className="inline-block bg-blue-500/20 text-blue-300 rounded-md text-xs font-medium"
+                      style={{ padding: '0.5rem 0.75rem' }}
+                    >
+                      {mention}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown de Links */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => setExpandedLinks(!expandedLinks)}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-violet-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-purple-300/30">
+                  <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h4 className="text-base font-semibold text-white">Links a procesar</h4>
+                  <p className="text-sm text-white/70">
+                    {workflowState.urls.filter(url => url.isValid).length} válido{workflowState.urls.filter(url => url.isValid).length !== 1 ? 's' : ''}
+                    {workflowState.urls.filter(url => !url.isValid).length > 0 && (
+                      <span className="text-red-300 ml-1">• {workflowState.urls.filter(url => !url.isValid).length} inválida{workflowState.urls.filter(url => !url.isValid).length !== 1 ? 's' : ''}</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <svg 
+                className={`w-5 h-5 text-white/70 transition-transform ${expandedLinks ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {expandedLinks && (
+              <div className="border-t border-white/10 pt-4 pb-4" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                {workflowState.urls.length > 0 ? (
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {workflowState.urls.map((url) => (
+                      <div key={url.id} className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <span className="text-white/80 truncate text-sm">{url.url}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => window.open(url.url, '_blank')}
+                            variant="ghost"
+                            size="icon"
+                            icon="ExternalLink"
+                          />
+                          <Button
+                            onClick={() => removeUrl(url.id)}
+                            variant="ghost"
+                            size="icon"
+                            icon="Delete"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-white/50 text-sm text-center py-4">No hay links agregados</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
-
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="upload-news-container">
@@ -766,7 +837,11 @@ export default function UploadNewsPage() {
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
                         !isTopicsStepValid ? 'bg-white/10' : 'bg-blue-500/20'
                       }`}>
-                        {!isTopicsStepValid ? '🔒' : '2'}
+                        {!isTopicsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '2'}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">Paso 2: Menciones</div>
@@ -788,7 +863,11 @@ export default function UploadNewsPage() {
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
                         !isMentionsStepValid ? 'bg-white/10' : 'bg-purple-500/20'
                       }`}>
-                        {!isMentionsStepValid ? '🔒' : '3'}
+                        {!isMentionsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '3'}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">Paso 3: Links</div>
@@ -810,7 +889,11 @@ export default function UploadNewsPage() {
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
                         !isUrlsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
                       }`}>
-                        {!isUrlsStepValid ? '🔒' : '4'}
+                        {!isUrlsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '4'}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">Paso 4: Procesar</div>
@@ -935,7 +1018,11 @@ export default function UploadNewsPage() {
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
                         !isTopicsStepValid ? 'bg-white/10' : 'bg-blue-500/20'
                       }`}>
-                        {!isTopicsStepValid ? '🔒' : '2'}
+                        {!isTopicsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '2'}
                       </div>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -968,7 +1055,11 @@ export default function UploadNewsPage() {
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                         !isMentionsStepValid ? 'bg-white/10' : 'bg-purple-500/20'
                       }`}>
-                        {!isMentionsStepValid ? '🔒' : '3'}
+                        {!isMentionsStepValid ? (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '3'}
                       </div>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -1001,7 +1092,11 @@ export default function UploadNewsPage() {
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                         !isUrlsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
                       }`}>
-                        {!isUrlsStepValid ? '🔒' : '4'}
+                        {!isUrlsStepValid ? (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '4'}
                       </div>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1049,13 +1144,17 @@ export default function UploadNewsPage() {
                 <Button
                   onClick={goToNextStep}
                   disabled={!canGoNext()}
-                  variant="primary"
+                  variant={activeSection === 'summary' ? 'success' : 'primary'}
                   size="default"
-                  icon="ArrowRight"
-                  iconPosition="right"
+                  icon={activeSection === 'summary' ? 'Generate' : 'ArrowRight'}
+                  iconPosition={activeSection === 'summary' ? 'left' : 'right'}
                   className="flex-1"
                 >
-                  Siguiente
+                  {activeSection === 'summary' 
+                    ? (isProcessing 
+                        ? 'Procesando...' 
+                        : `Procesar ${workflowState.urls.filter(url => url.isValid).length} noticias`)
+                    : 'Siguiente'}
                 </Button>
               </div>
               
