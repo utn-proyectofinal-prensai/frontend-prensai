@@ -149,8 +149,8 @@ export default function ClippingReportPage() {
       {/* Header de la página */}
       <div className="upload-news-header">
         <div className="flex items-center justify-start mb-4">
-          <Button onClick={() => navigate(`/clipping/${id}`)} variant="outline" size="sm">
-            ← Volver al Detalle
+          <Button onClick={() => navigate('/clippings-history')} variant="outline" size="sm">
+            ← Volver
           </Button>
         </div>
         <div className="text-center mb-4">

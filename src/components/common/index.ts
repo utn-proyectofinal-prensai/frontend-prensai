@@ -44,6 +44,13 @@ export { default as SimpleWorkflowStepper } from './SimpleWorkflowStepper';
 // Componentes de tabla
 export { default as NewsTable } from './NewsTable';
 
+// Componentes de filtros
+export { default as NewsFilters } from './NewsFilters';
+export { default as ClippingsFilters } from './ClippingsFilters';
+
+// Componentes de badges
+export { default as TopicBadge } from './TopicBadge';
+
 // Componentes de métricas
 export { default as AdvancedMetricsCharts } from './AdvancedMetricsCharts';
 export { default as DashboardLineChart } from './DashboardLineChart';
