@@ -79,7 +79,7 @@ export const MentionCard: React.FC<MentionCardProps> = ({
           {mention.name}
         </h3>
         <p className="text-white/60 text-sm">
-          Persona monitoreada
+          Mención Monitoreada
         </p>
       </div>
 

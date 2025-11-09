@@ -395,8 +395,61 @@ async function apiRequest<T>(
           const contentType = response.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            const raw = (data?.errors?.[0]?.message as string | undefined) ?? '';
-            apiMessage = raw.trim();
+            
+            // Detectar el tipo de recurso desde el endpoint para mensajes más específicos
+            const isTopicEndpoint = endpoint.includes('/topics');
+            const isMentionEndpoint = endpoint.includes('/mentions');
+            
+            // Manejar diferentes formatos de error de Rails
+            if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+              const firstError = data.errors[0];
+              
+              // Formato: {"errors":[{"message": "..."}]}
+              if (firstError.message) {
+                apiMessage = firstError.message;
+              }
+              // Formato: {"errors":[{"name": ["ya está en uso"]}]}
+              else if (typeof firstError === 'object') {
+                const errorKeys = Object.keys(firstError);
+                if (errorKeys.length > 0) {
+                  const fieldName = errorKeys[0];
+                  const fieldErrors = firstError[fieldName];
+                  if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+                    // Mejorar el mensaje para campos comunes según el endpoint
+                    const errorText = fieldErrors[0];
+                    if (fieldName === 'name' && errorText === 'ya está en uso') {
+                      if (isTopicEndpoint) {
+                        apiMessage = 'El nombre del tema ya está en uso';
+                      } else if (isMentionEndpoint) {
+                        apiMessage = 'La mención ya existe';
+                      } else {
+                        apiMessage = errorText;
+                      }
+                    } else {
+                      apiMessage = `${fieldName}: ${errorText}`;
+                    }
+                  } else if (typeof fieldErrors === 'string') {
+                    if (fieldName === 'name' && fieldErrors === 'ya está en uso') {
+                      if (isTopicEndpoint) {
+                        apiMessage = 'El nombre del tema ya está en uso';
+                      } else if (isMentionEndpoint) {
+                        apiMessage = 'La mención ya existe';
+                      } else {
+                        apiMessage = fieldErrors;
+                      }
+                    } else {
+                      apiMessage = `${fieldName}: ${fieldErrors}`;
+                    }
+                  }
+                }
+              }
+              // Formato: {"errors":["mensaje directo"]}
+              else if (typeof firstError === 'string') {
+                apiMessage = firstError;
+              }
+            }
+            
+            apiMessage = apiMessage.trim();
           }
         } catch (parseErr) {
           console.warn('No se pudo parsear el error de la API:', parseErr);
