@@ -48,15 +48,18 @@ export default function DashboardLineChart({
 
   // Formatear fechas para mostrar día/mes, incluyendo año si hay cambio de año
   // Usar parseo manual para evitar problemas de zona horaria
+  // Mantener el orden exacto de los datos del backend
   const dates = data.map(item => {
+    // Parsear la fecha directamente del string "YYYY-MM-DD"
     const [year, month, day] = item.date.split('-').map(Number);
-    return { year, month, day };
+    return { year, month, day, originalDate: item.date };
   });
   
   // Detectar si hay cambio de año en el rango
   const years = dates.map(d => d.year);
   const hasYearChange = new Set(years).size > 1;
   
+  // Generar labels manteniendo el orden exacto del backend
   const labels = dates.map(({ year, month, day }) => {
     if (hasYearChange) {
       // Si hay cambio de año, mostrar año abreviado: día/mes/año (2 dígitos)
