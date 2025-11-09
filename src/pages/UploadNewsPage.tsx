@@ -424,25 +424,6 @@ export default function UploadNewsPage() {
                 💡 <strong>Tip:</strong> Agrega al menos un link válido para poder procesar las noticias
               </p>
             </div>
-          <div className="upload-news-section-actions">
-          <Button
-              onClick={handleAddUrls}
-              disabled={!hasValidUrls()}
-              variant="success"
-              size="default"
-              icon="Plus"
-          >
-              Agregar {localTextArea.split('\n').filter(l => l.trim()).length > 0 ? localTextArea.split('\n').filter(l => l.trim()).length : ''} link{localTextArea.split('\n').filter(l => l.trim()).length !== 1 ? 's' : ''}
-          </Button>
-          <Button
-            onClick={clearUrls}
-            variant="secondary"
-            size="default"
-            icon="Refresh"
-          >
-              Limpiar todo
-          </Button>
-          </div>
         </div>
         </div>
       </div>
@@ -466,6 +447,26 @@ export default function UploadNewsPage() {
             placeholder="https://ejemplo.com/noticia1&#10;https://ejemplo.com/noticia2&#10;https://ejemplo.com/noticia3"
             className="w-full h-32 bg-blue-500/20 backdrop-filter backdrop-blur-sm border border-blue-400/30 rounded-xl p-4 text-white placeholder-white/50 resize-none transition-all duration-300 focus:outline-none focus:border-blue-400 focus:bg-blue-500/30 text-sm sm:text-base"
           />
+          {/* Botones de acción debajo del textarea */}
+          <div className="flex gap-3 mt-3">
+            <Button
+              onClick={handleAddUrls}
+              disabled={!hasValidUrls()}
+              variant="success"
+              size="default"
+              icon="Plus"
+            >
+              Agregar {localTextArea.split('\n').filter(l => l.trim()).length > 0 ? localTextArea.split('\n').filter(l => l.trim()).length : ''} link{localTextArea.split('\n').filter(l => l.trim()).length !== 1 ? 's' : ''}
+            </Button>
+            <Button
+              onClick={clearUrls}
+              variant="secondary"
+              size="default"
+              icon="Refresh"
+            >
+              Limpiar todo
+            </Button>
+          </div>
           {/* Mostrar URLs duplicadas e inválidas */}
           {(urlAnalysis.duplicates.length > 0 || urlAnalysis.invalid.length > 0) && (
             <div className="mt-2 p-3 bg-black/20 rounded-lg border border-white/10">
