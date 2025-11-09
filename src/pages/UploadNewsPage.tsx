@@ -4,10 +4,8 @@ import { useNews, useEnabledTopics, useEnabledMentions } from '../hooks';
 import { useWorkflow } from '../hooks/useWorkflow';
 import { type BatchProcessRequest, parseApiError } from '../services/api';
 import { 
-  Snackbar,
-  BatchProcessResultsModal
+  Snackbar
 } from '../components/common';
-import type { BatchProcessResponse } from '../services/api';
 import { Button } from '../components/ui/button';
 import { LoadingModal } from '../components/ui/loading-modal';
 import '../styles/upload-news.css';
@@ -40,9 +38,6 @@ export default function UploadNewsPage() {
   // Estados para mensajes
   const [errorMessage, setErrorMessage] = useState('');
   
-  // Estados para el modal de resultados
-  const [showResultsModal, setShowResultsModal] = useState(false);
-  const [processResults, setProcessResults] = useState<BatchProcessResponse | null>(null);
 
   // Estados para la nueva interfaz
   const [activeSection, setActiveSection] = useState<'topics' | 'mentions' | 'urls' | 'summary'>('topics');
@@ -163,21 +158,27 @@ export default function UploadNewsPage() {
 
     setIsProcessing(true);
 
-    try {
-      const requestData: BatchProcessRequest = {
-        urls: validUrls,
-        topics: workflowState.selectedTopics,
-        mentions: workflowState.selectedMentions
-      };
+    const requestData: BatchProcessRequest = {
+      urls: validUrls,
+      topics: workflowState.selectedTopics,
+      mentions: workflowState.selectedMentions
+    };
 
+    try {
       const response = await batchProcess(requestData);
 
-      // Guardar resultados y mostrar modal
-      setProcessResults(response);
-      setShowResultsModal(true);
-    } catch (error) {
+      // Limpiar el workflow antes de navegar
+      clearUrls();
+      clearTopics();
+      clearMentions();
+
+      // Navegar a la página de resumen con los resultados
+      navigate('/batch-process-results', { state: { results: response } });
+    } catch (error: any) {
       console.error('Error procesando noticias:', error);
       
+      // batchProcessNews ahora maneja los errores 422 y devuelve BatchProcessResponse
+      // Si llegamos aquí, es un error real (red, 500, etc.)
       const errorMessage = parseApiError(error, 'Error al procesar las noticias');
       setErrorMessage(errorMessage);
     } finally {
@@ -1176,25 +1177,6 @@ export default function UploadNewsPage() {
           </svg>
         }
       />
-
-      {/* Modal de resultados del procesamiento */}
-      {processResults && (
-        <BatchProcessResultsModal
-          isOpen={showResultsModal}
-          onClose={() => {
-            setShowResultsModal(false);
-            // Limpiar el workflow después de cerrar el modal
-            clearUrls();
-            clearTopics();
-            clearMentions();
-          }}
-          results={processResults}
-          onViewHistory={() => {
-            setShowResultsModal(false);
-            navigate('/history');
-          }}
-        />
-      )}
 
       {/* Snackbar para errores de conexión/procesamiento */}
       <Snackbar

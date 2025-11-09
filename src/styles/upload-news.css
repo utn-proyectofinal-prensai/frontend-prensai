@@ -558,3 +558,29 @@
     transform: translateX(100%);
   }
 }
+
+/* Colores para subtítulos de MetricCard */
+.metric-subtitle-blue {
+  color: rgb(147, 197, 253) !important; /* blue-300 */
+}
+
+.metric-subtitle-green {
+  color: rgb(134, 239, 172) !important; /* green-300 */
+}
+
+.metric-subtitle-purple {
+  color: rgb(196, 181, 253) !important; /* purple-300 */
+}
+
+.metric-subtitle-orange {
+  color: rgb(253, 186, 116) !important; /* orange-300 */
+}
+
+.metric-subtitle-red {
+  color: rgb(252, 165, 165) !important; /* red-300 */
+}
+
+.metric-subtitle-yellow {
+  color: rgb(253, 224, 71) !important; /* yellow-300 */
+}
+

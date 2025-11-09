@@ -1,9 +1,7 @@
 // Configuración de la API
 import { AUTH_MESSAGES, API_MESSAGES } from '../constants/messages';
 
-// TEMPORAL: Apuntando a producción. Revertir después de las pruebas.
-// TODO: Cambiar de vuelta a localhost cuando termine la prueba
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://prensai-api-325152031261.us-central1.run.app/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
 
 
 // Tipos de datos según la nueva API
@@ -52,7 +50,8 @@ export interface ApiError {
 
 export interface ProcessingError {
   url: string;
-  reason: string;
+  reason?: string;
+  motivo?: string;
 }
 
 export interface ErrorResponse {
@@ -490,10 +489,54 @@ export const apiService = {
 
   // Procesar noticias por lotes
   async batchProcessNews(data: BatchProcessRequest): Promise<BatchProcessResponse> {
-    return apiRequest<BatchProcessResponse>('/news/batch_process', {
+    // Hacer fetch manual para poder manejar errores 422 con estructura BatchProcessResponse
+    const jwtToken = localStorage.getItem('jwt-token');
+    const response = await fetch(`${API_BASE_URL}/news/batch_process`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+      },
+      body: JSON.stringify(data)
     });
+
+    if (!response.ok) {
+      // Si es un 422, intentar parsear como BatchProcessResponse
+      if (response.status === 422) {
+        try {
+          const responseData = await response.json();
+          // Si tiene la estructura de BatchProcessResponse, devolverla
+          if (responseData.errors && Array.isArray(responseData.errors)) {
+            return {
+              received: responseData.received || 0,
+              processed_by_ai: responseData.processed_by_ai || 0,
+              persisted: responseData.persisted || 0,
+              news: responseData.news || [],
+              errors: responseData.errors || []
+            };
+          }
+        } catch (parseErr) {
+          console.warn('No se pudo parsear la respuesta 422:', parseErr);
+        }
+      }
+      
+      // Si no es un 422 o no tiene la estructura correcta, lanzar error
+      let apiMessage = '';
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          apiMessage = (errorData?.errors?.[0]?.message as string | undefined) ?? '';
+        }
+      } catch (parseErr) {
+        console.warn('No se pudo parsear el error de la API:', parseErr);
+      }
+      
+      throw new Error(apiMessage || `${API_MESSAGES.ERRORS.HTTP_ERROR} ${response.status}`);
+    }
+
+    // Si la respuesta es exitosa, parsear y devolver
+    return await response.json();
   },
 
   // Obtener estadísticas del dashboard (endpoint legacy)
