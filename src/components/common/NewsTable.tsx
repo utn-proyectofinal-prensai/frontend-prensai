@@ -1,6 +1,7 @@
 import type { NewsItem } from '../../services/api';
 import { Button } from '../ui/button';
 import { Tooltip } from '../ui/tooltip';
+import TopicBadge from './TopicBadge';
 
 interface NewsTableProps {
   news: NewsItem[];
@@ -163,18 +164,9 @@ export default function NewsTable({
               </td>
               <td>
                 <div className="history-table-cell-content">
-                  {item.topic ? (
-                    <div className="flex flex-col gap-1">
-                      <span 
-                        className="inline-block bg-green-500/20 text-green-300 rounded-md text-xs font-medium"
-                        style={{ padding: '0.5rem 0.75rem' }}
-                      >
-                        {item.topic.name}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-white/50">-</span>
-                  )}
+                  <div className="flex flex-col gap-1">
+                    <TopicBadge topic={item.topic} />
+                  </div>
                 </div>
               </td>
               <td>

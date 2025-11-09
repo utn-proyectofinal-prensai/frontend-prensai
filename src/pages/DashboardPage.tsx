@@ -353,7 +353,7 @@ export default function DashboardPage() {
                 </svg>
                   </div>
                   <h3 className="text-sm font-semibold text-white/70">No hay datos disponibles</h3>
-                </div>
+              </div>
             </div>
           )}
           </CardContent>

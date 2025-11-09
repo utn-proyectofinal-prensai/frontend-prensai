@@ -273,6 +273,26 @@
   max-width: 100%;
 }
 
+/* Columna de título para tabla de clippings - un poco más estrecha */
+.history-table th.history-table-title-col-clippings,
+.history-table td.history-table-title-col-clippings {
+  min-width: 200px;
+  max-width: 280px;
+  text-align: left;
+}
+
+.history-table td.history-table-title-col-clippings .history-table-cell-content {
+  max-width: 100%;
+}
+
+/* Columna de período para tabla de clippings - más ancha */
+.history-table th.history-table-period-col,
+.history-table td.history-table-period-col {
+  min-width: 150px;
+  max-width: 180px;
+  text-align: center;
+}
+
 .history-table-cell-content {
   max-width: 200px;
   overflow: hidden;

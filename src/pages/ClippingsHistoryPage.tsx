@@ -1,11 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService, type ClippingItem } from '../services/api';
+import { useTopics } from '../hooks/useTopics';
 import Snackbar from '../components/common/Snackbar';
 import ConfirmationModal from '../components/common/ConfirmationModal';
-import { EditClippingModal, ClippingReportButton } from '../components/common';
+import { EditClippingModal, ClippingReportButton, ClippingsFilters, TopicBadge } from '../components/common';
 import { Button } from '../components/ui/button';
 import { PageHeader } from '../components/ui/page-header';
+import { Tooltip } from '../components/ui/tooltip';
 import '../styles/history.css';
 import '../styles/upload-news.css';
 
@@ -14,12 +16,11 @@ interface PaginationInfo {
   page: number;
   limit: number;
   count: number;
-  total_pages: number;
+  pages: number;
 }
 
 export default function ClippingsHistoryPage() {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [clippings, setClippings] = useState<ClippingItem[]>([]);
@@ -28,6 +29,16 @@ export default function ClippingsHistoryPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+
+  // Estados para filtros avanzados
+  const [advancedFilters, setAdvancedFilters] = useState<{
+    topic_id?: number;
+    start_date?: string;
+    end_date?: string;
+  }>({});
+
+  // Hook para obtener temas
+  const { topics } = useTopics();
 
   // Estados para modal de confirmación de eliminación
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -43,11 +54,24 @@ export default function ClippingsHistoryPage() {
   const loadClippings = async () => {
     setLoading(true);
     try {
-      const response = await apiService.getClippings({
+      // Construir objeto de filtros explícitamente, solo incluyendo los que tienen valor
+      const filters: any = {
         page: currentPage,
-        limit: pageSize,
-        // El filtro por texto se realiza en el frontend
-      });
+        limit: pageSize
+      };
+      
+      // Solo agregar filtros que existan y tengan valor
+      if (advancedFilters.topic_id !== undefined && advancedFilters.topic_id !== null) {
+        filters.topic_id = advancedFilters.topic_id;
+      }
+      if (advancedFilters.start_date !== undefined && advancedFilters.start_date !== null && advancedFilters.start_date !== '') {
+        filters.start_date = advancedFilters.start_date;
+      }
+      if (advancedFilters.end_date !== undefined && advancedFilters.end_date !== null && advancedFilters.end_date !== '') {
+        filters.end_date = advancedFilters.end_date;
+      }
+
+      const response = await apiService.getClippings(filters);
       setClippings(response.clippings);
       setPagination(response.pagination);
       
@@ -62,18 +86,7 @@ export default function ClippingsHistoryPage() {
   // Cargar clippings al montar el componente y cuando cambien los filtros
   useEffect(() => {
     loadClippings();
-  }, [currentPage, pageSize]);
-
-  // Filtro de frontend por título o tema
-  const visibleClippings = useMemo(() => {
-    const term = (searchTerm || '').trim().toLowerCase();
-    if (!term) return clippings;
-    return clippings.filter((c) => {
-      const title = (c.name || '').toLowerCase();
-      const topic = (c.topic?.name || '').toLowerCase();
-      return title.includes(term) || topic.includes(term);
-    });
-  }, [clippings, searchTerm]);
+  }, [currentPage, pageSize, advancedFilters]);
 
   // Efecto para cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -105,6 +118,28 @@ export default function ClippingsHistoryPage() {
   // Manejar cambios de página
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // Manejar cambios de tamaño de página
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset a la primera página
+  };
+
+  // Manejar aplicación de filtros avanzados
+  const handleApplyFilters = (filters: {
+    topic_id?: number;
+    start_date?: string;
+    end_date?: string;
+  }) => {
+    setAdvancedFilters(filters);
+    setCurrentPage(1); // Reset a la primera página
+  };
+
+  // Manejar limpieza de filtros avanzados
+  const handleClearFilters = () => {
+    setAdvancedFilters({});
+    setCurrentPage(1); // Reset a la primera página
   };
 
 
@@ -175,17 +210,6 @@ export default function ClippingsHistoryPage() {
   };
 
 
-  // Manejar cambios de tamaño de página
-  const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize);
-    setCurrentPage(1); // Reset a la primera página
-  };
-
-  // Manejar cambios en la búsqueda
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1); // Reset a la primera página
-  };
 
   // Función para formatear fecha
   const formatDate = (dateString: string) => {
@@ -200,95 +224,67 @@ export default function ClippingsHistoryPage() {
   return (
     <div className="history-container px-6">
       {/* Header de la página */}
-      <PageHeader
-        title="Historial de Clippings"
-        description="Revisa todos los clippings que has generado en el sistema"
-      />
+      <div style={{ marginBottom: '0.75rem' }}>
+        <PageHeader
+          title="Historial de Clippings"
+          description="Revisa todos los clippings que has generado en el sistema"
+        />
+      </div>
 
-      {/* Filtros y métricas */}
-      <div className="upload-news-panel history-filters-panel">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4 mb-4">
-          <h3 className="upload-news-section-title flex-shrink-0">Filtros de búsqueda</h3>
-          
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            {/* Búsqueda */}
-            <div className="history-filter-group flex-1">
-              <input
-                type="text"
-                placeholder="🔍 Buscar por título o tema..."
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="history-filter-input"
-              />
-            </div>
-
-            {/* Botón de filtros (TODO: implementar filtros avanzados) */}
-            <div className="history-filter-group flex-shrink-0">
-              <Button
-                variant="primary"
-                size="default"
-                icon="Search"
-                onClick={() => alert('TODO: Implementar filtros avanzados (fecha, tema, etc.)')}
-              >
-                Filtrar
-              </Button>
-            </div>
-          </div>
-        </div>
+      {/* Filtros */}
+      <div className="upload-news-panel history-filters-panel" style={{ marginBottom: '0.75rem' }}>
+        <ClippingsFilters
+          topics={topics}
+          onApplyFilters={handleApplyFilters}
+          onClearFilters={handleClearFilters}
+          currentFilters={advancedFilters}
+        />
       </div>
 
       {/* Lista de clippings */}
-      <div className="upload-news-panel">
-        {loading ? (
+      {loading ? (
+        <div className="history-table-container">
           <div className="history-loading">
-            <div className="relative inline-flex items-center justify-center">
-              <div className="history-loading-spinner" style={{ 
-                width: '4rem', 
-                height: '4rem',
-                borderWidth: '4px',
-                borderTopColor: 'rgb(59, 130, 246)',
-                borderRightColor: 'rgba(59, 130, 246, 0.3)',
-                borderBottomColor: 'transparent',
-                borderLeftColor: 'transparent'
-              }}></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-white/70 mt-4">Cargando clippings...</p>
+            <div className="history-loading-spinner"></div>
+            <p>Cargando historial de clippings...</p>
           </div>
-        ) : (
-          <>
-            {/* Tabla de clippings */}
-            <div className="history-table-container" style={{ overflowX: 'auto' }}>
-              <table className="history-table" style={{ minWidth: '1200px' }}>
-                <thead>
-                  <tr>
-                    <th>Título</th>
-                    <th>Tema</th>
-                    <th>Período</th>
-                    <th>Noticias</th>
-                    <th>Creador</th>
-                    <th>Editor</th>
-                    <th>Creación</th>
-                    <th>Edición</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleClippings.map((clipping) => (
+        </div>
+      ) : (
+        <>
+          {/* Tabla de clippings */}
+          <div className="history-table-container" style={{ overflowX: 'auto', width: '100%' }}>
+            <table className="history-table" style={{ width: '100%', tableLayout: 'auto' }}>
+              <thead>
+                <tr>
+                  <th className="history-table-title-col-clippings">Título</th>
+                  <th>Tema</th>
+                  <th className="history-table-period-col">Período</th>
+                  <th>Noticias</th>
+                  <th>Creador</th>
+                  <th>Editor</th>
+                  <th>Creación</th>
+                  <th>Edición</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clippings.map((clipping) => (
                     <tr key={clipping.id}>
-                      <td>
-                        <div className="history-news-title">{clipping.name}</div>
+                      <td className="history-table-title-col-clippings">
+                        <Tooltip content={clipping.name} position="top" onlyIfTruncated={true}>
+                          <div className="history-table-cell-content font-semibold">
+                            {clipping.name}
+                          </div>
+                        </Tooltip>
                       </td>
                       <td>
-                        <span className="history-topic-badge">
-                          {clipping.topic?.name || '-'}
-                        </span>
+                        <div className="history-table-cell-content">
+                          <div className="flex flex-col gap-1">
+                            <TopicBadge topic={clipping.topic} />
+                          </div>
+                        </div>
                       </td>
-                      <td>
+                      <td className="history-table-period-col">
                         <div className="history-news-date" style={{ lineHeight: '1.2', whiteSpace: 'normal' }}>
                           <div>{formatDate(clipping.start_date)}</div>
                           <div>a {formatDate(clipping.end_date)}</div>
@@ -310,13 +306,13 @@ export default function ClippingsHistoryPage() {
                         </div>
                       </td>
                       <td>
-                        <div className="history-news-date">
-                          {formatDate(clipping.created_at)}
+                        <div className="history-table-cell-content">
+                          {clipping.created_at ? new Date(clipping.created_at).toLocaleDateString() : '-'}
                         </div>
                       </td>
                       <td>
-                        <div className="history-news-date">
-                          {formatDate(clipping.updated_at)}
+                        <div className="history-table-cell-content">
+                          {clipping.updated_at ? new Date(clipping.updated_at).toLocaleDateString() : '-'}
                         </div>
                       </td>
                       <td>
@@ -356,31 +352,31 @@ export default function ClippingsHistoryPage() {
               </table>
             </div>
 
-            {/* Estado vacío */}
-            {visibleClippings.length === 0 && !loading && (
-              <div className="history-empty">
-                <div className="history-empty-icon">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">No se encontraron clippings</h3>
-                <p className="text-white/70 mb-6">
-                  {searchTerm ? `No hay clippings que coincidan con "${searchTerm}"` : 'No hay clippings generados aún'}
-                </p>
-                <Button
-                  onClick={() => navigate('/create-clipping')}
-                  variant="primary"
-                  size="default"
-                  icon="Plus"
-                >
-                  Crear Primer Clipping
-                </Button>
+          {/* Estado vacío */}
+          {clippings.length === 0 && !loading && (
+            <div className="history-empty">
+              <div className="history-empty-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
-            )}
+              <h3 className="text-xl font-semibold text-white mb-2">No se encontraron clippings</h3>
+              <p className="text-white/70 mb-6">
+                {(advancedFilters.topic_id || advancedFilters.start_date || advancedFilters.end_date) ? 'No hay clippings que coincidan con los filtros aplicados' : 'No hay clippings generados aún'}
+              </p>
+              <Button
+                onClick={() => navigate('/create-clipping')}
+                variant="primary"
+                size="default"
+                icon="Plus"
+              >
+                Crear Primer Clipping
+              </Button>
+            </div>
+          )}
 
-            {/* Controles de paginación */}
-            {(pagination || visibleClippings.length > 0) && (
+          {/* Controles de paginación */}
+          {(pagination || clippings.length > 0) && (
               <div className="history-pagination">
                 <div className="history-pagination-container">
                   {/* Selector de tamaño de página */}
@@ -417,30 +413,33 @@ export default function ClippingsHistoryPage() {
                         size="icon"
                         title="Página anterior"
                       >
-                        ←
+                        ‹
                       </Button>
                       
-                      <span className="text-sm text-white font-medium px-2">
-                        Página {pagination?.page || 1} de {pagination?.total_pages || 1}
+                      <span className="text-sm text-white px-3">
+                        {pagination ? (
+                          `Página ${pagination.page} de ${pagination.pages}`
+                        ) : (
+                          `Página 1 de 1`
+                        )}
                       </span>
                       
                       <Button 
                         onClick={() => handlePageChange((pagination?.page || 1) + 1)}
-                        disabled={!pagination || pagination.page >= pagination.total_pages}
+                        disabled={!pagination || pagination.page >= pagination.pages}
                         variant="outline"
                         size="icon"
                         title="Página siguiente"
                       >
-                        →
+                        ›
                       </Button>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-          </>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Snackbar para mensajes */}
       <Snackbar

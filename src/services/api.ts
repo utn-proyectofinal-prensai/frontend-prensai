@@ -829,7 +829,7 @@ export const apiService = {
       page: number;
       limit: number;
       count: number;
-      total_pages: number;
+      pages: number;
     };
   }> {
     const params = new URLSearchParams();
@@ -850,7 +850,7 @@ export const apiService = {
         page: number;
         limit: number;
         count: number;
-        total_pages: number;
+        pages: number;
       };
     }>(endpoint);
   },
