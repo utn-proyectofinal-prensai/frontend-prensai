@@ -204,7 +204,6 @@ export default function CreateClippingPage() {
   const generateClipping = async () => {
     // Obtener el valor actual del input usando el ref
     const currentTitle = titleInputRef.current?.value;
-    console.log('Título actual:', currentTitle);
     
     // Validar que hay noticias seleccionadas
     if (!isNewsStepValid) {
@@ -214,7 +213,6 @@ export default function CreateClippingPage() {
     
     // Validar que hay un título
     if (!currentTitle || !currentTitle.trim()) {
-      console.log('Título vacío, estableciendo mensaje de error');
       setTitleError('Por favor ingresa un título');
       return;
     }
