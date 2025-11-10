@@ -892,22 +892,8 @@ export const apiService = {
   },
 
   // Crear clipping
-  async createClipping(data: ClippingData): Promise<{
-    message: string;
-    clipping: {
-      id: number;
-      title: string;
-      created_at: string;
-    };
-  }> {
-    return apiRequest<{
-      message: string;
-      clipping: {
-        id: number;
-        title: string;
-        created_at: string;
-      };
-    }>('/clippings', {
+  async createClipping(data: ClippingData): Promise<ClippingItem> {
+    return apiRequest<ClippingItem>('/clippings', {
       method: 'POST',
       body: JSON.stringify({ clipping: data }),
     });

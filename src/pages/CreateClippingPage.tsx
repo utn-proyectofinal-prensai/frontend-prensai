@@ -4,6 +4,7 @@ import { apiService, type ClippingData } from '../services/api';
 import { useEnabledTopics } from '../hooks';
 import { NewsTable, Snackbar } from '../components/common';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import { LoadingModal } from '../components/ui/loading-modal';
 import { PageHeader } from '../components/ui/page-header';
 import '../styles/upload-news.css';
@@ -23,7 +24,7 @@ export default function CreateClippingPage() {
   const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
   const [dateFrom, setDateFrom] = useState(() => {
     const date = new Date();
-    date.setDate(date.getDate() - 7);
+    date.setMonth(date.getMonth() - 2);
     return date.toISOString().split('T')[0];
   });
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
@@ -56,6 +57,55 @@ export default function CreateClippingPage() {
   const handleSectionChange = (section: 'topic' | 'news' | 'generate') => {
     setActiveSection(section);
     setIsDropdownOpen(false);
+  };
+
+  // Funciones para navegación entre pasos
+  const goToNextStep = () => {
+    // Si estamos en generate, procesar el clipping
+    if (activeSection === 'generate') {
+      generateClipping();
+      return;
+    }
+    
+    const steps: Array<'topic' | 'news' | 'generate'> = ['topic', 'news', 'generate'];
+    const currentIndex = steps.indexOf(activeSection);
+    if (currentIndex < steps.length - 1) {
+      const nextStep = steps[currentIndex + 1];
+      // Verificar que el paso actual sea válido antes de avanzar
+      if (
+        (activeSection === 'topic' && isTopicStepValid) ||
+        (activeSection === 'news' && isNewsStepValid)
+      ) {
+        setActiveSection(nextStep);
+      }
+    }
+  };
+
+  const goToPreviousStep = () => {
+    const steps: Array<'topic' | 'news' | 'generate'> = ['topic', 'news', 'generate'];
+    const currentIndex = steps.indexOf(activeSection);
+    if (currentIndex > 0) {
+      setActiveSection(steps[currentIndex - 1]);
+    }
+  };
+
+  // Determinar si se puede avanzar
+  const canGoNext = () => {
+    switch (activeSection) {
+      case 'topic':
+        return isTopicStepValid;
+      case 'news':
+        return isNewsStepValid;
+      case 'generate':
+        return isGenerateStepValid && !isGenerating;
+      default:
+        return false;
+    }
+  };
+
+  // Determinar si se puede retroceder
+  const canGoPrevious = () => {
+    return activeSection !== 'topic';
   };
 
   // Función para obtener el texto del paso actual
@@ -183,12 +233,35 @@ export default function CreateClippingPage() {
         news_ids: Array.from(selectedNewsIds)
       };
 
-      await apiService.createClipping(clippingData);
+      const response = await apiService.createClipping(clippingData);
       
-      setSuccessMessage(`Clipping "${currentTitle}" generado exitosamente con ${selectedNewsIds.size} noticias`);
+      // Verificar que la respuesta tenga la estructura esperada
+      if (!response || !response.id) {
+        console.error('Respuesta inesperada de la API:', response);
+        setErrorMessage('Error: La respuesta del servidor no tiene el formato esperado.');
+        return;
+      }
 
-      // Redirigir al dashboard de histórico de clippings
-      navigate('/clippings-history');
+      // Obtener el nombre del tema desde la respuesta o desde enabledTopics
+      const topicName = response.topic?.name || enabledTopics.find(t => t.id === selectedTopic)?.name || 'Sin tema';
+
+      // Redirigir a la página de resultados con los datos del clipping (usando todos los valores de la API)
+      navigate('/clipping-results', {
+        state: {
+          result: {
+            clipping: {
+              id: response.id,
+              title: response.name,
+              created_at: response.created_at
+            },
+            message: `El clipping "${response.name}" se creó exitosamente.`,
+            newsCount: response.news_ids?.length || selectedNewsIds.size,
+            topicName: topicName,
+            startDate: response.start_date,
+            endDate: response.end_date
+          }
+        }
+      });
 
     } catch (error) {
       console.error('Error generando clipping:', error);
@@ -206,8 +279,11 @@ export default function CreateClippingPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
             <h3 className="upload-news-section-title">Paso 1: Selecciona un tema</h3>
             <div className="upload-news-tip">
-              <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Selecciona el tema que quieres analizar para tu clipping
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Selecciona el tema que quieres analizar para tu clipping
               </p>
             </div>
                 </div>
@@ -224,15 +300,16 @@ export default function CreateClippingPage() {
               <div
                 key={topic.id}
                 onClick={() => setSelectedTopic(topic.id)}
-                className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] ${
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 w-full min-w-[160px] sm:min-w-[180px] max-w-[240px] min-h-[4rem] flex flex-col relative ${
                   isSelected
-                    ? 'border-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20'
-                    : 'border-white/20 bg-white/5 hover:border-blue-400/50 hover:bg-white/10'
+                    ? 'border-green-400 bg-green-500/10 shadow-lg shadow-green-400/20'
+                    : 'border-white/20 bg-white/5 hover:border-green-400/50 hover:bg-white/10'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                    isSelected ? 'border-blue-400 bg-blue-400' : 'border-white/30'
+                {/* Checkbox arriba a la derecha - completamente dentro de la card */}
+                <div className="absolute top-3 right-3">
+                  <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 ${
+                    isSelected ? 'border-green-400 bg-green-400' : 'border-white/30'
                   }`}>
                     {isSelected && (
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -240,10 +317,13 @@ export default function CreateClippingPage() {
                       </svg>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-white">{topic.name}</h4>
+                </div>
+                {/* Contenido centrado */}
+                <div className="flex-1 flex items-center justify-center" style={{ paddingRight: '2.25rem', paddingLeft: '0.5rem' }}>
+                  <div className="flex flex-col items-center justify-center text-center w-full">
+                    <h4 className="font-medium text-white leading-tight break-words">{topic.name}</h4>
                     {topic.description && (
-                      <p className="text-sm text-white/70 mt-1">{topic.description}</p>
+                      <p className="text-sm text-white/70 mt-1 leading-tight break-words">{topic.description}</p>
                     )}
                   </div>
                 </div>
@@ -265,8 +345,11 @@ export default function CreateClippingPage() {
             <h3 className="upload-news-section-title">Paso 2: Selecciona noticias</h3>
             
             <div className="upload-news-tip">
-              <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Las noticias se cargan automáticamente. Ajusta las fechas y haz clic en "Filtrar" para actualizar
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Ajusta las fechas y haz clic en "Filtrar" para actualizar
               </p>
             </div>
             
@@ -384,99 +467,146 @@ export default function CreateClippingPage() {
   );
 
   // Componente de generación
-  const GenerateSection = () => (
-    <div className="upload-news-section">
-      <div className="upload-news-section-header">
-        <div className="flex-1">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
-            <h3 className="upload-news-section-title">Paso 3: Generar clipping</h3>
-            <div className="upload-news-tip">
-              <p className="upload-news-tip-text">
-                💡 <strong>Tip:</strong> Ingresa un título y haz clic en "Generar Clipping" para crear tu clipping
-              </p>
-            </div>
-            <div className="upload-news-section-actions">
-                  <Button
-                onClick={generateClipping}
-                disabled={isGenerating}
-                variant="success"
-                size="lg"
-                icon="Generate"
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    <span>Generando...</span>
-                  </>
-                ) : (
-                  <span>Generar Clipping</span>
-                )}
-                  </Button>
+  const GenerateSection = () => {
+    const [expandedNews, setExpandedNews] = useState(false);
+
+    return (
+      <div className="upload-news-section">
+        <div className="upload-news-section-header">
+          <div className="flex-1">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 gap-2 lg:gap-0">
+              <h3 className="upload-news-section-title">Paso 3: Generar clipping</h3>
+              <div className="upload-news-tip">
+                <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <strong>Tip:</strong> Agrega un título para generar el clipping y revisa la información antes de continuar
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div>
         {/* Campo de título */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <h4 className="text-base sm:text-lg font-semibold text-white flex items-center justify-center gap-2 mb-4">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Título del clipping <span className="text-red-400">*</span>
-          </h4>
-          <p 
-                    style={{ 
-              color: '#FFFFFF', 
-              opacity: 0.6,
-                      fontSize: '14px',
-              marginBottom: '12px'
-            }}
-          >
-            Este título identificará tu clipping en el sistema
-          </p>
-          <input
+        <div className="clipping-title-input-wrapper">
+          <Input
             ref={titleInputRef}
+            label="Título del clipping"
             type="text"
             placeholder="Ej: Clipping Política - Enero 2024"
-            className="w-full bg-white/10 backdrop-filter backdrop-blur-sm border border-white/20 rounded-xl p-3 text-white placeholder-white/50 focus:outline-none focus:border-blue-400"
+            error={titleError || undefined}
+            helperText="Este título identificará tu clipping en el sistema"
             autoComplete="off"
             spellCheck="false"
           />
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg" style={{ display: titleError ? 'block' : 'none' }}>
-            <p className="text-red-400 text-sm flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              {titleError}
-            </p>
-          </div>
         </div>
 
-        {/* Espaciado personalizado */}
-        <div style={{ height: '60px' }}></div>
+        {/* Dropdowns de resumen */}
+        <div>
+          {/* Tema seleccionado - Estático */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden" style={{ marginBottom: '1.5rem' }}>
+            <div className="w-full flex items-center justify-between p-4" style={{ minHeight: '72px', cursor: 'default', paddingLeft: '1rem', paddingRight: '1rem' }}>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-green-300/30 flex-shrink-0">
+                  <svg className="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <h4 className="text-base font-semibold text-white">Tema seleccionado</h4>
+                  <p className="text-sm text-white/70">{enabledTopics.find(t => t.id === selectedTopic)?.name || 'Ninguno'}</p>
+                </div>
+              </div>
+              <div className="w-5 h-5 flex-shrink-0"></div>
+            </div>
+          </div>
 
-        {/* Resumen de configuración */}
-        <div className="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-white/80">
-            <div>
-              <p className="font-semibold">Tema seleccionado:</p>
-              <p>{enabledTopics.find(t => t.id === selectedTopic)?.name || 'Ninguno'}</p>
+          {/* Período - Estático */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden" style={{ marginBottom: '1.5rem' }}>
+            <div className="w-full flex items-center justify-between p-4" style={{ minHeight: '72px', cursor: 'default', paddingLeft: '1rem', paddingRight: '1rem' }}>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-blue-300/30 flex-shrink-0">
+                  <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <h4 className="text-base font-semibold text-white">Período</h4>
+                  <p className="text-sm text-white/70">
+                    {dateFrom && dateTo ? `${new Date(dateFrom).toLocaleDateString()} - ${new Date(dateTo).toLocaleDateString()}` : 'No definido'}
+                  </p>
+                </div>
+              </div>
+              <div className="w-5 h-5 flex-shrink-0"></div>
             </div>
-            <div>
-              <p className="font-semibold">Período:</p>
-              <p>{dateFrom && dateTo ? `${new Date(dateFrom).toLocaleDateString()} - ${new Date(dateTo).toLocaleDateString()}` : 'No definido'}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Noticias seleccionadas:</p>
-              <p>{selectedNewsIds.size}</p>
-            </div>
+          </div>
+
+          {/* Dropdown de Noticias */}
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => setExpandedNews(!expandedNews)}
+              className="w-full flex items-center justify-between hover:bg-white/5 transition-colors"
+              style={{ minHeight: '72px', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '1rem', paddingBottom: '1rem' }}
+            >
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-violet-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg border border-purple-300/30 flex-shrink-0">
+                  <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <h4 className="text-base font-semibold text-white">Noticias seleccionadas</h4>
+                  <p className="text-sm text-white/70">{selectedNewsIds.size} noticia{selectedNewsIds.size !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <svg 
+                className={`w-5 h-5 text-white/70 transition-transform flex-shrink-0 ${expandedNews ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {expandedNews && (
+              <div className="border-t border-white/10 pt-4 pb-4" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                {selectedNewsIds.size > 0 ? (
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {Array.from(selectedNewsIds).map((newsId) => {
+                      const news = filteredNews.find(n => n.id === newsId);
+                      return news ? (
+                        <div key={newsId} className="flex items-center justify-between p-3">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <span className="text-white/80 truncate text-sm">
+                              <strong>{news.title}</strong>
+                              {news.media && <span> - {news.media}</span>}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {news.link && (
+                              <Button
+                                onClick={() => window.open(news.link, '_blank')}
+                                variant="ghost"
+                                size="icon"
+                                icon="ExternalLink"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-white/50 text-sm text-center py-4">No hay noticias seleccionadas</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <>
@@ -502,23 +632,23 @@ export default function CreateClippingPage() {
                   active={activeSection === 'topic'}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                    <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center text-sm font-bold">
                       {activeSection === 'topic' ? '1' : activeSection === 'news' ? '2' : '3'}
                     </div>
                     <span>{getCurrentStepText()}</span>
                     <div className="flex items-center gap-2">
                       {activeSection === 'topic' && selectedTopic && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-green-500 text-white min-w-[2rem] flex items-center justify-center">
                           ✓
                         </span>
                       )}
                       {activeSection === 'news' && selectedNewsIds.size > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-purple-500 text-white min-w-[2rem] flex items-center justify-center">
                           {selectedNewsIds.size}
                         </span>
                       )}
                       {activeSection === 'generate' && isGenerateStepValid && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-orange-500 text-white min-w-[2rem] flex items-center justify-center">
                           ✓
                         </span>
                       )}
@@ -540,7 +670,7 @@ export default function CreateClippingPage() {
                       onClick={() => handleSectionChange('topic')}
                       className={`upload-news-dropdown-item ${activeSection === 'topic' ? 'active' : ''}`}
                     >
-                      <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                      <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center text-sm font-bold">
                         1
                       </div>
                       <div className="flex-1">
@@ -548,7 +678,7 @@ export default function CreateClippingPage() {
                         <div className="text-xs text-white/50">Selecciona el tema a analizar</div>
                       </div>
                       {isTopicStepValid && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-green-500 text-white min-w-[2rem] flex items-center justify-center">
                           ✓
                         </span>
                       )}
@@ -561,7 +691,11 @@ export default function CreateClippingPage() {
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
                         !isTopicStepValid ? 'bg-white/10' : 'bg-purple-500/20'
                       }`}>
-                        {!isTopicStepValid ? '🔒' : '2'}
+                        {!isTopicStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '2'}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">Paso 2: Noticias</div>
@@ -570,7 +704,7 @@ export default function CreateClippingPage() {
                         </div>
                       </div>
                       {selectedNewsIds.size > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-purple-500 text-white min-w-[2rem] flex items-center justify-center">
                           {selectedNewsIds.size}
                         </span>
                       )}
@@ -583,7 +717,11 @@ export default function CreateClippingPage() {
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
                         !isNewsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
                       }`}>
-                        {!isNewsStepValid ? '🔒' : '3'}
+                        {!isNewsStepValid ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : '3'}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">Paso 3: Generar</div>
@@ -592,7 +730,7 @@ export default function CreateClippingPage() {
                         </div>
                       </div>
                       {isGenerateStepValid && (
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">
+                        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-orange-500 text-white min-w-[2rem] flex items-center justify-center">
                           ✓
                         </span>
                       )}
@@ -608,7 +746,7 @@ export default function CreateClippingPage() {
                     isTopicStepValid 
                       ? 'bg-green-500 text-white' 
                       : activeSection === 'topic'
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-green-500 text-white'
                       : 'bg-white/20 text-white/50'
                   }`}>
                     {isTopicStepValid ? '✓' : '1'}
@@ -660,13 +798,20 @@ export default function CreateClippingPage() {
                   active={activeSection === 'topic'}
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-bold">
+                    <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center text-sm font-bold">
                       1
                     </div>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     <span className="text-base">Tema</span>
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-bold min-w-[2rem] flex items-center justify-center ${
+                      selectedTopic 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-white/20 text-white/70'
+                    }`}>
+                      {selectedTopic ? '✓' : '0'}
+                    </span>
                     {selectedTopic && (
                       <div className="w-2 h-2 rounded-full bg-green-400"></div>
                     )}
@@ -685,13 +830,17 @@ export default function CreateClippingPage() {
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                       !isTopicStepValid ? 'bg-white/10' : 'bg-purple-500/20'
                     }`}>
-                      {!isTopicStepValid ? '🔒' : '2'}
+                      {!isTopicStepValid ? (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      ) : '2'}
                     </div>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>Noticias</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-bold min-w-[2rem] flex items-center justify-center ${
                       selectedNewsIds.size > 0 
                         ? 'bg-purple-500 text-white' 
                         : 'bg-white/20 text-white/70'
@@ -718,13 +867,17 @@ export default function CreateClippingPage() {
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                       !isNewsStepValid ? 'bg-white/10' : 'bg-orange-500/20'
                     }`}>
-                      {!isNewsStepValid ? '🔒' : '3'}
+                      {!isNewsStepValid ? (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      ) : '3'}
                     </div>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     <span>Generar</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-bold min-w-[2rem] flex items-center justify-center ${
                       isGenerateStepValid 
                         ? 'bg-orange-500 text-white' 
                         : 'bg-white/20 text-white/70'
@@ -747,6 +900,36 @@ export default function CreateClippingPage() {
               {activeSection === 'topic' && <TopicSection />}
               {activeSection === 'news' && <NewsSection />}
               {activeSection === 'generate' && <GenerateSection />}
+            </div>
+
+            {/* Botones de navegación */}
+            <div className="flex justify-between items-center gap-4 mt-6">
+              <Button
+                onClick={goToPreviousStep}
+                disabled={!canGoPrevious()}
+                variant="secondary"
+                size="default"
+                icon="ArrowLeft"
+                iconPosition="left"
+                className="flex-1"
+              >
+                Anterior
+              </Button>
+              <Button
+                onClick={goToNextStep}
+                disabled={!canGoNext()}
+                variant={activeSection === 'generate' ? 'success' : 'primary'}
+                size="default"
+                icon={activeSection === 'generate' ? 'Generate' : 'ArrowRight'}
+                iconPosition={activeSection === 'generate' ? 'left' : 'right'}
+                className="flex-1"
+              >
+                {activeSection === 'generate' 
+                  ? (isGenerating 
+                      ? 'Generando...' 
+                      : `Generar Clipping`)
+                  : 'Siguiente'}
+              </Button>
             </div>
             
           </div>

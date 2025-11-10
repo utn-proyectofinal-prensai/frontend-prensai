@@ -300,6 +300,20 @@
   white-space: nowrap;
 }
 
+/* Ajuste para la celda del checkbox - sin overflow y con padding adecuado */
+.history-table-checkbox-cell {
+  padding: 0.75rem !important;
+}
+
+.history-table-checkbox-content {
+  overflow: visible !important;
+  max-width: none !important;
+  white-space: normal !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 /* Estados y badges */
 .history-badge {
   display: inline-flex;
