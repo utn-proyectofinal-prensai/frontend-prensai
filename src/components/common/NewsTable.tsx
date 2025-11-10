@@ -71,8 +71,8 @@ export default function NewsTable({
           {news.map((item) => (
             <tr key={item.id}>
               {showCheckboxes && (
-                <td>
-                  <div className="history-table-cell-content">
+                <td className="history-table-checkbox-cell">
+                  <div className="history-table-cell-content history-table-checkbox-content">
                     <input
                       type="checkbox"
                       checked={selectedNewsIds?.has(item.id) || false}

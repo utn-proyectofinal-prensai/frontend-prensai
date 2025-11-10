@@ -584,3 +584,8 @@
   color: rgb(253, 224, 71) !important; /* yellow-300 */
 }
 
+/* Ajuste de espaciado para el input de título en creación de clipping */
+.clipping-title-input-wrapper > div {
+  margin-bottom: 0.5rem !important;
+}
+

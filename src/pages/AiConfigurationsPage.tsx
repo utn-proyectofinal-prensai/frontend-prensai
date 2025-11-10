@@ -325,7 +325,6 @@ export default function AiConfigurationsPage() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Button clicked', { hasDirtyFields, isSaving, dirtyCount });
                     handleSave();
                   }}
                   disabled={!hasDirtyFields || isSaving}

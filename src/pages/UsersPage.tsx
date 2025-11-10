@@ -99,9 +99,7 @@ export default function AdminUsersPage() {
 
     setIsDeleting(true);
     try {
-      console.log('Intentando eliminar usuario con ID:', userToDelete.id);
       await apiService.deleteUser(userToDelete.id.toString());
-      console.log('Usuario eliminado exitosamente');
       
       setUsuarios(usuarios.filter(u => u.id !== userToDelete.id));
       showSnackbar(`Usuario ${userToDelete.username} eliminado exitosamente`, 'success');
