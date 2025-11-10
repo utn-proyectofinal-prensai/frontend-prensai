@@ -64,16 +64,49 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   const config = getTypeConfig();
 
-  // Icono del modal basado en el tipo
-  const modalIcon = (
-    <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-      {config.icon === 'AlertTriangle' ? (
-        <AlertTriangle className="w-4 h-4 text-white" />
-      ) : (
-        <Info className="w-4 h-4 text-white" />
-      )}
-    </div>
-  );
+  // Función para procesar el mensaje y poner en negrita el texto entre comillas
+  const processMessage = (text: string) => {
+    // Dividir por saltos de línea para mantener el formato
+    const lines = text.split('\n');
+    return lines.map((line, lineIndex) => {
+      // Buscar texto entre comillas dobles y reemplazarlo con negrita
+      const parts = line.split(/"([^"]*)"/g);
+      return (
+        <React.Fragment key={lineIndex}>
+          {parts.map((part, partIndex) => {
+            // Las partes en índices impares están entre comillas
+            if (partIndex % 2 === 1) {
+              return <strong key={partIndex} className="text-white font-semibold">{part}</strong>;
+            }
+            return <span key={partIndex}>{part}</span>;
+          })}
+          {lineIndex < lines.length - 1 && <br />}
+        </React.Fragment>
+      );
+    });
+  };
+
+  // Icono del modal basado en el tipo - sin fondo, solo color
+  const modalIcon = (() => {
+    switch (type) {
+      case 'danger':
+        return (
+          <AlertTriangle className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" />
+        );
+      case 'warning':
+        return (
+          <AlertTriangle className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" />
+        );
+      case 'info':
+        return (
+          <Info className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" />
+        );
+      default:
+        return (
+          <AlertTriangle className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" />
+        );
+    }
+  })();
 
   // Footer del modal
   const footer = (
@@ -105,12 +138,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       title={title}
       icon={modalIcon}
       footer={footer}
-      size="sm"
+      size="default"
+      className="!w-[520px]"
     >
       {/* Mensaje */}
-      <div className="text-center mb-12">
-        <p className="text-white/90 text-base leading-relaxed whitespace-pre-line">
-          {message}
+      <div className="text-center mb-12 flex items-center justify-center" style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
+        <p className="text-white/90 text-base leading-relaxed">
+          {processMessage(message)}
         </p>
       </div>
     </Modal>
