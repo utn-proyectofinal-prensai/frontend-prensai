@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { apiService } from '../services/api';
@@ -7,10 +7,13 @@ import {
   AdminUsersHeader,
   SearchFilters,
   UserModal,
-  PasswordChangeModal
+  PasswordChangeModal,
+  UsersTable
 } from '../components/admin';
 import Snackbar from '../components/common/Snackbar';
 import { ConfirmationModal } from '../components/common';
+import '../styles/history.css';
+import '../styles/upload-news.css';
 
 
 export default function AdminUsersPage() {
@@ -56,33 +59,34 @@ export default function AdminUsersPage() {
   const totalUsers = usuarios.length;
   const adminUsers = usuarios.filter(u => u.role === 'admin').length;
 
-  // Cargar usuarios desde la API
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Cargar usuarios desde la API
-        const { users } = await apiService.getUsers();
-        
-        // Convertir el formato de la API al formato del componente
-        const usuariosFormateados: User[] = users.map(user => ({
-          ...user,
-          role: user.role === 'admin' ? 'admin' : 'user' // Mapear roles del backend
-        }));
-        
-        setUsuarios(usuariosFormateados);
-      } catch (err) {
-        console.error('Error cargando usuarios:', err);
-        setError('Error al cargar los usuarios');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUsers();
+  // Función para cargar usuarios desde la API
+  const loadUsers = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Cargar usuarios desde la API
+      const { users } = await apiService.getUsers();
+      
+      // Convertir el formato de la API al formato del componente
+      const usuariosFormateados: User[] = users.map(user => ({
+        ...user,
+        role: user.role === 'admin' ? 'admin' : 'user' // Mapear roles del backend
+      }));
+      
+      setUsuarios(usuariosFormateados);
+    } catch (err) {
+      console.error('Error cargando usuarios:', err);
+      setError('Error al cargar los usuarios');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Cargar usuarios al montar el componente
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   // Funciones para Usuarios
 
@@ -101,7 +105,6 @@ export default function AdminUsersPage() {
     try {
       await apiService.deleteUser(userToDelete.id.toString());
       
-      setUsuarios(usuarios.filter(u => u.id !== userToDelete.id));
       showSnackbar(`Usuario ${userToDelete.username} eliminado exitosamente`, 'success');
       
       // Cerrar modal si el usuario eliminado estaba siendo visto
@@ -110,6 +113,9 @@ export default function AdminUsersPage() {
         setEditModeActive(false);
         setCreateModeActive(false);
       }
+      
+      // Recargar la lista de usuarios
+      await loadUsers();
     } catch (error: any) {
       console.error('Error eliminando usuario:', error);
       
@@ -152,19 +158,6 @@ export default function AdminUsersPage() {
 
       const { user: updatedUser } = await apiService.updateUser(usuario.id.toString(), updateData);
       
-      // Preservar fechas si el backend no las devuelve
-      const usuarioAnterior = usuarios.find(u => u.id === usuario.id);
-      const usuarioActualizado = {
-        ...updatedUser,
-        created_at: updatedUser.created_at || usuarioAnterior?.created_at || '',
-        updated_at: updatedUser.updated_at || usuarioAnterior?.updated_at || ''
-      };
-      
-      // Actualizar estado local
-      setUsuarios(usuarios.map(u => 
-        u.id === usuario.id ? usuarioActualizado : u
-      ));
-      
       // Cerrar el modal
       setViewingUser(null);
       setEditModeActive(false);
@@ -172,6 +165,9 @@ export default function AdminUsersPage() {
       
       // Mostrar snackbar de éxito
       showSnackbar(`Usuario ${updatedUser.username} actualizado exitosamente`, 'success');
+      
+      // Recargar la lista de usuarios
+      await loadUsers();
     } catch (err: any) {
       console.error('Error editando usuario:', err);
       
@@ -209,13 +205,14 @@ export default function AdminUsersPage() {
 
       const { user: newUser } = await apiService.createUser(createData);
       
-      // Agregar nuevo usuario al estado local
-      setUsuarios([...usuarios, newUser]);
       setCreateModeActive(false);
       setViewingUser(null);
       
       // Mostrar snackbar de éxito
       showSnackbar(`Usuario ${newUser.username} creado exitosamente`, 'success');
+      
+      // Recargar la lista de usuarios
+      await loadUsers();
     } catch (err: any) {
       console.error('Error creando usuario:', err);
       
@@ -300,28 +297,54 @@ export default function AdminUsersPage() {
           adminUsers={adminUsers}
         />
 
-        {/* Espacio entre secciones */}
-        <div className="h-6"></div>
+        {/* Filtros */}
+        <div style={{ marginBottom: '0.75rem' }}>
+          <SearchFilters
+            searchTerm={searchTerm}
+            filterRol={filterRol}
+            onSearchChange={setSearchTerm}
+            onRolChange={setFilterRol}
+            onClearFilters={() => {
+              setSearchTerm('');
+              setFilterRol('todos');
+            }}
+            onAddUser={handleAddUser}
+          />
+        </div>
 
-        {/* Filtros modernos */}
-        <SearchFilters
-          searchTerm={searchTerm}
-          filterRol={filterRol}
-          onSearchChange={setSearchTerm}
-          onRolChange={setFilterRol}
-          onClearFilters={() => {
-            setSearchTerm('');
-            setFilterRol('todos');
-          }}
-          onAddUser={handleAddUser}
-          usuarios={filteredUsuarios}
-          onViewUser={handleUserView}
-          onEditUser={handleOpenEditModal}
-          onChangePassword={handleChangePassword}
-          onDeleteUser={handleUserDelete}
-          loading={loading}
-          error={error}
-        />
+        {/* Tabla de usuarios */}
+        {loading ? (
+          <div className="history-table-container">
+            <div className="history-loading">
+              <div className="history-loading-spinner"></div>
+              <p>Cargando usuarios...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <div className="text-red-400 text-lg">{error}</div>
+          </div>
+        ) : filteredUsuarios.length === 0 ? (
+          <div className="history-empty">
+            <div className="history-empty-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">No se encontraron usuarios</h3>
+            <p className="text-white/70">
+              No hay usuarios que coincidan con los filtros seleccionados
+            </p>
+          </div>
+        ) : (
+          <UsersTable
+            usuarios={filteredUsuarios}
+            onViewUser={handleUserView}
+            onEditUser={handleOpenEditModal}
+            onChangePassword={handleChangePassword}
+            onDeleteUser={handleUserDelete}
+          />
+        )}
       </div>
 
       {/* Modal para detalles del usuario */}

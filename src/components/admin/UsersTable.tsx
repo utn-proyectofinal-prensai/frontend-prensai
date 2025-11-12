@@ -1,11 +1,10 @@
 import React from 'react';
 import { UserRow } from './UserRow';
 import type { User } from '../../types/auth';
-import { USER_MESSAGES } from '../../constants/admin/userMessages';
 import { getRoleInfo } from '../../constants/admin/userRoles';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { List } from 'lucide-react';
+import '../../styles/history.css';
 
 interface UsersTableProps {
   usuarios: User[];
@@ -24,61 +23,41 @@ export const UsersTable: React.FC<UsersTableProps> = ({
 }) => {
 
   return (
-    <div className="bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden shadow-xl">
-      {/* Título de la sección */}
-      <div className="bg-black/30 border-b border-white/10" style={{ padding: '1rem 1.5rem' }}>
-        <div className="flex items-center justify-center gap-2">
-          <List className="w-5 h-5 text-white/90" />
-          <h3 className="text-lg font-semibold text-white/90 text-center">
-            Lista de Usuarios ({usuarios.length})
-          </h3>
+    <>
+      {/* Vista Desktop - Tabla mejorada */}
+      <div className="hidden lg:block">
+        <div className="history-table-container" style={{ overflowX: 'auto', width: '100%' }}>
+          <table className="history-table" style={{ width: '100%', tableLayout: 'auto' }}>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Username</th>
+                <th>Rol</th>
+                <th>Creación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usuarios.map((usuario) => (
+                <UserRow
+                  key={usuario.id}
+                  usuario={usuario}
+                  onView={onViewUser}
+                  onEdit={onEditUser}
+                  onChangePassword={onChangePassword}
+                  onDelete={onDeleteUser}
+                  getRolInfo={(role: string) => getRoleInfo(role as any)}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-
-      {/* Vista Desktop - Tabla tradicional */}
-      <div className="hidden lg:block overflow-x-auto">
-        <table className="min-w-full">
-          <thead className="bg-black/30">
-            <tr>
-              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
-                {USER_MESSAGES.FORMS.EMAIL}
-              </th>
-              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
-                Nombre
-              </th>
-              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
-                Apellido
-              </th>
-              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
-                Username
-              </th>
-              <th className="px-6 py-10 text-left text-sm font-bold text-white/90 uppercase tracking-wider">
-                {USER_MESSAGES.FORMS.ROLE}
-              </th>
-              <th className="px-6 py-10 text-center text-sm font-bold text-white/90 uppercase tracking-wider">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/10">
-            {usuarios.map((usuario) => (
-              <UserRow
-                key={usuario.id}
-                usuario={usuario}
-                onView={onViewUser}
-                onEdit={onEditUser}
-                onChangePassword={onChangePassword}
-                onDelete={onDeleteUser}
-                getRolInfo={(role: string) => getRoleInfo(role as any)}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-
       {/* Vista Mobile/Tablet - Tarjetas */}
-      <div className="lg:hidden space-y-4 p-4">
+      <div className="lg:hidden space-y-4 p-4 bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden shadow-xl">
         {usuarios.map((usuario) => {
           const roleInfo = getRoleInfo(usuario.role as any);
           return (
@@ -155,6 +134,6 @@ export const UsersTable: React.FC<UsersTableProps> = ({
           );
         })}
       </div>
-    </div>
+    </>
   );
 };

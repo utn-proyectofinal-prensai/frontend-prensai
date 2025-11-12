@@ -241,94 +241,62 @@ export const UserModal: React.FC<UserModalProps> = ({
 
             <div className="space-y-6">
               {/* Nombre */}
-              {isEditing ? (
-                <Input
-                  label="Nombre"
-                  type="text"
-                  value={editForm.first_name}
-                  onChange={(e) => setEditForm({...editForm, first_name: e.target.value})}
-                  placeholder="Nombre"
-                />
-              ) : (
-                <div style={{ marginBottom: '16px' }}>
-                  <div className="text-sm font-medium text-white mb-2">Nombre</div>
-                  <div className="text-white/90 font-semibold text-sm">{displayUser.first_name || 'No especificado'}</div>
-                </div>
-              )}
+              <Input
+                label="Nombre"
+                type="text"
+                value={isEditing ? editForm.first_name : (displayUser.first_name || '')}
+                onChange={(e) => isEditing && setEditForm({...editForm, first_name: e.target.value})}
+                placeholder="Nombre"
+                disabled={!isEditing}
+              />
 
               {/* Apellido */}
-              {isEditing ? (
-                <Input
-                  label="Apellido"
-                  type="text"
-                  value={editForm.last_name}
-                  onChange={(e) => setEditForm({...editForm, last_name: e.target.value})}
-                  placeholder="Apellido"
-                />
-              ) : (
-                <div style={{ marginBottom: '16px' }}>
-                  <div className="text-sm font-medium text-white mb-2">Apellido</div>
-                  <div className="text-white/90 font-semibold text-sm">{displayUser.last_name || 'No especificado'}</div>
-                </div>
-              )}
+              <Input
+                label="Apellido"
+                type="text"
+                value={isEditing ? editForm.last_name : (displayUser.last_name || '')}
+                onChange={(e) => isEditing && setEditForm({...editForm, last_name: e.target.value})}
+                placeholder="Apellido"
+                disabled={!isEditing}
+              />
 
               {/* Email */}
-              {isEditing ? (
-                <Input
-                  label="Email"
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                  placeholder="Email"
-                />
-              ) : (
-                <div style={{ marginBottom: '16px' }}>
-                  <div className="text-sm font-medium text-white mb-2">Email</div>
-                  <div className="text-white/90 font-semibold text-sm break-all">{displayUser.email}</div>
-                </div>
-              )}
+              <Input
+                label="Email"
+                type="email"
+                value={isEditing ? editForm.email : (displayUser.email || '')}
+                onChange={(e) => isEditing && setEditForm({...editForm, email: e.target.value})}
+                placeholder="Email"
+                disabled={!isEditing}
+              />
 
               {/* Username y Rol en dos columnas */}
               <div className="flex gap-3 w-full">
                 {/* Username */}
                 <div className="flex-1">
-                  {isEditing ? (
-                    <Input
-                      label="Username"
-                      type="text"
-                      value={editForm.username}
-                      onChange={(e) => setEditForm({...editForm, username: e.target.value})}
-                      placeholder="Username"
-                      required
-                    />
-                  ) : (
-                    <div style={{ marginBottom: '16px' }}>
-                      <div className="text-sm font-medium text-white mb-2">Username</div>
-                      <div className="text-white/90 font-semibold text-sm">@{displayUser.username}</div>
-                    </div>
-                  )}
+                  <Input
+                    label="Username"
+                    type="text"
+                    value={isEditing ? editForm.username : (displayUser.username || '')}
+                    onChange={(e) => isEditing && setEditForm({...editForm, username: e.target.value})}
+                    placeholder="Username"
+                    required
+                    disabled={!isEditing}
+                  />
                 </div>
 
                 {/* Rol */}
                 <div className="flex-1">
-                  {isEditing ? (
-                    <Select
-                      label="Rol"
-                      value={editForm.role}
-                      onChange={(e) => setEditForm({...editForm, role: e.target.value as 'admin' | 'user'})}
-                      options={[
-                        { value: 'admin', label: 'Administrador' },
-                        { value: 'user', label: 'Usuario' }
-                      ]}
-                    />
-                  ) : (
-                    <div style={{ marginBottom: '16px' }}>
-                      <div className="text-sm font-medium text-white mb-2">Rol</div>
-                      <div className="text-white/90 font-semibold text-sm capitalize">
-                        {displayUser.role === 'admin' ? 'Administrador' : 'Usuario'}
-                      </div>
-                    </div>
-                  )}
+                  <Select
+                    label="Rol"
+                    value={isEditing ? editForm.role : displayUser.role}
+                    onChange={(e) => isEditing && setEditForm({...editForm, role: e.target.value as 'admin' | 'user'})}
+                    options={[
+                      { value: 'admin', label: 'Administrador' },
+                      { value: 'user', label: 'Usuario' }
+                    ]}
+                    disabled={!isEditing}
+                  />
                 </div>
               </div>
 
@@ -350,11 +318,11 @@ export const UserModal: React.FC<UserModalProps> = ({
                       onClick={() => setShowPassword(!showPassword)}
                       variant="ghost"
                       size="icon"
-                      className="absolute right-3 top-8 w-6 h-6 p-0 text-white/80 hover:text-white"
+                      className="absolute right-3 top-[46px] w-6 h-6 p-0 text-white/80 hover:text-white flex items-center justify-center"
+                      style={{ transform: 'translateY(-50%)' }}
                       title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                    >
-                      {showPassword ? '⚫' : '👁'}
-                    </Button>
+                      icon={showPassword ? "EyeOff" : "Eye"}
+                    />
                   </div>
 
 
