@@ -125,7 +125,7 @@ export default function TagInput({
         {value.map((tag) => (
           <span
             key={tag}
-            className={`inline-flex items-center gap-2.5 rounded-full py-2 text-xs font-medium ${styles.chip}`}
+            className={`inline-flex items-center gap-2.5 rounded-lg py-2 text-xs font-medium ${styles.chip}`}
             style={{ paddingLeft: '16px', paddingRight: '12px' }}
           >
             <span className="truncate max-w-[300px]">{tag}</span>

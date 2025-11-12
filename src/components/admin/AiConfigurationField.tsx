@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import TagInput from '../common/TagInput';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Select } from '../ui/input';
 import type { AiConfiguration } from '../../services/api';
 import { MAX_ARRAY_ITEMS, type DraftValue } from '../../utils/aiConfigurations';
+import '../../styles/upload-news.css';
 
 export interface AiConfigurationFieldProps {
   configuration: AiConfiguration;
@@ -106,34 +106,32 @@ export default function AiConfigurationField({
   };
 
   return (
-    <Card variant="elevated" padding="lg" className="relative overflow-hidden">
+    <div className="upload-news-panel relative" style={{ padding: '1rem', minHeight: 'auto' }}>
       {/* Indicador de guardado */}
       {isSaving && (
-        <div className="absolute top-4 right-4 flex items-center gap-2 text-blue-400 text-xs">
+        <div className="absolute top-3 right-3 flex items-center gap-2 text-blue-400 text-xs z-10">
           <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
           <span>Guardando...</span>
         </div>
       )}
 
-      <CardHeader className="!px-8 !pt-6 !pb-3">
-        <div className="flex-1">
-          <CardTitle className="text-xl font-semibold text-white !mb-3">
-            {configuration.display_name}
-          </CardTitle>
-          <CardDescription className="text-sm leading-relaxed text-white/70 !mt-1.5">
-            {configuration.description}
-          </CardDescription>
-        </div>
-      </CardHeader>
+      {/* Header */}
+      <div className="mb-3">
+        <h3 className="text-lg font-semibold text-white mb-1.5">
+          {configuration.display_name}
+        </h3>
+        <p className="text-sm leading-relaxed text-white/70">
+          {configuration.description}
+        </p>
+      </div>
 
-      <CardContent className="!px-8 !pt-1 !pb-6">
-        <div className="space-y-5">
-          <label htmlFor={fieldId} className="sr-only">
-            Campo de configuración
-          </label>
-          {renderField()}
-        </div>
-      </CardContent>
-    </Card>
+      {/* Contenido del campo */}
+      <div className="space-y-3">
+        <label htmlFor={fieldId} className="sr-only">
+          Campo de configuración
+        </label>
+        {renderField()}
+      </div>
+    </div>
   );
 }
