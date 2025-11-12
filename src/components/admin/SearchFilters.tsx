@@ -1,8 +1,7 @@
 import React from 'react';
-import { UsersTable } from './UsersTable';
-import type { User } from '../../types/auth';
 import { Button } from '../ui/button';
 import { Search, Crown, User as UserIcon, Users } from 'lucide-react';
+import '../../styles/upload-news.css';
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -11,13 +10,6 @@ interface SearchFiltersProps {
   onRolChange: (value: 'todos' | 'admin' | 'user') => void;
   onClearFilters: () => void;
   onAddUser: () => void;
-  usuarios: User[];
-  onViewUser: (usuario: User) => void;
-  onEditUser: (usuario: User) => void;
-  onChangePassword: (usuario: User) => void;
-  onDeleteUser: (id: number) => void;
-  loading?: boolean;
-  error?: string | null;
 }
 
 export const SearchFilters: React.FC<SearchFiltersProps> = ({
@@ -26,20 +18,12 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
   onSearchChange,
   onRolChange,
   onClearFilters,
-  onAddUser,
-  usuarios,
-  onViewUser,
-  onEditUser,
-  onChangePassword,
-  onDeleteUser,
-  loading = false,
-  error = null
+  onAddUser
 }) => {
   return (
-    <div className="bg-gradient-to-r from-black/40 to-black/20 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl" style={{ padding: '20px' }}>
+    <div className="upload-news-panel history-filters-panel">
+      {/* Sección de filtros */}
       <div className="space-y-6">
-        {/* Sección de filtros */}
-        <div className="space-y-6">
           {/* Título de la sección */}
           <div className="px-4 py-3">
             <div className="flex items-center justify-center gap-2">
@@ -129,7 +113,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
                 Limpiar
               </Button>
             </div>
-            {/* Botón agregar - 2 columnas */}
+            {/* Botón nuevo usuario - 2 columnas */}
             <div className="col-span-2 px-4 py-2">
               <Button
                 onClick={onAddUser}
@@ -138,7 +122,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
                 icon="Plus"
                 className="w-full"
               >
-                Agregar
+                Nuevo Usuario
               </Button>
             </div>
           </div>
@@ -224,44 +208,11 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
                 size="lg"
                 icon="Plus"
               >
-                <span className="hidden sm:inline">Agregar</span>
+                <span className="hidden sm:inline">Nuevo Usuario</span>
               </Button>
             </div>
           </div>
         </div>
-
-        {/* Tabla de usuarios */}
-        {!loading && !error && (
-          <div style={{ marginTop: '2rem' }}>
-            <UsersTable
-              usuarios={usuarios}
-              onViewUser={onViewUser}
-              onEditUser={onEditUser}
-              onChangePassword={onChangePassword}
-              onDeleteUser={onDeleteUser}
-            />
-          </div>
-        )}
-
-        {/* Estados de carga y error */}
-        {loading && (
-          <div className="text-center py-8">
-            <div className="text-white/70 text-lg">Cargando...</div>
-          </div>
-        )}
-
-        {error && (
-          <div className="text-center py-8">
-            <div className="text-red-400 text-lg">{error}</div>
-          </div>
-        )}
-
-        {!loading && !error && usuarios.length === 0 && (
-          <div className="text-center py-8">
-            <div className="text-white/70 text-lg">No hay usuarios disponibles</div>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

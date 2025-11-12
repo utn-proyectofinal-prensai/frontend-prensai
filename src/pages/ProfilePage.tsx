@@ -324,7 +324,7 @@ const ProfilePage: React.FC = () => {
                   <Input
                     label="Username"
                     type="text"
-                    value={`@${user.username}`}
+                    value={user.username || '-'}
                     readOnly
                     disabled
                   />

@@ -2,6 +2,7 @@ import React from 'react';
 import type { User } from '../../types/auth';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Tooltip } from '../ui/tooltip';
 interface UserRowProps {
   usuario: User;
   onView: (usuario: User) => void;
@@ -38,46 +39,65 @@ export const UserRow: React.FC<UserRowProps> = ({
 
   return (
     <tr 
-      className="hover:bg-white/5 transition-all duration-300 cursor-pointer group"
+      className="cursor-pointer group"
       onClick={handleRowClick}
     >
       {/* Email */}
-      <td className="px-6 py-4 text-left">
-        <div className="text-sm text-white/90 font-medium">{usuario.email}</div>
+      <td>
+        <Tooltip content={usuario.email} position="top" onlyIfTruncated={true}>
+          <div className="history-table-cell-content font-semibold">
+            {usuario.email}
+          </div>
+        </Tooltip>
       </td>
       
       {/* Nombre */}
-      <td className="px-6 py-4 text-left">
-        <div className="text-sm font-semibold text-white group-hover:text-blue-300 transition-colors">
-          {usuario.first_name || 'Sin nombre'}
-        </div>
+      <td>
+        <Tooltip content={usuario.first_name || 'Sin nombre'} position="top" onlyIfTruncated={true}>
+          <div className="history-table-cell-content">
+            {usuario.first_name || 'Sin nombre'}
+          </div>
+        </Tooltip>
       </td>
       
       {/* Apellido */}
-      <td className="px-6 py-4 text-left">
-        <div className="text-sm font-semibold text-white group-hover:text-blue-300 transition-colors">
-          {usuario.last_name || 'Sin apellido'}
-        </div>
+      <td>
+        <Tooltip content={usuario.last_name || 'Sin apellido'} position="top" onlyIfTruncated={true}>
+          <div className="history-table-cell-content">
+            {usuario.last_name || 'Sin apellido'}
+          </div>
+        </Tooltip>
       </td>
       
       {/* Username */}
-      <td className="px-6 py-4 text-left">
-        <div className="text-sm text-white/70">@{usuario.username}</div>
+      <td>
+        <div className="history-table-cell-content">
+          {usuario.username || '-'}
+        </div>
       </td>
       
       {/* Rol */}
-      <td className="px-6 py-4 text-left">
-        <Badge 
-          variant={usuario.role === 'admin' ? 'admin' : 'user'} 
-          size="default"
-        >
-          {getRolInfo(usuario.role).label}
-        </Badge>
+      <td>
+        <div className="history-table-cell-content">
+          <Badge 
+            variant={usuario.role === 'admin' ? 'admin' : 'user'} 
+            size="default"
+          >
+            {getRolInfo(usuario.role).label}
+          </Badge>
+        </div>
+      </td>
+      
+      {/* Creación */}
+      <td>
+        <div className="history-table-cell-content">
+          {usuario.created_at ? new Date(usuario.created_at).toLocaleDateString() : '-'}
+        </div>
       </td>
       
       {/* Acciones */}
-      <td className="px-6 py-4">
-        <div className="flex items-center justify-center space-x-2">
+      <td>
+        <div className="history-actions" style={{ display: 'flex', gap: '2px', flexWrap: 'nowrap', justifyContent: 'center' }}>
           <Button
             onClick={handleEditClick}
             variant="ghost"
