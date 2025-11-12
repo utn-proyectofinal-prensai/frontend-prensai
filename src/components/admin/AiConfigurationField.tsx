@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
+import { FileText } from 'lucide-react';
 import TagInput from '../common/TagInput';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Select } from '../ui/input';
 import type { AiConfiguration } from '../../services/api';
 import { MAX_ARRAY_ITEMS, type DraftValue } from '../../utils/aiConfigurations';
+import '../../styles/upload-news.css';
 
 export interface AiConfigurationFieldProps {
   configuration: AiConfiguration;
@@ -41,7 +42,7 @@ export default function AiConfigurationField({
       case 'reference':
         if (configuration.options && configuration.options.length > 0) {
           return (
-            <div>
+            <div className="space-y-3">
               <div className="relative">
                 <Select
                   id={fieldId}
@@ -57,10 +58,17 @@ export default function AiConfigurationField({
                     label: option.label,
                   }))}
                   placeholder="Seleccioná una opción"
-                  helperText="Actualizá el valor y recordá guardar los cambios."
                   size="default"
                   className="pr-10"
                 />
+              </div>
+              <div className="upload-news-tip" style={{ marginTop: '0.5rem', marginBottom: '0', marginLeft: '0', marginRight: '0', flex: 'none' }}>
+                <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <strong>Tip:</strong> Actualizá el valor y recordá guardar los cambios.
+                </p>
               </div>
             </div>
           );
@@ -72,15 +80,20 @@ export default function AiConfigurationField({
               type="text"
               value={draftValue == null ? '' : String(draftValue)}
               onChange={(event) => onChange(event.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-lg text-white text-sm px-4 py-3 outline-none transition-all duration-300 placeholder:text-white/50 focus:border-blue-500/50 focus:bg-white/15"
+              className="w-full bg-white/10 border border-white/20 rounded-lg text-white text-sm outline-none transition-all duration-300 placeholder:text-white/50 focus:border-blue-500/50 focus:bg-white/15"
               placeholder="Ingresá el valor de referencia"
               disabled={disabled || isSaving}
               autoComplete="off"
-              style={{ fontSize: '14px' }}
+              style={{ fontSize: '14px', padding: '12px 16px' }}
             />
-            <p className="text-xs text-white/60">
-              Actualizá el valor y recordá guardar los cambios.
-            </p>
+            <div className="upload-news-tip" style={{ marginTop: '0.5rem', marginBottom: '0', marginLeft: '0', marginRight: '0', flex: 'none' }}>
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Actualizá el valor y recordá guardar los cambios.
+              </p>
+            </div>
           </div>
         );
       default:
@@ -91,49 +104,55 @@ export default function AiConfigurationField({
               type="text"
               value={draftValue == null ? '' : String(draftValue)}
               onChange={(event) => onChange(event.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-lg text-white text-sm px-4 py-3 outline-none transition-all duration-300 placeholder:text-white/50 focus:border-blue-500/50 focus:bg-white/15"
+              className="w-full bg-white/10 border border-white/20 rounded-lg text-white text-sm outline-none transition-all duration-300 placeholder:text-white/50 focus:border-blue-500/50 focus:bg-white/15"
               placeholder="Ingresá un valor"
               disabled={disabled || isSaving}
               autoComplete="off"
-              style={{ fontSize: '14px' }}
+              style={{ fontSize: '14px', padding: '12px 16px' }}
             />
-            <p className="text-xs text-white/60">
-              Actualizá el valor y recordá guardar los cambios.
-            </p>
+            <div className="upload-news-tip" style={{ marginTop: '0.5rem', marginBottom: '0', marginLeft: '0', marginRight: '0', flex: 'none' }}>
+              <p className="upload-news-tip-text flex items-center justify-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <strong>Tip:</strong> Actualizá el valor y recordá guardar los cambios.
+              </p>
+            </div>
           </div>
         );
     }
   };
 
   return (
-    <Card variant="elevated" padding="lg" className="relative overflow-hidden">
+    <div className="upload-news-panel relative" style={{ padding: '0.75rem', minHeight: 'auto' }}>
       {/* Indicador de guardado */}
       {isSaving && (
-        <div className="absolute top-4 right-4 flex items-center gap-2 text-blue-400 text-xs">
+        <div className="absolute top-2 right-2 flex items-center gap-2 text-blue-400 text-xs z-10">
           <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
           <span>Guardando...</span>
         </div>
       )}
 
-      <CardHeader className="!px-8 !pt-6 !pb-3">
-        <div className="flex-1">
-          <CardTitle className="text-xl font-semibold text-white !mb-3">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4" style={{ marginBottom: '0.75rem' }}>
+        <div className="flex items-center gap-2">
+          <FileText className="w-5 h-5 text-white/70 flex-shrink-0" />
+          <h3 className="text-lg font-semibold text-white">
             {configuration.display_name}
-          </CardTitle>
-          <CardDescription className="text-sm leading-relaxed text-white/70 !mt-1.5">
-            {configuration.description}
-          </CardDescription>
+          </h3>
         </div>
-      </CardHeader>
+        <p className="text-sm text-white/70 text-right flex-shrink-0">
+          {configuration.description}
+        </p>
+      </div>
 
-      <CardContent className="!px-8 !pt-1 !pb-6">
-        <div className="space-y-5">
-          <label htmlFor={fieldId} className="sr-only">
-            Campo de configuración
-          </label>
-          {renderField()}
-        </div>
-      </CardContent>
-    </Card>
+      {/* Contenido del campo */}
+      <div className="space-y-2">
+        <label htmlFor={fieldId} className="sr-only">
+          Campo de configuración
+        </label>
+        {renderField()}
+      </div>
+    </div>
   );
 }

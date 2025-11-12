@@ -4,6 +4,7 @@ import AiConfigurationField from '../components/admin/AiConfigurationField';
 import Snackbar from '../components/common/Snackbar';
 import { useAiConfigurations } from '../hooks/useAiConfigurations';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { PageHeader } from '../components/ui/page-header';
 import { AlertTriangle, Check, RefreshCw, Info } from 'lucide-react';
 import {
@@ -229,7 +230,7 @@ export default function AiConfigurationsPage() {
 
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+    <>
       {error && (
         <Snackbar
           message={error}
@@ -248,99 +249,95 @@ export default function AiConfigurationsPage() {
         />
       )}
 
-      {/* Header de la página */}
-      <PageHeader
-        title="Configuraciones de IA"
-        description="Gestioná los parámetros del módulo de inteligencia artificial"
-      />
+      {/* Contenido principal */}
+      <div className="px-6 py-6 h-full">
+        {/* Header de la página */}
+        <div style={{ marginBottom: '0.75rem' }}>
+          <PageHeader
+            title="Configuraciones de IA"
+            description="Gestioná los parámetros del módulo de inteligencia artificial"
+          />
+        </div>
 
-      {loading ? (
-        <div className="flex flex-col gap-6">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-40 animate-pulse rounded-2xl border border-white/20 bg-gradient-to-br from-black/30 to-black/20 backdrop-blur-sm"
-            ></div>
-          ))}
-        </div>
-      ) : configurations.length === 0 ? (
-        <div className="rounded-2xl border border-white/20 bg-gradient-to-br from-black/40 to-black/20 backdrop-blur-xl px-10 py-16 text-center shadow-xl">
-          <div className="flex flex-col items-center gap-4">
-            <div className="p-4 rounded-full bg-white/10 border border-white/20">
-              <Info className="w-8 h-8 text-white/50" />
-            </div>
-            <h2 className="text-xl font-semibold text-white">No hay configuraciones disponibles</h2>
-            <p className="text-sm text-white/60 max-w-md">
-              Todavía no hay configuraciones de IA habilitadas. Volvé a intentarlo más tarde.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-col gap-6 pb-24">
-            {configurations.map((configuration) => (
-              <AiConfigurationField
-                key={configuration.key}
-                configuration={configuration}
-                value={drafts[configuration.key] ?? normalizeValue(configuration)}
-                onChange={(nextValue) => handleFieldChange(configuration.key, nextValue)}
-                isSaving={savingKeys.includes(configuration.key)}
-                disabled={isSaving}
-              />
+        {loading ? (
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="upload-news-panel h-40 animate-pulse"
+              ></div>
             ))}
           </div>
-
-          {/* Barra de estado inferior mejorada */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/20 bg-gradient-to-br from-black/95 to-black/90 backdrop-blur-xl shadow-2xl">
-            <div className="mx-auto w-full max-w-6xl px-6 py-4">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-4 flex-wrap">
-                  {hasDirtyFields ? (
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-400/30">
-                      <AlertTriangle className="w-4 h-4 text-amber-300" />
-                      <span className="text-sm font-medium text-amber-300">
-                        {dirtyCount} {dirtyCount === 1 ? 'cambio pendiente' : 'cambios pendientes'} sin guardar
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/20 border border-green-400/30">
-                      <Check className="w-4 h-4 text-green-300" />
-                      <span className="text-sm font-medium text-green-300">
-                        No hay cambios pendientes
-                      </span>
-                    </div>
-                  )}
-                  {isSaving && (
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-400/30">
-                      <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
-                      <span className="text-sm font-medium text-blue-400">
-                        Guardando configuraciones…
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSave();
-                  }}
-                  disabled={!hasDirtyFields || isSaving}
-                  variant="primary"
-                  size="lg"
-                  icon="Save"
-                  iconPosition="left"
-                  className="min-w-[160px]"
-                >
-                  Guardar cambios
-                </Button>
+        ) : configurations.length === 0 ? (
+          <div className="upload-news-panel text-center" style={{ padding: '2rem 1.5rem' }}>
+            <div className="flex flex-col items-center gap-3">
+              <div className="p-3 rounded-full bg-white/10 border border-white/20">
+                <Info className="w-6 h-6 text-white/50" />
               </div>
+              <h2 className="text-lg font-semibold text-white">No hay configuraciones disponibles</h2>
+              <p className="text-sm text-white/60 max-w-md">
+                Todavía no hay configuraciones de IA habilitadas. Volvé a intentarlo más tarde.
+              </p>
             </div>
           </div>
-        </>
-      )}
-    </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-4" style={{ paddingBottom: '6rem' }}>
+              {configurations.map((configuration) => (
+                <AiConfigurationField
+                  key={configuration.key}
+                  configuration={configuration}
+                  value={drafts[configuration.key] ?? normalizeValue(configuration)}
+                  onChange={(nextValue) => handleFieldChange(configuration.key, nextValue)}
+                  isSaving={savingKeys.includes(configuration.key)}
+                  disabled={isSaving}
+                />
+              ))}
+            </div>
+
+            {/* Barra de estado inferior mejorada */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/20 backdrop-blur-xl shadow-2xl" style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}>
+              <div className="py-4" style={{ paddingLeft: '2.5rem', paddingRight: '1.5rem' }}>
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {hasDirtyFields ? (
+                      <Badge variant="warning" size="default" icon={<AlertTriangle className="w-4 h-4" />}>
+                        {dirtyCount} {dirtyCount === 1 ? 'cambio pendiente' : 'cambios pendientes'} sin guardar
+                      </Badge>
+                    ) : (
+                      <Badge variant="success" size="default" icon={<Check className="w-4 h-4" />}>
+                        No hay cambios pendientes
+                      </Badge>
+                    )}
+                    {isSaving && (
+                      <Badge variant="info" size="default" icon={<RefreshCw className="w-4 h-4 animate-spin" />}>
+                        Guardando configuraciones…
+                      </Badge>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSave();
+                    }}
+                    disabled={!hasDirtyFields || isSaving}
+                    variant="primary"
+                    size="lg"
+                    icon="Save"
+                    iconPosition="left"
+                    className="min-w-[160px]"
+                  >
+                    Guardar cambios
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }
