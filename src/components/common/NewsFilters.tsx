@@ -26,10 +26,10 @@ export default function NewsFilters({
   onClearFilters,
   currentFilters
 }: NewsFiltersProps) {
-  // Calcular fecha por defecto: dos meses atrás
+  // Calcular fecha por defecto: nueve meses atrás
   const getDefaultStartDate = () => {
     const date = new Date();
-    date.setMonth(date.getMonth() - 2);
+    date.setMonth(date.getMonth() - 9);
     return date.toISOString().split('T')[0];
   };
 
@@ -53,14 +53,17 @@ export default function NewsFilters({
   const isApplyingFilters = useRef(false);
 
   // Aplicar fechas por defecto al montar el componente si no hay filtros
+  // Solo aplicar si realmente no hay fechas (para evitar llamadas duplicadas)
   useEffect(() => {
-    if (isInitialMount.current && (!currentFilters.start_date || !currentFilters.end_date)) {
-      const defaultStart = getDefaultStartDate();
-      const defaultEnd = getDefaultEndDate();
-      onApplyFilters({
-        start_date: defaultStart,
-        end_date: defaultEnd
-      });
+    if (isInitialMount.current) {
+      if (!currentFilters.start_date || !currentFilters.end_date) {
+        const defaultStart = getDefaultStartDate();
+        const defaultEnd = getDefaultEndDate();
+        onApplyFilters({
+          start_date: defaultStart,
+          end_date: defaultEnd
+        });
+      }
       isInitialMount.current = false;
     }
   }, []);
@@ -394,11 +397,11 @@ export default function NewsFilters({
                 <select
                   value={localFilters.topic_id}
                   onChange={(e) => handleFilterChange('topic_id', e.target.value)}
-                  className="history-filter-input w-full"
+                  className="history-filter-select w-full"
                 >
-                  <option value="">Todos los temas</option>
+                  <option value="" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Todos los temas</option>
                   {topics.map(topic => (
-                    <option key={topic.id} value={topic.id}>
+                    <option key={topic.id} value={topic.id} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>
                       {topic.name}
                     </option>
                   ))}
@@ -413,13 +416,13 @@ export default function NewsFilters({
                 <select
                   value={localFilters.publication_type}
                   onChange={(e) => handleFilterChange('publication_type', e.target.value)}
-                  className="history-filter-input w-full"
+                  className="history-filter-select w-full"
                 >
-                  <option value="">Todos</option>
-                  <option value="noticia">Nota</option>
-                  <option value="articulo">Declaración</option>
-                  <option value="entrevista">Entrevista</option>
-                  <option value="opinion">Agenda</option>
+                  <option value="" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Todos</option>
+                  <option value="noticia" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Nota</option>
+                  <option value="articulo" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Declaración</option>
+                  <option value="entrevista" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Entrevista</option>
+                  <option value="opinion" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Agenda</option>
                 </select>
               </div>
 
@@ -431,12 +434,12 @@ export default function NewsFilters({
                 <select
                   value={localFilters.valuation}
                   onChange={(e) => handleFilterChange('valuation', e.target.value)}
-                  className="history-filter-input w-full"
+                  className="history-filter-select w-full"
                 >
-                  <option value="">Todas</option>
-                  <option value="positive">Positiva</option>
-                  <option value="neutral">Neutra</option>
-                  <option value="negative">Negativa</option>
+                  <option value="" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Todas</option>
+                  <option value="positive" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Positiva</option>
+                  <option value="neutral" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Neutra</option>
+                  <option value="negative" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Negativa</option>
                 </select>
               </div>
             </div>

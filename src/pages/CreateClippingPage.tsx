@@ -24,7 +24,7 @@ export default function CreateClippingPage() {
   const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
   const [dateFrom, setDateFrom] = useState(() => {
     const date = new Date();
-    date.setMonth(date.getMonth() - 2);
+    date.setMonth(date.getMonth() - 9);
     return date.toISOString().split('T')[0];
   });
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);

@@ -16,14 +16,28 @@ export default function HistoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   
-  // Estados para filtros avanzados
+  // Calcular fechas por defecto: nueve meses atrás hasta hoy
+  const getDefaultStartDate = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 9);
+    return date.toISOString().split('T')[0];
+  };
+  
+  const getDefaultEndDate = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+  
+  // Estados para filtros avanzados - inicializar con fechas por defecto
   const [advancedFilters, setAdvancedFilters] = useState<{
     topic_id?: number;
     start_date?: string;
     end_date?: string;
     publication_type?: string;
     valuation?: string;
-  }>({});
+  }>({
+    start_date: getDefaultStartDate(),
+    end_date: getDefaultEndDate()
+  });
 
   // Estados para el modal de edición
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -107,11 +121,17 @@ export default function HistoryPage() {
 
   // Manejar limpieza de filtros avanzados
   const handleClearFilters = () => {
-    setAdvancedFilters({});
+    // Siempre mantener las fechas por defecto
+    const defaultFilters = {
+      start_date: getDefaultStartDate(),
+      end_date: getDefaultEndDate()
+    };
+    setAdvancedFilters(defaultFilters);
     setCurrentPage(1); // Reset a la primera página
     setFilters({
       page: 1,
-      limit: pageSize
+      limit: pageSize,
+      ...defaultFilters
     });
   };
 
@@ -232,11 +252,12 @@ export default function HistoryPage() {
                   value={pageSize} 
                   onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                   className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                 >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
+                  <option value={5} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>5</option>
+                  <option value={10} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>10</option>
+                  <option value={20} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>20</option>
+                  <option value={50} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>50</option>
                 </select>
                 <span className="text-sm text-white font-medium">por página</span>
               </div>

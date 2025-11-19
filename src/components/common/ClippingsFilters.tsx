@@ -260,11 +260,11 @@ export default function ClippingsFilters({
               <select
                 value={localFilters.topic_id}
                 onChange={(e) => handleFilterChange('topic_id', e.target.value)}
-                className="history-filter-input flex-1"
+                className="history-filter-select flex-1"
               >
-                <option value="">Todos los temas</option>
+                <option value="" style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>Todos los temas</option>
                 {topics.map(topic => (
-                  <option key={topic.id} value={topic.id}>
+                  <option key={topic.id} value={topic.id} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>
                     {topic.name}
                   </option>
                 ))}
