@@ -385,11 +385,12 @@ export default function ClippingsHistoryPage() {
                       value={pageSize} 
                       onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                       className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                     >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
+                      <option value={5} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>5</option>
+                      <option value={10} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>10</option>
+                      <option value={20} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>20</option>
+                      <option value={50} style={{ backgroundColor: '#1e293b', color: '#ffffff' }}>50</option>
                     </select>
                     <span className="text-sm text-white font-medium">por página</span>
                   </div>
