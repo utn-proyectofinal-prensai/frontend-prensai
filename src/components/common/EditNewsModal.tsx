@@ -192,11 +192,11 @@ export function EditNewsModal({
                   onChange={(e) => handleInputChange('support', e.target.value)}
                   options={[
                     { value: '', label: 'Seleccionar soporte' },
-                    { value: 'web', label: 'Web' },
-                    { value: 'impreso', label: 'Impreso' },
-                    { value: 'digital', label: 'Digital' },
-                    { value: 'radio', label: 'Radio' },
-                    { value: 'tv', label: 'TV' }
+                    { value: 'WEB', label: 'Web' },
+                    { value: 'GRÁFICA', label: 'Gráfica' },
+                    //{ value: 'digital', label: 'Digital' },
+                    //({ value: 'radio', label: 'Radio' },
+                    //{ value: 'tv', label: 'TV' }
                   ]}
                 />
               </div>
@@ -261,17 +261,8 @@ export function EditNewsModal({
                 />
               </div>
 
-              {/* Crisis y Factor Político */}
+              {/* Factor Político */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select
-                  label="Crisis"
-                  value={formData.crisis ? 'SÍ' : 'NO'}
-                  onChange={(e) => handleInputChange('crisis', e.target.value === 'SÍ')}
-                  options={[
-                    { value: 'NO', label: 'NO' },
-                    { value: 'SÍ', label: 'SÍ' }
-                  ]}
-                />
                 <Select
                   label="Factor Político"
                   value={formData.political_factor || ''}
