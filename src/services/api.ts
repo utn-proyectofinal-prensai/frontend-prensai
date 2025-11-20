@@ -804,8 +804,14 @@ export const apiService = {
     });
   },
 
-  async getAllMentions(): Promise<{ mentions: Mention[] }> {
-    return apiRequest<{ mentions: Mention[] }>('/mentions');
+  async getAllMentions(queryParams?: { enabled?: boolean }): Promise<{ mentions: Mention[] }> {
+    const params = new URLSearchParams();
+    if (queryParams?.enabled !== undefined) {
+      params.append('enabled', queryParams.enabled.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/mentions${queryString ? `?${queryString}` : ''}`;
+    return apiRequest<{ mentions: Mention[] }>(endpoint);
   },
 
   // CRUD de menciones individuales
