@@ -168,7 +168,6 @@ export default function HistoryPage() {
         quotation: updatedData.quotation || undefined,
         valuation: updatedData.valuation || undefined,
         political_factor: updatedData.political_factor || undefined,
-        crisis: updatedData.crisis,
         topic_id: updatedData.topic?.id,
         mention_ids: updatedData.mentions?.map(m => m.id) || []
       });

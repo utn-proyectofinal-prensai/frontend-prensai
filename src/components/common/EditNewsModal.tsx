@@ -39,7 +39,6 @@ export function EditNewsModal({
         section: newsItem.section,
         valuation: newsItem.valuation,
         political_factor: newsItem.political_factor,
-        crisis: newsItem.crisis,
         author: newsItem.author,
         interviewee: newsItem.interviewee,
         audience_size: newsItem.audience_size,
@@ -95,7 +94,6 @@ export function EditNewsModal({
       quotation: formData.quotation,
       valuation: formData.valuation,
       political_factor: formData.political_factor,
-      crisis: formData.crisis,
       topic: selectedTopicId ? topics.find(t => t.id === selectedTopicId) || null : null,
       mentions: mentions.filter(m => selectedMentionIds.includes(m.id))
     };
