@@ -530,7 +530,6 @@ export const apiService = {
     quotation?: number;
     valuation?: string;
     political_factor?: string;
-    crisis?: boolean;
     topic_id?: number;
     mention_ids?: number[];
   }): Promise<NewsItem> {
